@@ -26,7 +26,13 @@
 
 _Rewritten after each step._
 
-- Phase: **C1-0b done** — full scaffold is on `main` (and `c1/platform`). Next task: **C1-1 Auth** on `c1/platform`.
+- Phase: **C1-1 Auth done** on `c1/platform`. Next task: **C1-2 Media pipeline**.
+- C1-1: Better Auth at `/api/auth/*` (modules/auth), personal account auto-created on signup (users.setup hook),
+  `GET /v1/me`, `PATCH /v1/me/profile`, `GET /v1/handles/:h/available`, `GET /v1/users/search`; web Login,
+  Signup, Facebook consent sheet + button, 4-step Onboarding. Verified: signup → /me → profile update → UI login.
+  NOT verified: Facebook login (needs FACEBOOK_CLIENT_ID/SECRET + a Tester account).
+- Testing helpers: start web with the browser-pane launch config `.claude/launch.json` ("web", port 3000);
+  start api+worker with `npx tsx --env-file=../../.env src/server.ts` in apps/api. Local test user: ava@ourlore.tech / password123.
 - Verified locally: `pnpm lint`, `pnpm typecheck`, `pnpm test` (11 policy tests), `next build` (31 routes),
   `pnpm --filter api build` (tsup), api/worker/mcp boot; `/health` ok; `/v1/ready` → database ok, valkey ok.
 - Local services (no Docker on this Mac): natively built Postgres 17 + TimescaleDB 2.17 + pgvector 0.8 in
@@ -67,7 +73,7 @@ _Rewritten after each step._
 | --- | --- | --- | --- |
 | C1-0a | Bootstrap repo | done | private repo hamizfaraz/lore, main pushed |
 | C1-0b | Full scaffold on main | done | main == c1/platform at scaffold commit |
-| C1-1 | Auth | pending | |
+| C1-1 | Auth | done (FB login unverified: no creds) | |
 | C1-2 | Media pipeline | pending | |
 | C1-3 | Social core | pending | |
 | C1-4 | Chat | pending | |
@@ -122,3 +128,4 @@ _Every deviation is also recorded in `docs/IMPLEMENTATION_PLAN.md` (section 18, 
   components, all routes, registries, C2 stubs; icons; dev compose; CI; e2e skeleton. Built Valkey,
   Postgres 17, TimescaleDB, pgvector from source into `~/.local` (no Docker/Homebrew on this Mac) and
   verified schema push, hypertables, `/v1/ready`. Fast-forwarded `main` to the scaffold and pushed.
+- **2026-10-24 · C1-1 done** — Better Auth email/password + Facebook provider, users module, auth screens, onboarding.

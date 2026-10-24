@@ -4,10 +4,13 @@ export * from './schema/index';
 export {
   and,
   asc,
+  count,
   desc,
   eq,
+  exists,
   gt,
   gte,
+  ilike,
   inArray,
   isNotNull,
   isNull,
@@ -15,6 +18,7 @@ export {
   lte,
   ne,
   not,
+  notInArray,
   or,
   sql,
 } from 'drizzle-orm';
