@@ -1,0 +1,64 @@
+/* LORE design tokens (plan section 9.1). Light by default, dark follows the system or [data-theme]. */
+:root {
+  --bg: #ffffff;
+  --surface-2: #efefef;
+  --ink: #000000;
+  --ink-2: #737373;
+  --line: #dbdbdb;
+  --action: #1a8cff;
+  --heart: #ff3040;
+  --ring-a: #ff5a4e;
+  --ring-b: #f6b94a;
+  --ring-group: #2f8f5b;
+  --ai: #6c5ce7;
+  --ai-tint: #efebff;
+  --verified: #2f8f5b;
+  --overlay: rgba(0, 0, 0, 0.5);
+  --elevated: #ffffff;
+
+  --font-sans: -apple-system, "SF Pro Text", BlinkMacSystemFont, Roboto, "Segoe UI", sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+
+  --topbar-h: 44px;
+  --tabbar-h: 49px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
+  --push-ms: 300ms;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #000000;
+    --surface-2: #262626;
+    --ink: #f5f5f5;
+    --ink-2: #a8a8a8;
+    --line: #262626;
+    --ring-group: #5cc48a;
+    --ai: #9c8cff;
+    --ai-tint: #221d3d;
+    --verified: #5cc48a;
+    --overlay: rgba(0, 0, 0, 0.65);
+    --elevated: #262626;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #000000;
+  --surface-2: #262626;
+  --ink: #f5f5f5;
+  --ink-2: #a8a8a8;
+  --line: #262626;
+  --ring-group: #5cc48a;
+  --ai: #9c8cff;
+  --ai-tint: #221d3d;
+  --verified: #5cc48a;
+  --overlay: rgba(0, 0, 0, 0.65);
+  --elevated: #262626;
+  color-scheme: dark;
+}

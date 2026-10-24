@@ -1491,3 +1491,14 @@ Checked October 24, 2026; verify again at H0 because these products changed ofte
 - [Snowflake: Cortex REST API](https://docs.snowflake.com/user-guide/snowflake-cortex/cortex-rest-api) — chat completions endpoint and PAT auth
 - [Google Cloud: Gemini model versions](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/model-versions) — `gemini-embedding-001`, Gemini 2.5 retirement on October 16, 2026
 - [SerpAPI: Google Local API](https://serpapi.com/google-local-api) and [SerpAPI Python library](https://pypi.org/p/serpapi) — engines `google_events`, `google_maps`, `google_local`
+
+## 18. Implementation notes (deviations recorded during the build)
+
+Kept in sync with `docs/PROJECT_CONTEXT_LOG.md`. Each line: date · task · change · reason.
+
+- 2026-10-24 · C1-0a · Repo is `hamizfaraz/lore` (private). Teammate must still be added as collaborator by a human.
+- 2026-10-24 · C1-0b · zod 4 (fastify-type-provider-zod ≥6 requires it; MCP SDK and Better Auth support it).
+- 2026-10-24 · C1-0b · `mayPublish`: AI drafts under `direct`/`courtesy` publish once ≥1 valid approval exists (matches 8.4 acceptance; the section 8.4 snippet never allowed it).
+- 2026-10-24 · C1-0b · Extra C1 tables `post_likes`, `post_saves`, `push_subscriptions`, `user_wallets` and extra columns listed in the context log (state the section 5 tables could not hold).
+- 2026-10-24 · C1-0b · Message idempotency: plain index on `(conversation_id, client_id)` + Valkey key, because hypertable unique indexes must include `created_at`.
+- 2026-10-24 · C1-0b · Dev-only tooling added: `tsx`, `tsup`, `dotenv-cli` (reason in HANDOFF).

@@ -26,14 +26,22 @@
 
 _Rewritten after each step._
 
-- Phase: C1-0a in progress.
+- Phase: **C1-0b scaffold in progress** (C1-0a done, `main` pushed).
+- Done in C1-0b so far: `packages/shared` (ids, enums, ai schemas, policy + 11 passing tests, flags,
+  events, cards, errors, all DTOs), `packages/db` (all 11 schema files, client, sql/001-005,
+  `scripts/setup.ts`, drizzle config), `packages/tokens` (CSS vars + TS), `packages/ai` typed stubs
+  for `games.*` and `guard` (C2 replaces bodies), `apps/api` package.json/tsconfig/tsup config (deps installed).
+- Next in C1-0b: `apps/api/src` (lib/, server.ts, mcp.ts, worker.ts, modules/index.ts + every module
+  stub + cross-boundary stubs), `apps/web` (Next 15 PWA shell, components, all routes, features,
+  registries), `infra/` dev compose, `.env.example`, CI workflow. Then fast-forward `main` to the scaffold.
+- WIP of C1-0b is pushed to `c1/platform` so it survives an interruption; `main` gets C1-0b when complete.
 
 ## Computer 1 task tracker
 
 | ID | Task | Status | Notes |
 | --- | --- | --- | --- |
-| C1-0a | Bootstrap repo | in progress | |
-| C1-0b | Full scaffold on main | pending | |
+| C1-0a | Bootstrap repo | done | private repo hamizfaraz/lore, main pushed |
+| C1-0b | Full scaffold on main | in progress | WIP on c1/platform |
 | C1-1 | Auth | pending | |
 | C1-2 | Media pipeline | pending | |
 | C1-3 | Social core | pending | |
@@ -57,6 +65,17 @@ _Rewritten after each step._
 
 _Every deviation is also recorded in `docs/IMPLEMENTATION_PLAN.md` (section 18, "Implementation notes") so the plan stays the truth._
 
+- `mayPublish`: AI drafts under direct/courtesy publish after >= 1 valid approval (the plan's snippet
+  returned false forever, contradicting 8.4 acceptance "still requires an approval").
+- Extra C1-owned tables/columns: `post_likes`, `post_saves`, `push_subscriptions`, `user_wallets`,
+  `social_accounts.avatar_url/show_on_profile/onboarded_at`, `user.guest_expires_at`,
+  `posts.draft_id/topic_tags/deleted_at`, `post_media.alt_text`, `media_assets.thumb_key/bytes/completed_at`,
+  `conversations.join_slug/join_code/last_message_at`, `conversation_members.pinned_at/removed_at`,
+  `messages.client_id`, `post_drafts.message_id/created_at`, `game_sessions.last_action_at`, `keepsakes.status/created_at`.
+- C2-owned files got small scaffold additions they need: `ai_personas.muted_until`, `recaps.facts_used`.
+- Message idempotency uses a plain index + Valkey key (hypertable unique indexes must include `created_at`).
+- Added dev tooling deps outside section 4: `tsx` (run TS), `tsup` (bundle api), `dotenv-cli`; logged in HANDOFF.
+
 ## Log
 
 - **2026-10-24 · C1-0a** — Installed Node 22 (official nodejs.org tarball, checksum verified) to
@@ -65,3 +84,8 @@ _Every deviation is also recorded in `docs/IMPLEMENTATION_PLAN.md` (section 18, 
   (`package.json`, `pnpm-workspace.yaml`, `turbo.json`, `biome.json`, `tsconfig.base.json`,
   `lefthook.yml`, `.gitignore`, `.nvmrc`), empty workspace packages, and docs
   (`IMPLEMENTATION_PLAN.md`, `CONTRACTS.md`, `HANDOFF.md`, this log).
+- **2026-10-24 · C1-0a done** — `gh repo create hamizfaraz/lore --private`, pushed `main`.
+- **2026-10-24 · C1-0b (partial)** — Wrote shared contracts, db schema + SQL, tokens, ai stubs, api
+  package config. Library versions pinned to plan majors (Next 15, BullMQ 5, motion 12, Fastify 5,
+  Socket.IO 4, TS 5, Tailwind 4); zod 4 chosen (required by fastify-type-provider-zod ≥6).
+  Deviations recorded in plan section 18. Pushed WIP to `c1/platform`.
