@@ -185,9 +185,7 @@ export async function personalAccountsByUser(userIds: string[]): Promise<Map<str
 }
 
 /** Display info for users (chat senders, voters, members). */
-export async function userCards(
-  userIds: string[],
-): Promise<
+export async function userCards(userIds: string[]): Promise<
   Map<
     string,
     {

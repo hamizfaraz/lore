@@ -29,6 +29,8 @@ const schema = z.object({
   VAPID_PRIVATE_KEY: z.string().optional(),
   /** dev only: story expiry override in minutes for the 8.1 acceptance test */
   STORY_TTL_MINUTES: z.coerce.number().default(24 * 60),
+  /** dev only: when S3_* is unset, media is stored on disk here and served by the api with signed URLs */
+  LOCAL_MEDIA_DIR: z.string().default('.data/media'),
 });
 
 const blank = (v: string | undefined) => (v === '' ? undefined : v);

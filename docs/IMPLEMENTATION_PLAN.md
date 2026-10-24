@@ -1505,3 +1505,4 @@ Kept in sync with `docs/PROJECT_CONTEXT_LOG.md`. Each line: date · task · chan
 - 2026-10-24 · C1-0b · PWA icons/splash generated with a sharp script (`apps/web/scripts/generate-icons.mjs`) instead of `pwa-asset-generator` (headless Chrome unavailable).
 - 2026-10-24 · C1-0b · Added routes `/p/[id]` (post detail) and `/offline` (SW fallback) [C1]. Profile tab root is `/u/<own handle>`.
 - 2026-10-24 · C1-0b · `@lore/ai` scaffold index exports typed stubs `games.{getPrompts,fiveWordChoices,storyTitle,storyImage,memeEntry,memeImage}` and `guard()`; C2 keeps these signatures.
+- 2026-10-24 · C1-2 · Dev without Vultr credentials stores media on disk (`LOCAL_MEDIA_DIR`) behind HMAC-signed expiring URLs served by the api; production uses presigned S3 exactly as planned.

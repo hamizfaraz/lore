@@ -26,7 +26,11 @@
 
 _Rewritten after each step._
 
-- Phase: **C1-1 Auth done** on `c1/platform`. Next task: **C1-2 Media pipeline**.
+- Phase: **C1-2 Media done** on `c1/platform`. Next task: **C1-3 Social core** (then C1-4 chat).
+- C1-2: `lib/storage.ts` (S3 when S3_* set, else signed local disk under `.data/media` served by
+  `/v1/media/local/{upload,file}`), `POST /v1/media/presign`, `POST /v1/media/:id/complete` (sharp 480px webp thumb,
+  blurhash, dims; ffprobe/ffmpeg for video/audio when installed — not installed on this Mac), `createFromBuffer`,
+  `signedUrl`, `mediaDTOs`, `assertUsable`, `setTranscript`, `ffmpeg.toWav24k` (for C2 voice). Verified upload flow.
 - C1-1: Better Auth at `/api/auth/*` (modules/auth), personal account auto-created on signup (users.setup hook),
   `GET /v1/me`, `PATCH /v1/me/profile`, `GET /v1/handles/:h/available`, `GET /v1/users/search`; web Login,
   Signup, Facebook consent sheet + button, 4-step Onboarding. Verified: signup → /me → profile update → UI login.
@@ -74,7 +78,7 @@ _Rewritten after each step._
 | C1-0a | Bootstrap repo | done | private repo hamizfaraz/lore, main pushed |
 | C1-0b | Full scaffold on main | done | main == c1/platform at scaffold commit |
 | C1-1 | Auth | done (FB login unverified: no creds) | |
-| C1-2 | Media pipeline | pending | |
+| C1-2 | Media pipeline | done | local disk fallback when no S3 |
 | C1-3 | Social core | pending | |
 | C1-4 | Chat | pending | |
 | C1-5 | Group accounts | pending | |
@@ -129,3 +133,4 @@ _Every deviation is also recorded in `docs/IMPLEMENTATION_PLAN.md` (section 18, 
   Postgres 17, TimescaleDB, pgvector from source into `~/.local` (no Docker/Homebrew on this Mac) and
   verified schema push, hypertables, `/v1/ready`. Fast-forwarded `main` to the scaffold and pushed.
 - **2026-10-24 · C1-1 done** — Better Auth email/password + Facebook provider, users module, auth screens, onboarding.
+- **2026-10-24 · C1-2 done** — media pipeline with S3 + signed local fallback; verified presign/PUT/complete/thumb.
