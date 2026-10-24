@@ -6,7 +6,7 @@ feature code imports these providers through `@lore/ai`; provider SDKs do not le
 ## Modes
 
 - `AI_MODE=mock` is the default. Structured calls return schema-validated fixtures without keys.
-- `AI_MODE=live` requires the environment variables in `docs/IMPLEMENTATION_PLAN.md` section 14.
+- `AI_MODE=live` requires the environment variables in `docs/IMPLEMENTATION_PLAN.md` section 7.
 
 `pnpm --filter @lore/ai smoke` validates all mock fixtures by default. A live smoke intentionally
 calls every paid provider once and additionally requires `AI_SMOKE_WAV_PATH` to point to a short,
