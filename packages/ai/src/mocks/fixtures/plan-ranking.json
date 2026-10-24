@@ -1,0 +1,26 @@
+{
+  "options": [
+    {
+      "candidateId": "00000000-0000-7000-8000-000000000101",
+      "headline": "free outdoor film",
+      "why": "free, social, and easy to reach from campus",
+      "fitByMember": [
+        { "userId": "00000000-0000-7000-8000-000000000001", "fit": "great", "note": "matches film interest" },
+        { "userId": "00000000-0000-7000-8000-000000000002", "fit": "great", "note": "within budget" }
+      ],
+      "logistics": { "priceText": "Free", "whenText": "Saturday 8:00 PM", "travelText": "12 min" }
+    },
+    {
+      "candidateId": "00000000-0000-7000-8000-000000000102",
+      "headline": "cozy watch party and board games",
+      "why": "the at-home option keeps cost and travel low",
+      "fitByMember": [
+        { "userId": "00000000-0000-7000-8000-000000000001", "fit": "ok", "note": "easy shared night" },
+        { "userId": "00000000-0000-7000-8000-000000000002", "fit": "great", "note": "lowest cost" }
+      ],
+      "logistics": { "priceText": "$0–10", "whenText": "Saturday evening", "travelText": "At home" }
+    }
+  ],
+  "compromiseNote": "both choices protect the strict budget and travel limits",
+  "noFeasibleOption": false
+}

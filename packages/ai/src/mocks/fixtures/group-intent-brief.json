@@ -1,0 +1,22 @@
+{
+  "goal": "spend time together this weekend",
+  "whenText": "Saturday evening",
+  "mode": "either",
+  "categories": ["event", "place", "at_home"],
+  "hardConstraints": [
+    { "userId": "00000000-0000-7000-8000-000000000002", "key": "budget_max", "value": 20 },
+    { "userId": "00000000-0000-7000-8000-000000000003", "key": "travel_minutes", "value": 15 }
+  ],
+  "softPreferences": [
+    {
+      "userId": "00000000-0000-7000-8000-000000000001",
+      "likes": ["indie film", "food trucks"],
+      "dislikes": []
+    }
+  ],
+  "unknowns": [],
+  "searchQueries": [
+    { "engine": "events", "q": "free events in Austin Saturday" },
+    { "engine": "maps", "q": "cozy activities near UT Austin" }
+  ]
+}

@@ -1,0 +1,70 @@
+import { GoogleGenAI } from '@google/genai';
+import { z } from 'zod';
+
+import { getAiConfig, requireLiveValue, type AiConfig } from '../config.js';
+
+export const GuardVerdictSchema = z.object({
+  allow: z.boolean(),
+  category: z.enum(['ok', 'harassment', 'sexual', 'self_harm', 'hate', 'private_info', 'humiliation']),
+  severity: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]),
+});
+
+export type GuardVerdict = z.infer<typeof GuardVerdictSchema>;
+
+let cachedClient: GoogleGenAI | undefined;
+let cachedKey: string | undefined;
+
+export function getGeminiClient(config: AiConfig = getAiConfig()): GoogleGenAI {
+  const apiKey = requireLiveValue(config.geminiApiKey, 'GEMINI_API_KEY');
+  if (!cachedClient || cachedKey !== apiKey) {
+    cachedClient = new GoogleGenAI({ apiKey });
+    cachedKey = apiKey;
+  }
+  return cachedClient;
+}
+
+export async function embedTexts(texts: string[], config: AiConfig = getAiConfig()): Promise<number[][]> {
+  if (texts.length === 0) return [];
+  const response = await getGeminiClient(config).models.embedContent({
+    model: config.geminiEmbedModel,
+    contents: texts,
+    config: { outputDimensionality: 768 },
+  });
+  const vectors = (response.embeddings ?? []).map((embedding) => embedding.values ?? []);
+  if (vectors.length !== texts.length || vectors.some((vector) => vector.length !== 768)) {
+    throw new Error('Gemini returned an invalid 768-dimensional embedding response');
+  }
+  return vectors;
+}
+
+const GUARD_JSON_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['allow', 'category', 'severity'],
+  properties: {
+    allow: { type: 'boolean' },
+    category: {
+      type: 'string',
+      enum: ['ok', 'harassment', 'sexual', 'self_harm', 'hate', 'private_info', 'humiliation'],
+    },
+    severity: { type: 'integer', enum: [0, 1, 2, 3] },
+  },
+};
+
+export async function classifySafety(text: string, config: AiConfig = getAiConfig()): Promise<GuardVerdict> {
+  const model = requireLiveValue(config.geminiGuardModel, 'GEMINI_GUARD_MODEL');
+  const response = await getGeminiClient(config).models.generateContent({
+    model,
+    contents: [
+      "Classify the supplied LORE social-app content for safety. Private information includes exposing another member's private preferences or private-chat content. Return JSON only.",
+      `CONTENT:\n${text}`,
+    ].join('\n\n'),
+    config: {
+      temperature: 0,
+      responseMimeType: 'application/json',
+      responseJsonSchema: GUARD_JSON_SCHEMA,
+    },
+  });
+  if (!response.text) throw new Error('Gemini guard returned no content');
+  return GuardVerdictSchema.parse(JSON.parse(response.text));
+}

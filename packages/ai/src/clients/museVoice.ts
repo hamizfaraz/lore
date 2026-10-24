@@ -1,0 +1,150 @@
+import WebSocket from 'ws';
+
+import { getAiConfig, requireLiveValue, type AiConfig } from '../config.js';
+
+export interface MuseTranscript {
+  text: string;
+  raw: unknown;
+  model: string;
+}
+
+export interface BatchTranscriptionOptions {
+  audio: Buffer;
+  sessionId: string;
+  filename?: string;
+  keywords?: string[];
+}
+
+function transcriptText(payload: unknown): string {
+  if (!payload || typeof payload !== 'object') return '';
+  const value = payload as Record<string, unknown>;
+  for (const key of ['transcript', 'text']) {
+    if (typeof value[key] === 'string') return value[key];
+  }
+  const result = value.result;
+  if (result && typeof result === 'object') {
+    const nested = result as Record<string, unknown>;
+    if (typeof nested.transcript === 'string') return nested.transcript;
+    if (typeof nested.text === 'string') return nested.text;
+  }
+  return '';
+}
+
+export async function transcribeMuseBatch(
+  options: BatchTranscriptionOptions,
+  config: AiConfig = getAiConfig(),
+): Promise<MuseTranscript> {
+  const apiKey = requireLiveValue(config.metaApiKey, 'META_API_KEY');
+  const body = new FormData();
+  body.append(
+    'audio',
+    new Blob([new Uint8Array(options.audio)], { type: 'audio/wav' }),
+    options.filename ?? `${options.sessionId}.wav`,
+  );
+  body.append(
+    'request',
+    JSON.stringify({
+      mode: 'PUSH_TO_TALK',
+      model: config.museVoiceModel,
+      audioEncoding: 'WAV',
+      keywords: options.keywords ?? [],
+    }),
+  );
+
+  const endpoint = new URL(`${config.metaApiBase.replace(/\/$/, '')}/asr/transcribe`);
+  endpoint.searchParams.set('sessionId', options.sessionId);
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}` },
+    body,
+  });
+  const raw = (await response.json()) as unknown;
+  if (!response.ok) {
+    throw new Error(`Muse Voice batch transcription failed (${response.status})`);
+  }
+
+  const text = transcriptText(raw);
+  if (!text) throw new Error('Muse Voice returned no transcript');
+  return { text, raw, model: config.museVoiceModel };
+}
+
+export interface MuseRealtimeOptions {
+  sessionId: string;
+  keywords?: string[];
+  onTranscript: (payload: unknown) => void;
+  onReady?: (sessionId: string) => void;
+  onError?: (error: Error) => void;
+  onClose?: (code: number, reason: string) => void;
+}
+
+export interface MuseRealtimeSession {
+  sendPcm(frame: Buffer | ArrayBuffer | Uint8Array): void;
+  end(): void;
+  close(): void;
+  socket: WebSocket;
+}
+
+export function createMuseRealtimeSession(
+  options: MuseRealtimeOptions,
+  config: AiConfig = getAiConfig(),
+): MuseRealtimeSession {
+  const apiKey = requireLiveValue(config.metaApiKey, 'META_API_KEY');
+  const httpBase = new URL(config.metaApiBase);
+  httpBase.protocol = httpBase.protocol === 'https:' ? 'wss:' : 'ws:';
+  httpBase.pathname = `${httpBase.pathname.replace(/\/$/, '')}/asr/realtime`;
+  httpBase.searchParams.set('sessionId', options.sessionId);
+
+  const socket = new WebSocket(httpBase);
+  let ready = false;
+  const pending: Array<Buffer | ArrayBuffer | Uint8Array> = [];
+
+  const sendFrame = (frame: Buffer | ArrayBuffer | Uint8Array) => {
+    if (socket.readyState !== WebSocket.OPEN || !ready) {
+      pending.push(frame);
+      return;
+    }
+    socket.send(frame);
+  };
+
+  socket.on('open', () => {
+    socket.send(
+      JSON.stringify({
+        authorization: { accessToken: `Bearer ${apiKey}` },
+        audioEncoding: 'PCM_24KHZ',
+        model: config.museVoiceModel,
+        mode: 'PUSH_TO_TALK',
+        partialMode: 'CUMULATIVE',
+        emitAudioProgress: false,
+        keywords: options.keywords ?? [],
+      }),
+    );
+  });
+
+  socket.on('message', (data, isBinary) => {
+    if (isBinary) return;
+    try {
+      const payload = JSON.parse(data.toString()) as Record<string, unknown>;
+      if (!ready && typeof payload.sessionId === 'string') {
+        ready = true;
+        options.onReady?.(payload.sessionId);
+        for (const frame of pending.splice(0)) socket.send(frame);
+      }
+      if ('transcript' in payload || payload.type === 'transcript') options.onTranscript(payload);
+    } catch (error) {
+      options.onError?.(error instanceof Error ? error : new Error('Invalid Muse Voice message'));
+    }
+  });
+  socket.on('error', (error) => options.onError?.(error));
+  socket.on('close', (code, reason) => options.onClose?.(code, reason.toString()));
+
+  return {
+    socket,
+    sendPcm: sendFrame,
+    end() {
+      if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'endStream' }));
+    },
+    close() {
+      socket.close();
+    },
+  };
+}

@@ -16,3 +16,6 @@ Check at every checkpoint (section 10 working agreements).
   absent in the local native build — db:setup warns and continues).
 
 ## Computer 2
+
+- [ ] C2->C1: Format the C1-owned root `biome.json` with the repository's Biome 1.9.4 formatter.
+  Whole-workspace `pnpm lint` otherwise fails on that file; C2-owned `packages/ai` lint is clean.
