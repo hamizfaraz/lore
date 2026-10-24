@@ -1,0 +1,120 @@
+@import "tailwindcss";
+@import "@lore/tokens/tokens.css";
+
+@source "../";
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-line: var(--line);
+  --color-action: var(--action);
+  --color-heart: var(--heart);
+  --color-ring-a: var(--ring-a);
+  --color-ring-b: var(--ring-b);
+  --color-ring-group: var(--ring-group);
+  --color-ai: var(--ai);
+  --color-ai-tint: var(--ai-tint);
+  --color-verified: var(--verified);
+  --color-elevated: var(--elevated);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-fraunces), var(--font-display);
+}
+
+/* Touch polish (section 9.3) */
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+html {
+  height: 100%;
+}
+body {
+  min-height: 100dvh;
+  margin: 0;
+}
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+input,
+textarea,
+select {
+  font-size: 16px; /* iOS never zooms */
+}
+img {
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+}
+.chrome {
+  user-select: none;
+  -webkit-user-select: none;
+}
+.press:active {
+  opacity: 0.6;
+}
+.press-btn {
+  transition: transform 80ms ease;
+}
+.press-btn:active {
+  transform: scale(0.97);
+}
+.hairline {
+  border-color: var(--line);
+  border-width: 0.5px;
+}
+.pt-safe {
+  padding-top: var(--safe-top);
+}
+.pb-safe {
+  padding-bottom: var(--safe-bottom);
+}
+.story-ring {
+  background: linear-gradient(45deg, var(--ring-b), var(--ring-a) 60%, #e0457b);
+}
+.story-ring-group {
+  background: var(--ring-group);
+}
+.story-ring-seen {
+  background: var(--line);
+}
+.wordmark {
+  font-family: var(--font-fraunces), var(--font-display);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+}
+.skeleton {
+  background: var(--surface-2);
+  animation: skel 1.4s ease-in-out infinite;
+}
+@keyframes skel {
+  50% {
+    opacity: 0.55;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+/* push/pop via View Transitions where supported */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}

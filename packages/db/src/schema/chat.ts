@@ -1,4 +1,10 @@
-import { CONVERSATION_KINDS, MEMBER_ROLES, MESSAGE_KINDS, MUTE_SCOPES, SENDER_TYPES } from '@lore/shared/enums';
+import {
+  CONVERSATION_KINDS,
+  MEMBER_ROLES,
+  MESSAGE_KINDS,
+  MUTE_SCOPES,
+  SENDER_TYPES,
+} from '@lore/shared/enums';
 import { sql } from 'drizzle-orm';
 import { boolean, index, jsonb, pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
 import { createdAt, id, ts } from './columns';

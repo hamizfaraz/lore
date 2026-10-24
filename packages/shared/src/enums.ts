@@ -79,7 +79,14 @@ export const RSVP_STATUSES = ['going', 'maybe', 'no'] as const;
 export const EVENT_KINDS = ['birthday', 'outing', 'trip', 'game_night', 'other'] as const;
 export const EVENT_CANDIDATE_STATES = ['tentative', 'confirmed', 'dismissed'] as const;
 export const RECAP_LAYOUTS = ['grid', 'collage', 'carousel', 'story'] as const;
-export const RECAP_STATES = ['candidate', 'generating', 'ready_private', 'edited', 'proposed', 'saved'] as const;
+export const RECAP_STATES = [
+  'candidate',
+  'generating',
+  'ready_private',
+  'edited',
+  'proposed',
+  'saved',
+] as const;
 
 // family.ts
 export const FAMILY_STORY_STATES = [

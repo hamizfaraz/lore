@@ -10,7 +10,9 @@ export const zFamilyStoryCardDTO = z.object({
   coverUrl: z.string().nullable(),
   chapterCount: z.number(),
   flagsOpen: z.number(),
-  contributors: z.array(z.object({ userId: z.string(), displayName: z.string(), avatarUrl: z.string().nullable() })),
+  contributors: z.array(
+    z.object({ userId: z.string(), displayName: z.string(), avatarUrl: z.string().nullable() }),
+  ),
 });
 export type FamilyStoryCardDTO = z.infer<typeof zFamilyStoryCardDTO>;
 

@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { type Approval, type DraftForPolicy, canFinishPodcast, mayPublish } from './policy';
 
 const voters = ['a', 'b', 'c', 'd'];
-const draft = (mode: DraftForPolicy['policySnapshot']['mode'], extra: Partial<DraftForPolicy> = {}): DraftForPolicy => ({
+const draft = (
+  mode: DraftForPolicy['policySnapshot']['mode'],
+  extra: Partial<DraftForPolicy> = {},
+): DraftForPolicy => ({
   version: 2,
   createdByAi: false,
   policySnapshot: { mode, threshold: mode === 'threshold' ? 3 : null, eligibleVoterIds: voters },
@@ -29,7 +32,13 @@ describe('mayPublish', () => {
 
   it('unanimous: one missing, all present', () => {
     expect(mayPublish(draft('unanimous'), [ok('a'), ok('b'), ok('c')], actor)).toBe(false);
-    expect(mayPublish(draft('unanimous'), voters.map((v) => ok(v)), actor)).toBe(true);
+    expect(
+      mayPublish(
+        draft('unanimous'),
+        voters.map((v) => ok(v)),
+        actor,
+      ),
+    ).toBe(true);
   });
 
   it('stale version approvals do not count', () => {
@@ -55,10 +64,14 @@ describe('mayPublish', () => {
 describe('canFinishPodcast', () => {
   const req = ['a', 'b', 'c'];
   it('not wrapped', () => {
-    expect(canFinishPodcast({ wrapped: false, requiredParticipantIds: req, engagedUserIds: req })).toBe(false);
+    expect(canFinishPodcast({ wrapped: false, requiredParticipantIds: req, engagedUserIds: req })).toBe(
+      false,
+    );
   });
   it('one missing participant', () => {
-    expect(canFinishPodcast({ wrapped: true, requiredParticipantIds: req, engagedUserIds: ['a', 'b'] })).toBe(false);
+    expect(canFinishPodcast({ wrapped: true, requiredParticipantIds: req, engagedUserIds: ['a', 'b'] })).toBe(
+      false,
+    );
   });
   it('all engaged', () => {
     expect(canFinishPodcast({ wrapped: true, requiredParticipantIds: req, engagedUserIds: req })).toBe(true);

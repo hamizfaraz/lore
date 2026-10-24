@@ -65,4 +65,13 @@ export const motion = {
 } as const;
 
 /** Distinct colors per game player / story author tint. */
-export const playerColors = ['#FF5A4E', '#1A8CFF', '#2F8F5B', '#F6B94A', '#6C5CE7', '#E84393', '#00B894', '#E17055'];
+export const playerColors = [
+  '#FF5A4E',
+  '#1A8CFF',
+  '#2F8F5B',
+  '#F6B94A',
+  '#6C5CE7',
+  '#E84393',
+  '#00B894',
+  '#E17055',
+];

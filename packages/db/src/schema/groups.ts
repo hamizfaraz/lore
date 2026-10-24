@@ -17,7 +17,10 @@ export const publishingPolicies = pgTable('publishing_policies', {
   accountId: uuid('account_id').primaryKey(),
   mode: text('mode', { enum: POLICY_MODES }).notNull().default('threshold'),
   threshold: integer('threshold'),
-  eligibleRoles: text('eligible_roles').array().notNull().default(sql`'{primary_admin,admin,publisher,member}'::text[]`),
+  eligibleRoles: text('eligible_roles')
+    .array()
+    .notNull()
+    .default(sql`'{primary_admin,admin,publisher,member}'::text[]`),
   storyMode: text('story_mode', { enum: POLICY_MODES }),
   updatedBy: uuid('updated_by'),
   updatedAt: ts('updated_at').notNull().defaultNow(),
@@ -47,7 +50,10 @@ export const postDrafts = pgTable(
     createdAt: createdAt(),
     updatedAt: ts('updated_at').notNull().defaultNow(),
   },
-  (t) => [index('drafts_account_idx').on(t.accountId, t.state), index('drafts_conv_idx').on(t.conversationId)],
+  (t) => [
+    index('drafts_account_idx').on(t.accountId, t.state),
+    index('drafts_conv_idx').on(t.conversationId),
+  ],
 );
 
 export const approvals = pgTable(

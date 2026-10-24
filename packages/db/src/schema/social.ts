@@ -303,7 +303,9 @@ export const keepsakes = pgTable('keepsakes', {
   mintAddress: text('mint_address'),
   txSignature: text('tx_signature'),
   network: text('network').notNull().default('devnet'),
-  status: text('status', { enum: ['pending', 'minted', 'failed'] as const }).notNull().default('pending'),
+  status: text('status', { enum: ['pending', 'minted', 'failed'] as const })
+    .notNull()
+    .default('pending'),
   metadata: jsonb('metadata').$type<Record<string, unknown>>(),
   createdAt: createdAt(),
 });

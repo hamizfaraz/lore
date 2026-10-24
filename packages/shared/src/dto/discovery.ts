@@ -25,5 +25,10 @@ export const zCommonGroundCardDTO = z.object({
 });
 export type CommonGroundCardDTO = z.infer<typeof zCommonGroundCardDTO>;
 
-export const zQuizAnswersBody = z.object({ answers: z.array(z.object({ questionId: z.string(), answer: z.unknown() })) });
-export const zIntroRequestBody = z.object({ toUserId: z.string(), firstMessage: z.string().max(280).optional() });
+export const zQuizAnswersBody = z.object({
+  answers: z.array(z.object({ questionId: z.string(), answer: z.unknown() })),
+});
+export const zIntroRequestBody = z.object({
+  toUserId: z.string(),
+  firstMessage: z.string().max(280).optional(),
+});

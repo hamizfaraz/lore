@@ -11,6 +11,9 @@ export const zTokenDTO = z.object({
 });
 export type TokenDTO = z.infer<typeof zTokenDTO>;
 
-export const zCreateTokenBody = z.object({ name: z.string().min(1).max(60), scopes: z.array(zTokenScope).optional() });
+export const zCreateTokenBody = z.object({
+  name: z.string().min(1).max(60),
+  scopes: z.array(zTokenScope).optional(),
+});
 /** the raw token is returned exactly once */
 export const zCreateTokenResult = z.object({ token: z.string(), info: zTokenDTO });

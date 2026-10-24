@@ -49,7 +49,8 @@ export function mayPublish(
       return valid.size >= (d.policySnapshot.threshold ?? 1);
     case 'unanimous':
       return (
-        d.policySnapshot.eligibleVoterIds.length > 0 && d.policySnapshot.eligibleVoterIds.every((id) => valid.has(id))
+        d.policySnapshot.eligibleVoterIds.length > 0 &&
+        d.policySnapshot.eligibleVoterIds.every((id) => valid.has(id))
       );
   }
 }

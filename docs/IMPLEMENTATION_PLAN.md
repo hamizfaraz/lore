@@ -1502,3 +1502,6 @@ Kept in sync with `docs/PROJECT_CONTEXT_LOG.md`. Each line: date · task · chan
 - 2026-10-24 · C1-0b · Extra C1 tables `post_likes`, `post_saves`, `push_subscriptions`, `user_wallets` and extra columns listed in the context log (state the section 5 tables could not hold).
 - 2026-10-24 · C1-0b · Message idempotency: plain index on `(conversation_id, client_id)` + Valkey key, because hypertable unique indexes must include `created_at`.
 - 2026-10-24 · C1-0b · Dev-only tooling added: `tsx`, `tsup`, `dotenv-cli` (reason in HANDOFF).
+- 2026-10-24 · C1-0b · PWA icons/splash generated with a sharp script (`apps/web/scripts/generate-icons.mjs`) instead of `pwa-asset-generator` (headless Chrome unavailable).
+- 2026-10-24 · C1-0b · Added routes `/p/[id]` (post detail) and `/offline` (SW fallback) [C1]. Profile tab root is `/u/<own handle>`.
+- 2026-10-24 · C1-0b · `@lore/ai` scaffold index exports typed stubs `games.{getPrompts,fiveWordChoices,storyTitle,storyImage,memeEntry,memeImage}` and `guard()`; C2 keeps these signatures.

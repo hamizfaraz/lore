@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch --clear-screen=false --env-file-if-exists=../../.env src/dev.ts",
+    "dev": "tsx src/dev.ts",
     "dev:server": "tsx watch --env-file-if-exists=../../.env src/server.ts",
     "dev:worker": "tsx watch --env-file-if-exists=../../.env src/worker.ts",
     "dev:mcp": "tsx watch --env-file-if-exists=../../.env src/mcp.ts",

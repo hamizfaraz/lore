@@ -25,7 +25,10 @@ export type PersonaDTO = z.infer<typeof zPersonaDTO>;
 export const zPersonaUpdateBody = zPersonaDTO
   .omit({ id: true, conversationId: true, avatarUrl: true, mutedUntil: true })
   .partial()
-  .extend({ avatarMediaId: z.string().nullable().optional(), preset: z.enum(['milo', 'juniper', 'sol', 'custom']).optional() });
+  .extend({
+    avatarMediaId: z.string().nullable().optional(),
+    preset: z.enum(['milo', 'juniper', 'sol', 'custom']).optional(),
+  });
 export type PersonaUpdateBody = z.infer<typeof zPersonaUpdateBody>;
 
 export const zMemoryDTO = z.object({

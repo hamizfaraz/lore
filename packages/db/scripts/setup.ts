@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import postgres from 'postgres';
 
-const dir = join(dirname(fileURLToPath(import.meta.url)), '..', 'sql');
+const dir = process.env.SQL_DIR ?? join(dirname(fileURLToPath(import.meta.url)), '..', 'sql');
 const url = process.env.DATABASE_URL;
 if (!url) {
   console.error('DATABASE_URL is not set');
@@ -27,7 +27,9 @@ function splitStatements(text: string): string[] {
 }
 
 let failures = 0;
-for (const file of readdirSync(dir).filter((f) => f.endsWith('.sql')).sort()) {
+for (const file of readdirSync(dir)
+  .filter((f) => f.endsWith('.sql'))
+  .sort()) {
   for (const stmt of splitStatements(readFileSync(join(dir, file), 'utf8'))) {
     try {
       await sql.unsafe(stmt);

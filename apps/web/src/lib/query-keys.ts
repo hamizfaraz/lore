@@ -1,0 +1,22 @@
+/** TanStack Query keys, one place so socket reducers and screens agree. */
+export const qk = {
+  me: ['me'] as const,
+  feed: ['feed'] as const,
+  reels: ['reels'] as const,
+  storiesRail: ['stories', 'rail'] as const,
+  stories: (accountId: string) => ['stories', accountId] as const,
+  post: (id: string) => ['post', id] as const,
+  comments: (postId: string) => ['comments', postId] as const,
+  account: (handle: string) => ['account', handle] as const,
+  accountPosts: (id: string, tab: string) => ['account', id, 'posts', tab] as const,
+  explore: (q: string) => ['explore', q] as const,
+  inbox: ['inbox'] as const,
+  conversation: (id: string) => ['conversation', id] as const,
+  messages: (id: string) => ['messages', id] as const,
+  policy: (accountId: string) => ['policy', accountId] as const,
+  draft: (id: string) => ['draft', id] as const,
+  game: (id: string) => ['game', id] as const,
+  notifications: ['notifications'] as const,
+  connections: ['connections'] as const,
+  userSearch: (q: string) => ['users', 'search', q] as const,
+};

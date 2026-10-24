@@ -48,12 +48,18 @@ export const games = {
   },
 
   /** House-style illustration of the finished story (Muse Image). Returns PNG/JPEG bytes. */
-  async storyImage(_input: { story: string; title: string }): Promise<{ image: Buffer; mime: string; degraded: boolean }> {
+  async storyImage(_input: { story: string; title: string }): Promise<{
+    image: Buffer;
+    mime: string;
+    degraded: boolean;
+  }> {
     throw new AiNotImplemented('games.storyImage');
   },
 
   /** AI competitor entry for Meme Battle. */
-  async memeEntry(_input: { promptText: string | null; imageCaption?: string | null }): Promise<MemeEntrySpec & { degraded: boolean }> {
+  async memeEntry(_input: { promptText: string | null; imageCaption?: string | null }): Promise<
+    MemeEntrySpec & { degraded: boolean }
+  > {
     throw new AiNotImplemented('games.memeEntry');
   },
 

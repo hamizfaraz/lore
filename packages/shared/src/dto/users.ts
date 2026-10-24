@@ -14,7 +14,10 @@ export const zAccountSummary = z.object({
 });
 export type AccountSummaryDTO = z.infer<typeof zAccountSummary>;
 
-export const zActingAccount = zAccountSummary.extend({ role: zMemberRole.nullable(), canPublishDirect: z.boolean() });
+export const zActingAccount = zAccountSummary.extend({
+  role: zMemberRole.nullable(),
+  canPublishDirect: z.boolean(),
+});
 export type ActingAccountDTO = z.infer<typeof zActingAccount>;
 
 export const zMe = z.object({

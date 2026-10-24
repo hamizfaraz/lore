@@ -12,7 +12,14 @@ export const zMessageDTO = z.object({
   clientId: z.string().nullable(),
   createdAt: z.string(),
   senderType: zSenderType,
-  sender: z.object({ userId: z.string(), displayName: z.string(), handle: z.string().nullable(), avatarUrl: z.string().nullable() }).nullable(),
+  sender: z
+    .object({
+      userId: z.string(),
+      displayName: z.string(),
+      handle: z.string().nullable(),
+      avatarUrl: z.string().nullable(),
+    })
+    .nullable(),
   persona: z.object({ id: z.string(), name: z.string(), avatarUrl: z.string().nullable() }).nullable(),
   kind: zMessageKind,
   body: z.string().nullable(),
@@ -87,7 +94,9 @@ export const zConversationDTO = z.object({
   avatarUrl: z.string().nullable(),
   members: z.array(zMemberDTO),
   myRole: zMemberRole,
-  persona: z.object({ id: z.string(), name: z.string(), avatarUrl: z.string().nullable(), enabled: z.boolean() }).nullable(),
+  persona: z
+    .object({ id: z.string(), name: z.string(), avatarUrl: z.string().nullable(), enabled: z.boolean() })
+    .nullable(),
   groupAccount: zAccountSummary.nullable(),
   createdAt: z.string(),
 });

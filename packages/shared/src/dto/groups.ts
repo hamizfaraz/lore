@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { zApprovalDecision, zDraftState, zPolicyMode, zPostKind, zPostSourceKind, zVisibility } from '../enums';
+import {
+  zApprovalDecision,
+  zDraftState,
+  zPolicyMode,
+  zPostKind,
+  zPostSourceKind,
+  zVisibility,
+} from '../enums';
 import { zMediaDTO } from './media';
 import { zAccountSummary } from './users';
 
@@ -22,7 +29,11 @@ export const zPolicyInput = z.object({
 export type PolicyInput = z.infer<typeof zPolicyInput>;
 
 export const zCreateGroupAccountBody = z.object({
-  handle: z.string().min(2).max(30).regex(/^[a-z0-9._]+$/),
+  handle: z
+    .string()
+    .min(2)
+    .max(30)
+    .regex(/^[a-z0-9._]+$/),
   displayName: z.string().min(1).max(60),
   bio: z.string().max(150).optional(),
   avatarMediaId: z.string().nullable().optional(),
@@ -67,12 +78,22 @@ export const zDraftCardDTO = z.object({
   state: zDraftState,
   createdByAi: z.boolean(),
   createdBy: z.object({ userId: z.string(), displayName: z.string() }).nullable(),
-  policy: z.object({ mode: zPolicyMode, threshold: z.number().nullable(), eligibleVoterIds: z.array(z.string()) }).nullable(),
+  policy: z
+    .object({ mode: zPolicyMode, threshold: z.number().nullable(), eligibleVoterIds: z.array(z.string()) })
+    .nullable(),
   needed: z.number(),
   approvals: z.array(
-    z.object({ userId: z.string(), displayName: z.string(), avatarUrl: z.string().nullable(), decision: zApprovalDecision, note: z.string().nullable() }),
+    z.object({
+      userId: z.string(),
+      displayName: z.string(),
+      avatarUrl: z.string().nullable(),
+      decision: zApprovalDecision,
+      note: z.string().nullable(),
+    }),
   ),
-  voters: z.array(z.object({ userId: z.string(), displayName: z.string(), avatarUrl: z.string().nullable() })),
+  voters: z.array(
+    z.object({ userId: z.string(), displayName: z.string(), avatarUrl: z.string().nullable() }),
+  ),
   publishedPostId: z.string().nullable(),
   sourceKind: zPostSourceKind,
   updatedAt: z.string(),

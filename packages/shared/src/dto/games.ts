@@ -20,7 +20,19 @@ export const zCreateGameBody = z.object({
 export type CreateGameBody = z.infer<typeof zCreateGameBody>;
 
 export const zGameActionBody = z.object({
-  type: z.enum(['choose_word', 'submit_meme', 'vote_meme', 'guess', 'stroke', 'end', 'next_round', 'skip', 'save_to_chat', 'share_story', 'propose_group']),
+  type: z.enum([
+    'choose_word',
+    'submit_meme',
+    'vote_meme',
+    'guess',
+    'stroke',
+    'end',
+    'next_round',
+    'skip',
+    'save_to_chat',
+    'share_story',
+    'propose_group',
+  ]),
   payload: z.record(z.string(), z.unknown()).default({}),
 });
 export type GameActionBody = z.infer<typeof zGameActionBody>;
@@ -49,14 +61,21 @@ export const zOneWordRound = z.object({
 export const zMemeRound = z.object({
   mode: z.literal('meme_battle'),
   phase: z.enum(['submitting', 'voting', 'reveal']),
-  prompt: z.object({ kind: z.enum(['image', 'caption']), text: z.string().nullable(), imageUrl: z.string().nullable(), imageOptions: z.array(z.string()).nullable() }),
+  prompt: z.object({
+    kind: z.enum(['image', 'caption']),
+    text: z.string().nullable(),
+    imageUrl: z.string().nullable(),
+    imageOptions: z.array(z.string()).nullable(),
+  }),
   /** anonymous gallery while voting: no creator info until reveal */
   gallery: z.array(
     z.object({
       slot: z.number(),
       imageUrl: z.string().nullable(),
       caption: z.string(),
-      creator: z.object({ type: z.enum(['human', 'ai']), userId: z.string().nullable(), displayName: z.string() }).nullable(),
+      creator: z
+        .object({ type: z.enum(['human', 'ai']), userId: z.string().nullable(), displayName: z.string() })
+        .nullable(),
       votes: z.number().nullable(),
     }),
   ),

@@ -4,7 +4,11 @@ import { zMediaKind, zTranscriptStatus } from '../enums';
 export const zPresignBody = z.object({
   kind: z.enum(['image', 'video', 'audio']),
   mime: z.string(),
-  bytes: z.number().int().positive().max(50 * 1024 * 1024),
+  bytes: z
+    .number()
+    .int()
+    .positive()
+    .max(50 * 1024 * 1024),
 });
 export type PresignBody = z.infer<typeof zPresignBody>;
 

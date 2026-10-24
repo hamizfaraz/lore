@@ -60,7 +60,9 @@ export const GroupIntentBrief = z.object({
     z.object({ userId: z.string(), likes: z.array(z.string()), dislikes: z.array(z.string()) }),
   ),
   unknowns: z.array(z.object({ key: zPrefKey, question: z.string() })).max(1),
-  searchQueries: z.array(z.object({ engine: z.enum(['events', 'maps', 'media', 'news']), q: z.string() })).max(4),
+  searchQueries: z
+    .array(z.object({ engine: z.enum(['events', 'maps', 'media', 'news']), q: z.string() }))
+    .max(4),
 });
 export type GroupIntentBrief = z.infer<typeof GroupIntentBrief>;
 
@@ -134,11 +136,16 @@ export const FamilyStorySpec = z.object({
     z.object({
       heading: z.string(),
       summary: z.string(),
-      items: z.array(z.object({ sourceMessageId: z.string(), contributorUserId: z.string(), text: z.string() })),
+      items: z.array(
+        z.object({ sourceMessageId: z.string(), contributorUserId: z.string(), text: z.string() }),
+      ),
     }),
   ),
   flags: z.array(
-    z.object({ sourceMessageId: z.string(), issue: z.enum(['date_unclear', 'unsupported_claim', 'sensitive']) }),
+    z.object({
+      sourceMessageId: z.string(),
+      issue: z.enum(['date_unclear', 'unsupported_claim', 'sensitive']),
+    }),
   ),
   coverPrompt: z.string(),
 });

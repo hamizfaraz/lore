@@ -19,15 +19,17 @@ export type NotificationKind = z.infer<typeof zNotificationKind>;
 export const zNotificationDTO = z.object({
   id: z.string(),
   kind: zNotificationKind,
-  payload: z.object({
-    actorName: z.string().optional(),
-    actorHandle: z.string().optional(),
-    actorAvatarUrl: z.string().nullable().optional(),
-    text: z.string(),
-    href: z.string(),
-    thumbUrl: z.string().nullable().optional(),
-    accountId: z.string().optional(),
-  }).catchall(z.unknown()),
+  payload: z
+    .object({
+      actorName: z.string().optional(),
+      actorHandle: z.string().optional(),
+      actorAvatarUrl: z.string().nullable().optional(),
+      text: z.string(),
+      href: z.string(),
+      thumbUrl: z.string().nullable().optional(),
+      accountId: z.string().optional(),
+    })
+    .catchall(z.unknown()),
   readAt: z.string().nullable(),
   createdAt: z.string(),
 });
