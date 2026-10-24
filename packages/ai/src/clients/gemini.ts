@@ -1,7 +1,10 @@
+import { createHash } from 'node:crypto';
+
 import { GoogleGenAI } from '@google/genai';
 import { z } from 'zod';
 
 import { getAiConfig, requireLiveValue, type AiConfig } from '../config.js';
+import { getMockFixture } from '../mocks/fixtures.js';
 
 export const GuardVerdictSchema = z.object({
   allow: z.boolean(),
@@ -25,6 +28,12 @@ export function getGeminiClient(config: AiConfig = getAiConfig()): GoogleGenAI {
 
 export async function embedTexts(texts: string[], config: AiConfig = getAiConfig()): Promise<number[][]> {
   if (texts.length === 0) return [];
+  if (config.mode === 'mock') {
+    return texts.map((text) => {
+      const digest = createHash('sha256').update(text).digest();
+      return Array.from({ length: 768 }, (_, index) => (digest[index % digest.length]! - 127.5) / 127.5);
+    });
+  }
   const response = await getGeminiClient(config).models.embedContent({
     model: config.geminiEmbedModel,
     contents: texts,
@@ -52,6 +61,7 @@ const GUARD_JSON_SCHEMA = {
 };
 
 export async function classifySafety(text: string, config: AiConfig = getAiConfig()): Promise<GuardVerdict> {
+  if (config.mode === 'mock') return GuardVerdictSchema.parse(getMockFixture('guardVerdict'));
   const model = requireLiveValue(config.geminiGuardModel, 'GEMINI_GUARD_MODEL');
   const response = await getGeminiClient(config).models.generateContent({
     model,

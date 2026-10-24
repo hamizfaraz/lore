@@ -1,6 +1,7 @@
 import { toFile } from 'openai';
 
 import { getAiConfig, type AiConfig } from '../config.js';
+import { mockImages } from '../mocks/media.js';
 import { getMuseClient } from './muse.js';
 
 export interface MuseImageResult {
@@ -41,6 +42,13 @@ export async function generateMuseImage(
   options: GenerateMuseImageOptions,
   config: AiConfig = getAiConfig(),
 ): Promise<MuseImageResult> {
+  if (config.mode === 'mock') {
+    return {
+      bytes: Buffer.from(mockImages[0]!.bytes),
+      mime: 'image/png',
+      model: config.museImageModel,
+    };
+  }
   const response = await getMuseClient(config).images.generate({
     model: config.museImageModel,
     prompt: options.prompt,
@@ -58,6 +66,13 @@ export async function editMuseImage(
 ): Promise<MuseImageResult> {
   if (options.images.length === 0 || options.images.length > 4) {
     throw new Error('Muse Image edits require between 1 and 4 reference images');
+  }
+  if (config.mode === 'mock') {
+    return {
+      bytes: Buffer.from(mockImages[1]!.bytes),
+      mime: 'image/png',
+      model: config.museImageModel,
+    };
   }
 
   const images = await Promise.all(

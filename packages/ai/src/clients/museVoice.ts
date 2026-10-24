@@ -1,6 +1,7 @@
 import WebSocket from 'ws';
 
 import { getAiConfig, requireLiveValue, type AiConfig } from '../config.js';
+import { mockVoiceFixtures } from '../mocks/media.js';
 
 export interface MuseTranscript {
   text: string;
@@ -34,6 +35,13 @@ export async function transcribeMuseBatch(
   options: BatchTranscriptionOptions,
   config: AiConfig = getAiConfig(),
 ): Promise<MuseTranscript> {
+  if (config.mode === 'mock') {
+    return {
+      text: mockVoiceFixtures[0]!.transcript,
+      raw: { transcript: mockVoiceFixtures[0]!.transcript, mock: true },
+      model: config.museVoiceModel,
+    };
+  }
   const apiKey = requireLiveValue(config.metaApiKey, 'META_API_KEY');
   const body = new FormData();
   body.append(
@@ -81,13 +89,36 @@ export interface MuseRealtimeSession {
   sendPcm(frame: Buffer | ArrayBuffer | Uint8Array): void;
   end(): void;
   close(): void;
-  socket: WebSocket;
+  socket: WebSocket | null;
 }
 
 export function createMuseRealtimeSession(
   options: MuseRealtimeOptions,
   config: AiConfig = getAiConfig(),
 ): MuseRealtimeSession {
+  if (config.mode === 'mock') {
+    let ended = false;
+    queueMicrotask(() => options.onReady?.(options.sessionId));
+    return {
+      socket: null,
+      sendPcm() {},
+      end() {
+        if (ended) return;
+        ended = true;
+        options.onTranscript({
+          type: 'transcript',
+          transcript: mockVoiceFixtures[0]!.transcript,
+          final: true,
+          mock: true,
+        });
+        options.onClose?.(1000, 'mock complete');
+      },
+      close() {
+        if (!ended) options.onClose?.(1000, 'mock closed');
+        ended = true;
+      },
+    };
+  }
   const apiKey = requireLiveValue(config.metaApiKey, 'META_API_KEY');
   const httpBase = new URL(config.metaApiBase);
   httpBase.protocol = httpBase.protocol === 'https:' ? 'wss:' : 'ws:';

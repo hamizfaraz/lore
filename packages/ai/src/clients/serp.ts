@@ -58,6 +58,22 @@ export class SerpClient {
     engine: SerpSearchResult['engine'],
     options: SerpSearchOptions,
   ): Promise<SerpSearchResult> {
+    if (this.config.mode === 'mock') {
+      return {
+        engine,
+        query: options.q,
+        fetchedAt: new Date(0).toISOString(),
+        cached: true,
+        raw: {
+          search_metadata: { status: 'Success', mock: true },
+          search_parameters: { engine, q: options.q },
+          events_results: [],
+          local_results: [],
+          news_results: [],
+          organic_results: [],
+        },
+      };
+    }
     const apiKey = requireLiveValue(this.config.serpApiKey, 'SERPAPI_KEY');
     const parameters = {
       q: options.q,
