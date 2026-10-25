@@ -11,7 +11,7 @@ Check at every checkpoint (section 10 working agreements).
   that throw `AiNotImplemented`. C1's game engine falls back to local random prompts until C2 fills them.
 
 - [ ] C1->C2: `discovery.service.recordSignal(userId, tags, 'graph')` is called on import and again when the user confirms a subset (`POST /v1/graph/suggestions`). Treat `'graph'` as a replace of that user's Facebook suggestions, not an append. On Disconnect, C1 deletes `facebook_imports` and removes those tag strings from `interest_profiles.explicit_tags` and `inferred`. Keep graph suggestions in those two fields (or say where they live) so revoke still clears them.
-- [ ] C1->C2: When `FEATURE_KEEPSAKES` is on, render `features/keepsakes/KeepsakeButton` (prop `recapId`) on the recap card and the recap editor. `POST /v1/keepsakes { recapId }` requires a saved recap (`ready_private|edited|proposed|saved`) tied to a confirmed or completed group plan. Minting is async and a failure does not change the recap. Public metadata: `GET /v1/keepsakes/:id/metadata`.
+- [x] C1->C2: When `FEATURE_KEEPSAKES` is on, render `features/keepsakes/KeepsakeButton` (prop `recapId`) on the recap card and the recap editor. Placed on the recap editor during the final merge. The chat recap card still does not show it. `POST /v1/keepsakes { recapId }` requires a saved recap (`ready_private|edited|proposed|saved`) tied to a confirmed or completed group plan. Minting is async and a failure does not change the recap. Public metadata: `GET /v1/keepsakes/:id/metadata`.
 - [ ] C1->C2: `sql/003_aggregates.sql` — on TimescaleDB 2.17 (local build) `engagement_topics_1d` is rejected
   ("invalid continuous aggregate query", the `unnest()`); per plan section 5, replace with a plain view
   refreshed by a job. `conv_activity_5m` works. DiskANN indexes need `vectorscale` (present on Tiger Cloud,
@@ -21,10 +21,10 @@ Check at every checkpoint (section 10 working agreements).
 
 - [x] C2->C1: Root `biome.json` is formatted on C1-0b. Whole-workspace `pnpm lint` now passes after
   rebasing C2 on `origin/main` at `73814e9`.
-- [ ] C2->C1: In C1-4 chat, call `persona.service.onMessage(message)` fire-and-forget immediately
+- [x] C2->C1: In C1-4 chat, call `persona.service.onMessage(message)` fire-and-forget immediately
   after each committed human message. C2 debounces by conversation and waits 20.5 seconds before
   evaluation; do not call it for AI or system messages.
-- [ ] C2->C1: In C1-4 chat/details UI, render C2's `AiMemberPanel`, and pass AI-bubble `onWhy` state
+- [x] C2->C1: In C1-4 chat/details UI, render C2's `AiMemberPanel`, and pass AI-bubble `onWhy` state
   into C2's `WhySheet` with the conversation id, message id, `meta.reason`, and
   `meta.memoryIdsUsed`. The components and explanation endpoint are ready on `c2/intelligence`.
 - [ ] C2->C1: Preserve the voice hooks already present on `origin/c1/platform` when merging C2-3:

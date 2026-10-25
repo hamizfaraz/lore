@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { StackScreen } from '@/components/ui/StackScreen';
 import { TopBar } from '@/components/ui/TopBar';
+import { KeepsakeButton } from '@/features/keepsakes/KeepsakeButton';
 import { api } from '@/lib/api';
 
 export function RecapEditorPage({ id }: { id: string }) {
@@ -130,6 +131,7 @@ export function RecapEditorPage({ id }: { id: string }) {
           <Button variant="secondary" block onClick={() => action.mutate('save')}>
             Save privately
           </Button>
+          <KeepsakeButton recapId={id} />
           <Button variant="secondary" block onClick={() => action.mutate('share')}>
             Share recap card to chat
           </Button>

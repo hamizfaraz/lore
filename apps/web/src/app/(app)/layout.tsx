@@ -17,8 +17,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const badges = useShellBadges();
 
   useEffect(() => {
-    if (me.error instanceof ApiError && me.error.status === 401) router.replace('/login');
-    else if (me.data && !me.data.onboarded) router.replace('/onboarding');
+    if (me.error instanceof ApiError && me.error.status === 401) {
+      const here = `${window.location.pathname}${window.location.search}`;
+      const next =
+        here.startsWith('/') && !here.startsWith('//') && here !== '/'
+          ? `?next=${encodeURIComponent(here)}`
+          : '';
+      router.replace(`/login${next}`);
+    } else if (me.data && !me.data.onboarded) router.replace('/onboarding');
   }, [me.error, me.data, router]);
 
   if (!me.data) {

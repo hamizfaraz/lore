@@ -2,7 +2,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
@@ -19,6 +19,8 @@ const schema = z.object({
 export function LoginPage() {
   const router = useRouter();
   const qc = useQueryClient();
+  const next = useSearchParams().get('next');
+  const dest = next?.startsWith('/') && !next.startsWith('//') ? next : '/';
   const form = useForm<z.infer<typeof schema>>({ resolver: zodResolver(schema) });
   const onSubmit = form.handleSubmit(async (v) => {
     const res = await authClient.signIn.email({ email: v.email.trim().toLowerCase(), password: v.password });
@@ -27,7 +29,7 @@ export function LoginPage() {
       return;
     }
     await qc.invalidateQueries();
-    router.replace('/');
+    router.replace(dest);
   });
   const { errors, isSubmitting } = form.formState;
   return (

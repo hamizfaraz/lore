@@ -115,6 +115,13 @@ describe.skipIf(!hasDb)('graph.service', () => {
         userId: id,
         explicitTags: ['film-tv', 'cooking'],
         inferred: { 'live-music': 0.5, cooking: 0.2 },
+      })
+      .onConflictDoUpdate({
+        target: interestProfiles.userId,
+        set: {
+          explicitTags: ['film-tv', 'cooking'],
+          inferred: { 'live-music': 0.5, cooking: 0.2 },
+        },
       });
 
     await graph.disconnect(id);

@@ -57,6 +57,8 @@ export function AppShell({
   const reselect = (k: TabKey) => scrollers.current[k]?.scrollTo({ top: 0, behavior: 'smooth' });
   const hideTabBar =
     pathname.startsWith('/c/') ||
+    pathname.startsWith('/family') ||
+    pathname.startsWith('/podcast') ||
     pathname.startsWith('/stories') ||
     pathname.startsWith('/story-camera') ||
     pathname.startsWith('/create');
