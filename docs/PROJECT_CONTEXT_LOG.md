@@ -26,8 +26,7 @@
 
 _Rewritten after each step._
 
-- Phase: C2-9 privacy-safe impact analytics is implementation-green on the C2 branch; C2-10 family
-  story is next and has not started.
+- Phase: C2-10 Family Story is implementation-green on the C2 branch; C2-11 Podcast is in progress.
   C1 merge and live-provider acceptance remain open for the complete C2 P0 chain.
   C2-1's paid live smoke remains blocked on human-owned C2-0 credentials.
 - Active Computer 2 branch: `c2/intelligence`, in a dedicated worktree. All implementation changes
@@ -73,6 +72,11 @@ _Rewritten after each step._
 - C2-9 supplies allowlisted pseudonymous product events, composite cursor sync in batches of 500,
   idempotent Snowflake SQL API v2 `MERGE`, six aggregate views, optional aggregate-only Cortex pulse,
   cached/local degradation, the public summary route, metric cards, and two small charts.
+- C2-10 supplies date-scoped, consent-only source selection; contributor-owned exclusion and
+  correction; grounded private story composition; visible sentence/source/contributor links;
+  unresolved-flag blocking; private sharing; and a governed C1 draft handoff with no direct public
+  publish path. A production-disabled demo identity bridge lets the seeded local UI work before C1
+  auth lands.
 - Full verification passes: six workspace typechecks and 110 tests across 28 files, whole-workspace
   Biome over 444 files, mock smoke, production web/API builds, and a direct
   browser-bundle provider-secret scan, and `git diff --check`.
@@ -124,7 +128,7 @@ _Rewritten after each step._
 | C2-7 | Seed and demo reset | integration pending | Seed 382 ms, reset 201 ms, consent/secret audits pass; C1 demo auth/media and browser chain remain |
 | C2-8 | Find Friends and Common Ground | integration pending | Seven focused tests and typechecks pass; C1 public-signal/block/DM hooks remain |
 | C2-9 | Snowflake impact | live verification pending | Service, sync, six views, route/UI, six tests, and local smoke pass; live Snowflake/Cortex awaits C2-0 |
-| C2-10 | Family story | pending | Depends on C2-5 |
+| C2-10 | Family story | implementation complete | C1 draft/media integration remains |
 | C2-11 | Podcast stations and render | pending | Depends on C2-3 |
 | C2-12 | Advanced persona studio and AI polish | pending | Depends on C2-2 |
 
@@ -335,3 +339,10 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
 - **2026-10-24 · Pre-checkpoint remote audit** — A read-only fetch confirmed `origin/main` remains
   `73814e9`. `origin/c1/platform` advanced independently to `14fe779`; C2 did not merge, copy, or
   modify that branch, preserving the agreed integration boundary.
+- **2026-10-24 · C2-10 Family Story** — Implemented consented date-range collection, per-contributor
+  source control, media transcript/caption context, strictly grounded structured composition,
+  source-visible private review, correction-based flag resolution, share blocking while any flag is
+  open, private sharing, and governed public-draft delegation. Added the mobile review/generate/share
+  UI plus a non-production seeded-demo identity bridge because C1 authentication is still a stub.
+  Shared/API/web typechecks and three grounding tests pass. C1 media URLs/covers and the group draft
+  service remain merge-time integrations; C2-11 is next.

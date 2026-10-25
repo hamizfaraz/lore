@@ -67,3 +67,10 @@ Check at every checkpoint (section 10 working agreements).
   `recordImpactEvent({ kind: 'recap_posted', groupId, actorId, objectId: recapId, props:
   { destination: 'group_post' } })`. Do not count C2's draft proposal as a publication and do not
   pass captions, handles, names, or raw ids through `props`; the impact service hashes identifiers.
+- [ ] C2->C1: C2-10 Family Story delegates every public proposal to
+  `groups.service.createDraft` and never publishes directly. Preserve its `source.kind: family`,
+  contributor/source attribution, and unresolved-flag gate when implementing the stub. Wire signed
+  media URLs and optional generated cover storage through C1's media service.
+- [ ] C2->C1: Replace C2's production-disabled `x-lore-demo-user` local test bridge with the real
+  C1 demo session after authentication lands. The bridge is active only when not production and
+  `DEMO_FAST_PROACTIVE=1`; remove it after the stable seeded users can sign in normally.

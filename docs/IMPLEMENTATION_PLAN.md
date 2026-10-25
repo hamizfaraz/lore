@@ -144,7 +144,7 @@ is the next ordered milestone; do not begin it unless the human explicitly conti
 | 7 | C2-7 demo seed/reset | P0 | C2-2, C2-4 | Implementation green; C1 demo login/media smoke pending |
 | 8 | C2-8 discovery | P1 | C2-1 | Implementation green; C1 signal/block/DM integration pending |
 | 9 | C2-9 impact | P1 | C2-4 | Implementation green; live Snowflake acceptance pending |
-| 10 | C2-10 family story | P1 | C2-5 | Pending |
+| 10 | C2-10 family story | P1 | C2-5 | Implementation complete; C1 draft/media integration pending |
 | 11 | C2-11 podcast | P2 | C2-3 | Pending |
 | 12 | C2-12 advanced persona | P2 | C2-2 | Pending |
 
@@ -1033,7 +1033,7 @@ Computer 2 is complete only when:
 - [ ] Checkpoint B full P0 demo chain passes in production.
 - [ ] C2-8 discovery accepted or deliberately cut/flagged off.
 - [ ] C2-9 impact accepted or Cortex portion deliberately cut.
-- [ ] C2-10 family accepted or deliberately cut/flagged off.
+- [x] C2-10 family implemented; final integrated acceptance awaits C1 draft/media services.
 - [ ] C2-11 podcast accepted, or video cut with audio-only finish retained.
 - [ ] C2-12 advanced persona accepted or deliberately cut/flagged off.
 - [ ] Final privacy, labels, native-feel, performance, and live-provider checks pass.
