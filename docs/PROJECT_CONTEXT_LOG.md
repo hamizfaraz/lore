@@ -565,3 +565,11 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
   The final 1280×720 H.264 cut passed end-to-end at 2:15. A focused contact-sheet review confirmed the
   three format controls, group-lore selection, lobby, live word choices, story progress, and attached
   chat all render cleanly with no fallback notice.
+- **2026-10-25 · Playwright + UI refresh integration** — Merged `feat/ui-refresh` into
+  `work/computer-2-next` without conflicts, leaving `main` untouched. The combined branch now contains
+  the complete Playwright recording workflow, group-first and games-focused demo variants, refreshed
+  card architecture, navigation, messaging surfaces, feed layout, and communal design tokens. All six
+  workspace typechecks pass. The same expanded games walkthrough passed end-to-end against the merged UI
+  and produced `lore-games-ui-refresh.mp4`: 1280×720 H.264, 2:16, with no Explore or Reels detour. Full
+  and games-chapter contact-sheet reviews confirmed the refreshed feed, group composer, chat, three game
+  modes, group-lore lobby, live turns, downstream feature screens, and captions render cleanly.

@@ -66,6 +66,26 @@ artifacts/demo-video/lore-games-demo.mp4
 The verified games-focused recording is 2:15 at 1280×720, leaving 45 seconds of headroom under the
 three-minute limit.
 
+## Record the games cut with the refreshed UI
+
+After the `feat/ui-refresh` merge, the same games-focused walkthrough can be written to a separate
+artifact with:
+
+```bash
+LORE_DEMO_GAMES_FOCUS=1 LORE_DEMO_OUTPUT=lore-games-ui-refresh pnpm demo:record
+```
+
+Finished files are written to:
+
+```text
+artifacts/demo-video/lore-games-ui-refresh.webm
+artifacts/demo-video/lore-games-ui-refresh.mp4
+```
+
+The verified refreshed-UI recording is 2:16 at 1280×720. It preserves the group-first narrative and
+expanded games chapter while showing the refreshed card architecture, navigation, spacing, and communal
+design tokens.
+
 ## What the tour shows
 
 - Login and a group-first feed where shared posts are visibly authored by `@weekendcrew`
