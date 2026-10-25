@@ -26,7 +26,8 @@
 
 _Rewritten after each step._
 
-- Phase: **C1-9 done** (reels, Explore, notifications). Next: **C1-10 Graph import**, then C1-12 keepsakes, C1-13 polish.
+- Phase: **C1-10 done** (Facebook Graph import, Friends on LORE, Connections). Next: **C1-12 Solana keepsakes** (depends on C2-5 recaps; build the C1 mint path against the recap table), then C1-13 polish.
+- C1-10: `POST /v1/graph/import` reads the Better Auth Facebook token and calls Graph `/me`, `/me/permissions`, `/me/likes?limit=100`, `/me/friends`. Declined `user_likes` / `user_friends` (Graph error 200/10) still imports. Likes map through `modules/graph/categories.ts` (Movie/TV Show → film-tv, Musician/Band → live-music, …). Tags go to `discovery.recordSignal(..., 'graph')` (NotImplemented is ignored). Friends on LORE = personal accounts whose fb id is in my friend list, who logged in with Facebook, or who listed me. `GET /v1/graph/connections`, `POST /v1/graph/suggestions` (onboarding keeps a subset), `POST /v1/graph/disconnect` (deletes import, facebook `account` row, and those tags on `interest_profiles`). Web: onboarding chips marked "from Facebook", Settings → Facebook (`/settings?section=facebook`), Explore section "Friends on LORE". Tests: `graph/categories.test.ts`, `graph/service.test.ts` (4). NOT verified: live Facebook (no app credentials).
 - C1-9: `GET /v1/explore?q=` (accounts+group accounts by handle/name, posts via `search_tsv @@ websearch_to_tsquery`,
   engagement-ranked grid; private accounts hidden), Explore tab root (search, recent searches, Find Friends/Discover
   tiles behind FEATURE_FIND_FRIENDS, masonry grid with tall reels), Reels tab root (snap pager, single playing video,
@@ -126,7 +127,7 @@ _Rewritten after each step._
 | C1-7 | Game engine + One-Word Story | done | engine tests + HTTP flow |
 | C1-8 | Meme Battle | done | flag FEATURE_GAMES_MEME |
 | C1-9 | Reels, Explore, notifications | done | web push needs VAPID keys |
-| C1-10 | Graph import | pending | |
+| C1-10 | Graph import | done (live FB unverified: no app creds) | friends match both ways |
 | C1-11 | Pictionary | done (live strokes not browser-tested) | flag FEATURE_GAMES_PICTIONARY |
 | C1-12 | Solana keepsakes | pending | |
 | C1-13 | Polish | pending | |
@@ -197,3 +198,4 @@ _Every deviation is also recorded in `docs/IMPLEMENTATION_PLAN.md` (section 18, 
   (prompt hidden from guesser, case/punctuation-insensitive guess). Built ahead of C1-9 because the shared engine
   needed all three rule sets.
 - **2026-10-24 · C1-9 done** — explore API (verified search, groups in results, private hidden) + Explore/Reels/Notifications screens.
+- **2026-10-24 · C1-10 done** — Graph import, category map, Friends on LORE, connections settings, disconnect clears graph tags. 5 graph tests pass. Live Facebook login still needs Tester credentials.

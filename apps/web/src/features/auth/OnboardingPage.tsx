@@ -32,6 +32,7 @@ export function OnboardingPage() {
   const [visibility, setVisibility] = useState<'public' | 'private'>('public');
   const [busy, setBusy] = useState(false);
   const [graph, setGraph] = useState<GraphImportResultDTO | null>(null);
+  const [picked, setPicked] = useState<string[] | null>(null);
   const file = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -48,9 +49,13 @@ export function OnboardingPage() {
     if (params.get('fb') !== '1') return;
     api
       .post<GraphImportResultDTO>('/v1/graph/import', {})
-      .then(setGraph)
+      .then((r) => {
+        setGraph(r);
+        setPicked(r.suggestedTags.map((t) => t.tag));
+        qc.invalidateQueries({ queryKey: qk.me });
+      })
       .catch(() => {});
-  }, [params]);
+  }, [params, qc]);
 
   useEffect(() => {
     if (!handle || handle === me.data?.personalAccount?.handle) return setAvailable(null);
@@ -78,6 +83,9 @@ export function OnboardingPage() {
   };
 
   const finish = async () => {
+    if (graph && picked) {
+      await api.post('/v1/graph/suggestions', { tags: picked }).catch(() => {});
+    }
     if (await save({ onboarded: true })) {
       const data = qc.getQueryData<MeDTO>(qk.me);
       if (data) qc.setQueryData(qk.me, { ...data, onboarded: true });
@@ -209,6 +217,40 @@ export function OnboardingPage() {
       {step === 'interests' && (
         <>
           <h1 className="text-[22px] font-bold">What are you into?</h1>
+          {graph?.suggestedTags.length ? (
+            <div className="flex w-full flex-wrap justify-center gap-2">
+              {graph.suggestedTags.map((t) => {
+                const on = (picked ?? graph.suggestedTags.map((s) => s.tag)).includes(t.tag);
+                return (
+                  <button
+                    key={t.tag}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() =>
+                      setPicked((cur) => {
+                        const base = cur ?? graph.suggestedTags.map((s) => s.tag);
+                        return base.includes(t.tag) ? base.filter((x) => x !== t.tag) : [...base, t.tag];
+                      })
+                    }
+                    className={cn(
+                      'min-h-[44px] rounded-full border px-3 py-1.5 text-[13px]',
+                      on ? 'border-ink bg-surface-2' : 'border-line text-ink-2 line-through',
+                    )}
+                  >
+                    {t.tag} <span className="text-ink-2">from Facebook</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+          {(graph?.friendsOnLore.length ?? 0) > 0 && (
+            <p className="text-[14px] text-ink-2">
+              {graph!.friendsOnLore.length === 1
+                ? '1 friend is on LORE'
+                : `${graph!.friendsOnLore.length} friends are on LORE`}
+              . You'll find them under Friends on LORE.
+            </p>
+          )}
           <InterestsStep onDone={finish} suggestedTags={graph?.suggestedTags} />
           <Button block size="lg" variant="secondary" loading={busy} onClick={finish}>
             Finish

@@ -1,8 +1,9 @@
 'use client';
 import { useQueryClient } from '@tanstack/react-query';
 import { Bell, Bot, Facebook, Lock, LogOut, Moon, UserRound } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { ConnectionsPage } from './ConnectionsPage';
 import { Toggle } from '@/components/ui/Field';
 import { ListRow, SectionHeader } from '@/components/ui/ListRow';
 import { StackScreen } from '@/components/ui/StackScreen';
@@ -20,10 +21,12 @@ import { type ThemePref, applyTheme, getTheme } from '@/lib/theme';
 /** Instagram-style settings list [C1]: account, theme, connections (Facebook), privacy, notifications. */
 export function SettingsPage() {
   const router = useRouter();
+  const params = useSearchParams();
   const qc = useQueryClient();
   const me = useMe();
   const [theme, setTheme] = useState<ThemePref>('system');
   useEffect(() => setTheme(getTheme()), []);
+  if (params.get('section') === 'facebook') return <ConnectionsPage />;
   const acct = me.data?.personalAccount;
   const isPrivate = acct?.visibility === 'private';
 

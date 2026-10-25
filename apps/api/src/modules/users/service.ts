@@ -1,5 +1,6 @@
 import { and, eq, ilike, inArray, isNull, or, sql } from '@lore/db';
 import {
+  account as authAccounts,
   approvals,
   conversationMembers,
   facebookImports,
@@ -274,7 +275,7 @@ export async function pendingApprovalCount(userId: string): Promise<number> {
 
 export async function getMe(u: SessionUser): Promise<MeDTO> {
   const acct = await requirePersonalAccount(u.id);
-  const [personal, groups, pending, fb] = await Promise.all([
+  const [personal, groups, pending, fb, fbAuth] = await Promise.all([
     accountSummary(acct.id),
     actingGroupAccounts(u.id),
     pendingApprovalCount(u.id),
@@ -283,13 +284,18 @@ export async function getMe(u: SessionUser): Promise<MeDTO> {
       .from(facebookImports)
       .where(eq(facebookImports.userId, u.id))
       .limit(1),
+    getDb()
+      .select({ id: authAccounts.id })
+      .from(authAccounts)
+      .where(and(eq(authAccounts.userId, u.id), eq(authAccounts.providerId, 'facebook')))
+      .limit(1),
   ]);
   return {
     user: { id: u.id, email: u.email, name: u.name, image: u.image },
     personalAccount: personal,
     groupAccounts: groups,
     onboarded: Boolean(acct.onboardedAt),
-    facebookLinked: fb.length > 0,
+    facebookLinked: fb.length > 0 || fbAuth.length > 0,
     pendingApprovals: pending,
   };
 }

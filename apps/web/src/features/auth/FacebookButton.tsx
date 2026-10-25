@@ -23,15 +23,16 @@ function FbGlyph() {
 export function FacebookButton({
   label = 'Continue with Facebook',
   variant = 'text',
-}: { label?: string; variant?: 'text' | 'primary' }) {
+  callbackURL = '/onboarding?fb=1',
+}: { label?: string; variant?: 'text' | 'primary'; callbackURL?: string }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const go = async () => {
     setBusy(true);
     const res = await authClient.signIn.social({
       provider: 'facebook',
-      callbackURL: '/onboarding?fb=1',
-      newUserCallbackURL: '/onboarding?fb=1',
+      callbackURL,
+      newUserCallbackURL: callbackURL,
     });
     if (res?.error) {
       setBusy(false);

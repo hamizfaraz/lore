@@ -1,4 +1,5 @@
 'use client';
+import type { ConnectionsDTO } from '@lore/shared/dto/graph';
 import type { ExploreResultDTO } from '@lore/shared/dto/social';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
@@ -11,6 +12,7 @@ import { SearchField } from '@/components/ui/SearchField';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { DiscoverTogetherEntry } from '@/features/discovery/DiscoverTogetherEntry';
 import { FindFriendsEntry } from '@/features/discovery/FindFriendsEntry';
+import { FriendsOnLore } from '@/features/profile/FriendsOnLore';
 import { api } from '@/lib/api';
 import { clientFlags } from '@/lib/flags';
 import { qk } from '@/lib/query-keys';
@@ -43,6 +45,11 @@ export function ExploreScreen() {
       api.get<ExploreResultDTO>(`/v1/explore${pageParam ? `?cursor=${pageParam}` : ''}`),
     initialPageParam: '',
     getNextPageParam: (l) => l.nextCursor ?? undefined,
+  });
+  const friends = useQuery({
+    queryKey: qk.connections,
+    queryFn: () => api.get<ConnectionsDTO>('/v1/graph/connections'),
+    staleTime: 60_000,
   });
   const search = useQuery({
     queryKey: qk.explore(debounced),
@@ -168,6 +175,17 @@ export function ExploreScreen() {
               <FindFriendsEntry variant="tile" />
               <DiscoverTogetherEntry />
             </div>
+          )}
+          {(friends.data?.friendsOnLore?.length ?? 0) > 0 && (
+            <section aria-label="Friends on LORE">
+              <div className="flex items-center justify-between px-4 pb-1 pt-2">
+                <h2 className="text-[16px] font-bold">Friends on LORE</h2>
+                <Link href="/settings?section=facebook" className="text-[14px] font-semibold text-action">
+                  See all
+                </Link>
+              </div>
+              <FriendsOnLore friends={friends.data!.friendsOnLore!} compact />
+            </section>
           )}
           {grid.isLoading ? (
             <div className="grid grid-cols-3 gap-px">
