@@ -5,7 +5,8 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 const exec = promisify(execFile);
-const root = join(process.cwd(), '.data/media/demo/rich');
+const demoRoot = join(process.cwd(), '.data/media/demo');
+const root = join(demoRoot, 'rich');
 const exists = async (path: string) =>
   stat(path)
     .then(() => true)
@@ -48,13 +49,66 @@ async function renderReel(index: number) {
   return { key: `demo/rich/${name}`, path, mime: 'video/mp4' };
 }
 
+async function renderLegacyImages() {
+  const specs = [
+    ['zilker-picnic.png', 9],
+    ['game-night.png', 18],
+    ['weekend-art.png', 27],
+    ['family-art.png', 36],
+  ] as const;
+  const assets = [];
+  for (const [name, photo] of specs) {
+    const path = join(demoRoot, name);
+    if (!(await exists(path)))
+      await exec('ffmpeg', [
+        '-y',
+        '-i',
+        join(root, `photo-${String(photo).padStart(2, '0')}.jpg`),
+        '-frames:v',
+        '1',
+        path,
+      ]);
+    assets.push({ key: `demo/${name}`, path, mime: 'image/png' });
+  }
+  return assets;
+}
+
+async function renderLegacyAudio() {
+  const specs = [
+    ['waffle-maker.wav', 1.7, 330],
+    ['podcast-ava.wav', 20, 220],
+    ['podcast-leo.wav', 20, 247],
+    ['podcast-mia.wav', 20, 277],
+    ['podcast-noor.wav', 20, 294],
+  ] as const;
+  const assets = [];
+  for (const [name, seconds, frequency] of specs) {
+    const path = join(demoRoot, name);
+    if (!(await exists(path)))
+      await exec('ffmpeg', [
+        '-y',
+        '-f',
+        'lavfi',
+        '-i',
+        `sine=frequency=${frequency}:duration=${seconds}`,
+        '-filter:a',
+        'volume=0.06',
+        path,
+      ]);
+    assets.push({ key: `demo/${name}`, path, mime: 'audio/wav' });
+  }
+  return assets;
+}
+
 async function main() {
   await mkdir(root, { recursive: true });
   const photos = [];
   for (let i = 1; i <= 48; i++) photos.push(await downloadPhoto(i));
   const reels = [];
   for (let i = 1; i <= 8; i++) reels.push(await renderReel(i));
-  const assets = [...photos, ...reels];
+  const legacyImages = await renderLegacyImages();
+  const legacyAudio = await renderLegacyAudio();
+  const assets = [...photos, ...reels, ...legacyImages, ...legacyAudio];
 
   const configured = Boolean(
     process.env.S3_ENDPOINT && process.env.S3_ACCESS_KEY && process.env.S3_SECRET_KEY,
@@ -84,6 +138,8 @@ async function main() {
         localRoot: root,
         photos: photos.length,
         reels: reels.length,
+        legacyImages: legacyImages.length,
+        legacyAudio: legacyAudio.length,
         uploadedToObjectStorage: configured,
       },
       null,

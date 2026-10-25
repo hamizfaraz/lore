@@ -190,7 +190,10 @@ export async function follow(viewerUserId: string, targetAccountId: string) {
   await getDb()
     .insert(follows)
     .values({ followerAccountId: v.accountId, targetAccountId: target.id, status })
-    .onConflictDoNothing();
+    .onConflictDoUpdate({
+      target: [follows.followerAccountId, follows.targetAccountId],
+      set: { status },
+    });
   const me = await users.accountSummary(v.accountId);
   const recipients = target.type === 'personal' ? [target.ownerUserId!] : [];
   for (const uid of recipients) {
@@ -316,12 +319,15 @@ export async function getPost(id: string, viewerUserId: string): Promise<PostDTO
 const PAGE = 10;
 
 /** Home feed: posts from followed accounts + own + group accounts I'm in, newest first, 10 per page. */
-export async function feed(userId: string, cursor?: string) {
+export async function feed(userId: string, cursor?: string, refresh = 0) {
   const v = await viewer(userId);
   const authorIds = [...new Set([v.accountId, ...v.following, ...v.groupAccountIds])].filter(
     (id) => !v.blockedAccountIds.has(id),
   );
   const c = decodeCursor(cursor);
+  // The first page rotates through three recent ranking windows. This gives an active demo feed
+  // genuinely different posts on periodic refreshes while cursor pages remain stable and ordered.
+  const rankingOffset = c ? 0 : (refresh % 3) * PAGE;
   const rows = authorIds.length
     ? await getDb()
         .select()
@@ -337,6 +343,7 @@ export async function feed(userId: string, cursor?: string) {
         )
         .orderBy(desc(posts.publishedAt), desc(posts.id))
         .limit(PAGE + 1)
+        .offset(rankingOffset)
     : [];
   const page = rows.slice(0, PAGE);
   return {

@@ -25,7 +25,9 @@ export function InboxPage() {
   const [compose, setCompose] = useState(false);
   const inbox = useQuery({
     queryKey: qk.inbox,
-    queryFn: () => api.get<{ items: ConversationRowDTO[] }>('/v1/conversations'),
+    queryFn: () => api.get<{ items: ConversationRowDTO[] }>('/v1/conversations?dataset=rich-demo-v1'),
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   });
   useEffect(() => onEvent('conversation.updated', (e) => upsertInboxRow(qc, e.data)), [qc]);
   const rows = (inbox.data?.items ?? []).filter((r) => r.title.toLowerCase().includes(q.toLowerCase()));

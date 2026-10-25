@@ -5,7 +5,7 @@ import { useDrag } from '@use-gesture/react';
 import { Heart, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { EmptyState, LoadError } from '@/components/ui/EmptyState';
 import { PostCard } from '@/components/ui/PostCard';
 import { PullToRefresh } from '@/components/ui/PullToRefresh';
@@ -28,20 +28,23 @@ export function HomeScreen() {
   const qc = useQueryClient();
   const me = useMe();
   const actions = usePostActions();
+  const [feedCycle, setFeedCycle] = useState(() => Math.floor(Date.now() / 45_000));
   const feed = useInfiniteQuery({
-    queryKey: qk.feed,
+    queryKey: [...qk.feed, feedCycle],
     // Keep the initial URL versioned so an older service-worker demo snapshot cannot mask a
     // freshly seeded dataset. Cursor pages are naturally unique, but retain the version too.
     queryFn: ({ pageParam }) =>
       api.get<Page>(
-        `/v1/feed?dataset=rich-demo-v1${pageParam ? `&cursor=${encodeURIComponent(pageParam)}` : ''}`,
+        `/v1/feed?dataset=rich-demo-v1&refresh=${feedCycle}${pageParam ? `&cursor=${encodeURIComponent(pageParam)}` : ''}`,
       ),
     initialPageParam: '' as string,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
   });
   const rail = useQuery({
     queryKey: qk.storiesRail,
-    queryFn: () => api.get<StoryRailItemDTO[]>('/v1/stories/rail'),
+    queryFn: () => api.get<StoryRailItemDTO[]>('/v1/stories/rail?dataset=rich-demo-v1'),
+    refetchInterval: 45_000,
+    refetchOnWindowFocus: true,
   });
   const unread = useQuery({
     queryKey: [...qk.notifications, 'unread'],
@@ -55,6 +58,11 @@ export function HomeScreen() {
   });
   const unreadDms = inbox.data?.items.filter((c) => c.unreadCount > 0).length ?? 0;
   const sentinel = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setFeedCycle(Math.floor(Date.now() / 45_000)), 45_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const el = sentinel.current;

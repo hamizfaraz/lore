@@ -10,6 +10,7 @@ import * as svc from './service';
 
 const zId = z.object({ id: z.string().uuid() });
 const zCursor = z.object({ cursor: z.string().optional() });
+const zFeedCursor = zCursor.extend({ refresh: z.coerce.number().int().nonnegative().optional() });
 
 /** social REST routes [C1] (section 6). */
 const routes: FastifyPluginAsync = async (base) => {
@@ -50,8 +51,8 @@ const routes: FastifyPluginAsync = async (base) => {
     { schema: { querystring: zCursor.extend({ q: z.string().max(80).optional() }) } },
     async (req) => svc.explore(me(req).id, req.query.q, req.query.cursor),
   );
-  app.get('/feed', { schema: { querystring: zCursor } }, async (req) =>
-    svc.feed(me(req).id, req.query.cursor),
+  app.get('/feed', { schema: { querystring: zFeedCursor } }, async (req) =>
+    svc.feed(me(req).id, req.query.cursor, req.query.refresh),
   );
   app.get('/reels', { schema: { querystring: zCursor } }, async (req) =>
     svc.reels(me(req).id, req.query.cursor),

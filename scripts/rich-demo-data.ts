@@ -29,7 +29,11 @@ import { uuidv7 } from '../packages/shared/src/ids';
 
 type DemoDb = ReturnType<typeof createDb>['db'];
 
+// Keep the UUID version and variant nibbles valid. Earlier demo IDs put `section` in the variant
+// field, which Postgres accepted but API `uuid()` validators correctly rejected.
 const uid = (section: number, index: number) =>
+  `10000000-0000-7000-8000-${section.toString(16).padStart(4, '0')}${index.toString().padStart(8, '0')}`;
+const legacyUid = (section: number, index: number) =>
   `10000000-0000-7000-${section.toString(16).padStart(4, '0')}-${index.toString().padStart(12, '0')}`;
 
 const BASE_USERS = Array.from(
@@ -48,6 +52,15 @@ export const RICH = {
   groupConversations: Array.from({ length: 12 }, (_, i) => uid(0x1400, i + 1)),
   dmConversations: Array.from({ length: 60 }, (_, i) => uid(0x1500, i + 1)),
   media: Array.from({ length: 56 }, (_, i) => uid(0x1600, i + 1)),
+} as const;
+
+const LEGACY_RICH = {
+  users: Array.from({ length: 24 }, (_, i) => legacyUid(0x1100, i + 7)),
+  accounts: Array.from({ length: 24 }, (_, i) => legacyUid(0x1200, i + 7)),
+  groupAccounts: Array.from({ length: 12 }, (_, i) => legacyUid(0x1300, i + 1)),
+  groupConversations: Array.from({ length: 12 }, (_, i) => legacyUid(0x1400, i + 1)),
+  dmConversations: Array.from({ length: 60 }, (_, i) => legacyUid(0x1500, i + 1)),
+  media: Array.from({ length: 56 }, (_, i) => legacyUid(0x1600, i + 1)),
 } as const;
 
 const people = [
@@ -376,31 +389,60 @@ const richAccountIds = RICH.accounts.slice(6);
 const allRichConversationIds = [...RICH.groupConversations, ...RICH.dmConversations];
 const richPostIds = Array.from({ length: 220 }, (_, i) => uid(0x1700, i + 1));
 const richStoryIds = Array.from({ length: 50 }, (_, i) => uid(0x1800, i + 1));
+const legacyRichPostIds = Array.from({ length: 220 }, (_, i) => legacyUid(0x1700, i + 1));
+const legacyRichStoryIds = Array.from({ length: 50 }, (_, i) => legacyUid(0x1800, i + 1));
 
 export async function clearRichDemo(db: DemoDb) {
-  await db.delete(storyViews).where(inArray(storyViews.storyId, richStoryIds));
-  await db.delete(stories).where(inArray(stories.id, richStoryIds));
-  await db.delete(comments).where(inArray(comments.postId, richPostIds));
-  await db.delete(postLikes).where(inArray(postLikes.postId, richPostIds));
-  await db.delete(postSaves).where(inArray(postSaves.postId, richPostIds));
-  await db.delete(engagementEvents).where(inArray(engagementEvents.targetId, richPostIds));
-  await db.delete(postMedia).where(inArray(postMedia.postId, richPostIds));
-  await db.delete(posts).where(inArray(posts.id, richPostIds));
-  await db.delete(follows).where(inArray(follows.followerAccountId, [...RICH.accounts]));
-  await db.delete(messageReactions).where(inArray(messageReactions.userId, [...RICH.users]));
-  await db.delete(messages).where(inArray(messages.conversationId, allRichConversationIds));
-  await db.delete(aiMemories).where(inArray(aiMemories.conversationId, [...RICH.groupConversations]));
-  await db.delete(aiPersonas).where(inArray(aiPersonas.conversationId, [...RICH.groupConversations]));
+  const oldConversations = [...LEGACY_RICH.groupConversations, ...LEGACY_RICH.dmConversations];
+  const allDemoAccounts = [...RICH.accounts, ...RICH.groupAccounts];
+  const allOldAccounts = [...LEGACY_RICH.accounts, ...LEGACY_RICH.groupAccounts];
+  await db.delete(storyViews).where(inArray(storyViews.storyId, [...richStoryIds, ...legacyRichStoryIds]));
+  await db.delete(stories).where(inArray(stories.id, [...richStoryIds, ...legacyRichStoryIds]));
+  await db.delete(comments).where(inArray(comments.postId, [...richPostIds, ...legacyRichPostIds]));
+  await db.delete(postLikes).where(inArray(postLikes.postId, [...richPostIds, ...legacyRichPostIds]));
+  await db.delete(postSaves).where(inArray(postSaves.postId, [...richPostIds, ...legacyRichPostIds]));
+  await db
+    .delete(engagementEvents)
+    .where(inArray(engagementEvents.targetId, [...richPostIds, ...legacyRichPostIds]));
+  await db.delete(postMedia).where(inArray(postMedia.postId, [...richPostIds, ...legacyRichPostIds]));
+  await db.delete(posts).where(inArray(posts.id, [...richPostIds, ...legacyRichPostIds]));
+  await db.delete(follows).where(inArray(follows.followerAccountId, [...allDemoAccounts, ...allOldAccounts]));
+  await db
+    .delete(messageReactions)
+    .where(inArray(messageReactions.userId, [...RICH.users, ...LEGACY_RICH.users]));
+  await db
+    .delete(messages)
+    .where(inArray(messages.conversationId, [...allRichConversationIds, ...oldConversations]));
+  await db
+    .delete(aiMemories)
+    .where(
+      inArray(aiMemories.conversationId, [...RICH.groupConversations, ...LEGACY_RICH.groupConversations]),
+    );
+  await db
+    .delete(aiPersonas)
+    .where(
+      inArray(aiPersonas.conversationId, [...RICH.groupConversations, ...LEGACY_RICH.groupConversations]),
+    );
   await db
     .delete(conversationMembers)
-    .where(inArray(conversationMembers.conversationId, allRichConversationIds));
-  await db.delete(publishingPolicies).where(inArray(publishingPolicies.accountId, [...RICH.groupAccounts]));
-  await db.delete(socialAccounts).where(inArray(socialAccounts.id, [...RICH.groupAccounts]));
-  await db.delete(conversations).where(inArray(conversations.id, allRichConversationIds));
-  await db.delete(interestProfiles).where(inArray(interestProfiles.userId, richUserIds));
-  await db.delete(socialAccounts).where(inArray(socialAccounts.id, richAccountIds));
-  await db.delete(mediaAssets).where(inArray(mediaAssets.id, [...RICH.media]));
-  await db.delete(user).where(inArray(user.id, richUserIds));
+    .where(inArray(conversationMembers.conversationId, [...allRichConversationIds, ...oldConversations]));
+  await db
+    .delete(publishingPolicies)
+    .where(inArray(publishingPolicies.accountId, [...RICH.groupAccounts, ...LEGACY_RICH.groupAccounts]));
+  await db
+    .delete(socialAccounts)
+    .where(inArray(socialAccounts.id, [...RICH.groupAccounts, ...LEGACY_RICH.groupAccounts]));
+  await db
+    .delete(conversations)
+    .where(inArray(conversations.id, [...allRichConversationIds, ...oldConversations]));
+  await db
+    .delete(interestProfiles)
+    .where(inArray(interestProfiles.userId, [...richUserIds, ...LEGACY_RICH.users]));
+  await db
+    .delete(socialAccounts)
+    .where(inArray(socialAccounts.id, [...richAccountIds, ...LEGACY_RICH.accounts]));
+  await db.delete(mediaAssets).where(inArray(mediaAssets.id, [...RICH.media, ...LEGACY_RICH.media]));
+  await db.delete(user).where(inArray(user.id, [...richUserIds, ...LEGACY_RICH.users]));
 }
 
 export async function seedRichDemo(db: DemoDb, now = new Date()) {
@@ -503,19 +545,26 @@ export async function seedRichDemo(db: DemoDb, now = new Date()) {
     })),
   );
 
-  const groupMemberships = groupDefs.flatMap((_, gi) =>
-    Array.from({ length: 10 }, (_, offset) => {
-      const personIndex = (gi * 5 + offset * 3) % 30;
-      return {
+  const groupChoicesByPerson = people.map((_, personIndex) =>
+    Array.from(
+      { length: 3 + (personIndex % 6) },
+      (_, membershipIndex) => (personIndex * 5 + membershipIndex * 7) % groupDefs.length,
+    ),
+  );
+  const groupMembershipsByGroup = groupDefs.map((_, gi) =>
+    groupChoicesByPerson
+      .map((choices, personIndex) => ({ choices, personIndex }))
+      .filter(({ choices }) => choices.includes(gi))
+      .map(({ personIndex }, offset) => ({
         conversationId: RICH.groupConversations[gi]!,
         userId: RICH.users[personIndex]!,
         role:
           offset === 0 ? ('primary_admin' as const) : offset < 3 ? ('admin' as const) : ('member' as const),
         aiHistoryConsent: offset !== 9,
         joinedAt: new Date(now.getTime() - (100 - gi * 2 - offset) * 86_400_000),
-      };
-    }),
+      })),
   );
+  const groupMemberships = groupMembershipsByGroup.flat();
   await db.insert(conversationMembers).values(groupMemberships);
 
   const dmPairs = Array.from({ length: 60 }, (_, i) => [i % 30, (i + (i < 30 ? 1 : 7)) % 30] as const);
@@ -560,7 +609,7 @@ export async function seedRichDemo(db: DemoDb, now = new Date()) {
       conversationId: RICH.groupConversations[gi]!,
       createdAt: new Date(now.getTime() - 45 * 86_400_000 + mi * 10.5 * 3_600_000),
       senderType: 'human' as const,
-      senderUserId: groupMemberships[gi * 10 + (mi % 10)]!.userId,
+      senderUserId: groupMembershipsByGroup[gi]![mi % groupMembershipsByGroup[gi]!.length]!.userId,
       kind: 'text' as const,
       body:
         mi % 9 === 0
@@ -614,15 +663,16 @@ export async function seedRichDemo(db: DemoDb, now = new Date()) {
           'The group jokes that every simple plan eventually becomes a side quest.',
         ][m]!,
         sourceMessageIds: [uid(0x1900 + gi, 10 + m)],
-        subjectUserIds: groupMemberships.slice(gi * 10, gi * 10 + 10).map((x) => x.userId),
+        subjectUserIds: groupMembershipsByGroup[gi]!.map((x) => x.userId),
         sensitivity: m === 0 ? ('medium' as const) : ('low' as const),
         confidence: 0.9 + m * 0.03,
       })),
     ),
   );
 
-  const followRows = RICH.accounts.flatMap((from, i) =>
-    RICH.accounts
+  const everyAccount = [...RICH.accounts, ...RICH.groupAccounts];
+  const followRows = everyAccount.flatMap((from, i) =>
+    everyAccount
       .filter((_, j) => i !== j)
       .map((to, j) => ({
         followerAccountId: from,
@@ -763,7 +813,9 @@ export async function seedRichDemo(db: DemoDb, now = new Date()) {
     mediaId: RICH.media[(i * 3) % 48]!,
     caption: i < 30 ? `Today with ${people[i]![0].split(' ')[0]}` : groupDefs[i - 30]![0],
     createdAt: new Date(storyNow.getTime() - (i % 18) * 3_600_000),
-    expiresAt: new Date(storyNow.getTime() + (24 - (i % 18)) * 3_600_000),
+    // Keep demo stories available throughout judging week instead of silently disappearing a day
+    // after the database is seeded.
+    expiresAt: new Date(storyNow.getTime() + (30 * 24 - (i % 18)) * 3_600_000),
   }));
   await db.insert(stories).values(storyRows);
   await db.insert(storyViews).values(
