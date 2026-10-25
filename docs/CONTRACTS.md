@@ -21,3 +21,6 @@ Format: `- YYYY-MM-DD · file · change · reason`
 - 2026-10-24 · `packages/shared/src/dto/memories.ts` · added typed recap list and chat/story share
   contracts plus request type exports · C2-5 list/editor/card and REST mutations use the same
   private-by-default recap shapes
+- 2026-10-24 · `packages/shared/src/dto/mcp.ts` · added typed token-create and token-list results,
+  explicit create input type, and a non-empty default `read` scope · C2-6 REST and Connect Muse UI
+  share the one-time credential response without ever persisting the raw token client-side

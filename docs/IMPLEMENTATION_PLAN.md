@@ -104,13 +104,14 @@ Status as last verified on October 24, 2026:
   guard and reference validation, prompts, game helpers, and live/mock smoke coverage.
 - Mock fixtures now include six distinct 128x128 images and two short spoken mono PCM16 24 kHz WAV
   samples. The temporary AI watch harness has been removed in favor of C1's real dev processes.
-- All repository verification passes: six workspace typechecks, Biome over 414 files, 69 tests,
-  mock smoke, and the production web/API build.
+- C2-4 plans, C2-5 private recaps, and C2-6 MCP are implemented. The latest full verification
+  passes six workspace typechecks, Biome over 428 files, 97 tests, mock smoke, production web/API
+  builds, and `git diff --check`.
 - C2-1 is awaiting only the paid live smoke required by its done condition. That is blocked on the
   human-owned C2-0 provider credentials and model ids, which are not present locally.
-- The web scaffold runs at `http://localhost:3000` in mock-AI mode. On this machine the API, worker,
-  and MCP processes require Valkey and exit because no local Valkey is running and the current user
-  cannot access the Docker daemon; this is an environment prerequisite, not a C2-1 package failure.
+- Rootless Podman now supplies isolated `lore-c2-db` and `lore-c2-valkey` containers for local
+  verification. The database image does not provide TimescaleDB/Vectorscale, so the documented
+  hypertable, continuous-aggregate, and DiskANN warnings remain expected.
 - At the human's explicit direction, C2-2 implementation began before the C2-1 paid live smoke.
   The persona engine, APIs, jobs, basic studio, explanations, memory controls, and focused tests are
   implemented on the C2 branch. Integrated acceptance still requires C1-4's committed-message hook
@@ -119,10 +120,14 @@ Status as last verified on October 24, 2026:
   acceptance. Batch voice jobs, ffmpeg normalization, transcript persistence/update behavior, the
   authenticated live proxy, browser PCM framing/captions, and the required test matrix are green.
   End-to-end acceptance still requires C1's auth/media/chat work to merge and C2-0 live Muse access.
+- C2-6 exposes all 11 required tools over stateless Streamable HTTP and implements scoped,
+  one-time-reveal PATs, confirmation gates, identity-safe plan votes, sanitized audits, immediate
+  revocation, and Connect Muse UI. A real SDK client listed all tools, executed `list_groups`, wrote
+  an audit row, and received 401 immediately after token revocation. C1-owned group approval/game
+  interfaces and later C2 family/discovery services remain explicit fail-closed integrations.
 
-Before resuming implementation, fetch `origin/main` and compare its head with this baseline. Do not
-begin C2-4 until C2-2 and C2-3 are integrated and accepted, unless the human explicitly changes the
-plan.
+Before resuming implementation, fetch `origin/main` and compare its head with this baseline. C2-7
+is the next ordered milestone; do not begin it unless the human explicitly continues the plan.
 
 ## 6. Dependencies and Execution Order
 
@@ -134,7 +139,7 @@ plan.
 | 3 | C2-3 voice | P0 | C2-1 | Implementation green; C1 merge/live acceptance pending |
 | 4 | C2-4 Concierge/plans | P0 | C2-2 | Implementation green; C1 integration pending |
 | 5 | C2-5 memories/recaps | P0 | C2-1, C1-2, C1-5 stub | Implementation green; C1 integration pending |
-| 6 | C2-6 MCP connector | P0 | C2-4 | Pending |
+| 6 | C2-6 MCP connector | P0 | C2-4 | Implementation green; integrated C1 tools pending |
 | 7 | C2-7 demo seed/reset | P0 | C2-2, C2-4 | Pending |
 | 8 | C2-8 discovery | P1 | C2-1 | Pending |
 | 9 | C2-9 impact | P1 | C2-4 | Pending |
@@ -567,6 +572,24 @@ logic, requires scoped PATs, confirms writes, and audits every action.
 
 Muse or Inspector lists all tools, a confirmed plan vote appears live in LORE, token revocation is
 immediate, and every write is confirmed, authorized, and audited.
+
+### Implemented state
+
+- Added membership-scoped PAT create/list/revoke REST APIs and the Connect Muse surface. Raw
+  `lore_pat_` credentials contain 32 unbiased base62 characters, are returned once, and only their
+  SHA-256 hashes are stored.
+- Added the stateless Streamable HTTP server with all 11 required, model-readable tools. Reads and
+  writes enforce token scopes; writes require `confirm: true`; plan votes derive identity only from
+  the token; recap/family actions cannot publish directly; and success, denial, and errors write
+  sanitized audit rows.
+- Eleven focused tests cover credential shape, hashing/redaction, invalid/revoked authentication,
+  scope and confirmation denials, actor identity, private recap behavior, tool inventory, and audit
+  outcomes. A real SDK client discovered all 11 tools and exercised an authenticated read against
+  the local MCP process; immediate revocation then returned HTTP 401.
+- The C1-owned draft-submission and game-lobby interfaces, plus the later C2 family-story and
+  Common Ground services, do not yet exist on `main`; their advertised tools fail closed with an
+  explicit integration error. A live confirmed plan vote awaits C1 auth/chat integration and demo
+  seed data rather than bypassing ownership or fabricating acceptance.
 
 ## 14. C2-7 — Seed Data and Demo Fixtures
 

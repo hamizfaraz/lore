@@ -45,3 +45,8 @@ Check at every checkpoint (section 10 working agreements).
   the `target: story` action but intentionally refuses it until a C1 service can create a story
   without bypassing media ownership/consent checks; chat share, private save, and governed group
   draft proposal are implemented.
+- [ ] C2->C1: Preserve `/settings/muse` and the MCP token REST routes when merging C2-6. Add frozen
+  `groups.service.submitDraft(draftId, actor)` and `games.service.createLobby(input, actor)`
+  interfaces so the advertised approval-request and game-lobby MCP tools can route through C1's
+  authorization/policy logic. Until then those tools intentionally fail closed; C2 does not write
+  C1-owned draft or game tables directly.

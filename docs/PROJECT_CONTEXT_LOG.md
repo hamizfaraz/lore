@@ -26,8 +26,8 @@
 
 _Rewritten after each step._
 
-- Phase: C2-5 private memories/recaps implementation is green on the C2 branch; C2-6 MCP is next.
-  C1 merge and live-provider acceptance remain open for the implemented C2 P0 chain.
+- Phase: C2-4 plans, C2-5 private memories, and C2-6 MCP are green on the C2 branch; C2-7 demo
+  seed/reset is next. C1 merge and live-provider acceptance remain open for the C2 P0 chain.
   C2-1's paid live smoke remains blocked on human-owned C2-0 credentials.
 - Active Computer 2 branch: `c2/intelligence`, in a dedicated worktree. All implementation changes
   in this run are confined to this branch; the original checkout remains clean on `main`.
@@ -54,8 +54,15 @@ _Rewritten after each step._
   persona keywords, transcript persistence and message refresh, degraded/failure metadata, audit
   records, an authenticated and membership-scoped realtime proxy, exact 80 ms frame enforcement,
   cumulative transcript relay, and browser-side resampling/caption UI with no provider secret.
-- Full verification passes: six workspace typechecks, 18 AI tests, 16 shared tests, 32 API tests,
-  3 web tests, whole-workspace Biome over 414 files, mock smoke, production web/API builds, a direct
+- C2-4 supplies grounded fair plans, voting, confirmation, RSVP/calendar behavior, and Plans UI.
+  C2-5 supplies consent-aware, grounded, private-by-default recaps, metadata-free Sharp layouts,
+  recap editing/sharing/proposal behavior, and Memories UI.
+- C2-6 supplies one-time-reveal, SHA-256-only scoped PATs; token management and Connect Muse UI;
+  a stateless Streamable HTTP MCP server; all 11 required model-readable tools; explicit write
+  confirmation; actor-safe plan votes; membership-scoped reads; and sanitized success/denial/error
+  audits. Unavailable C1/later-C2 tool integrations fail closed.
+- Full verification passes: six workspace typechecks, 18 AI tests, 16 shared tests, 60 API tests,
+  3 web tests (97 total), whole-workspace Biome over 428 files, mock smoke, production web/API builds, a direct
   browser-bundle provider-secret scan, and `git diff --check`.
   The mock smoke validates 11 JSON fixtures, 6 images, 2 voice fixtures, 5 choices, 3 prompts, guard,
   and budget paths without credentials or network calls.
@@ -63,12 +70,13 @@ _Rewritten after each step._
   worker, and MCP processes. Rootless Podman can provide isolated PostgreSQL and Redis-compatible
   test containers even though the Docker daemon socket remains unavailable. The local image lacks
   TimescaleDB/Vectorscale, so hypertable, aggregate, and DiskANN setup warnings remain expected.
-  No development process or temporary container should be assumed to survive an agent handoff.
+  A real SDK client listed all 11 MCP tools, ran an authenticated read, verified its audit row, and
+  received HTTP 401 immediately after revocation. No development process or temporary container
+  should be assumed to survive an agent handoff.
 - `docs/IMPLEMENTATION_PLAN.md` is now the single active plan and covers C2-0 through C2-12, exact
   ownership, dependencies, acceptance tests, merge rules, cut lines, and recovery. The previous
   broad plan and `docs/C2_NOW.md` workflow were removed from the working tree and remain only in git
-  history. C2-4 must not begin until C2-2 and C2-3 are accepted unless the human explicitly changes
-  the plan.
+  history. C2-7 is next and should begin only when the human explicitly continues the plan.
 
 ## Computer 1 task tracker
 
@@ -100,7 +108,7 @@ _Rewritten after each step._
 | C2-3 | Voice transcription and live captions | integration pending | Implementation and local checks pass; requires C1 auth/media/chat merge and live Muse acceptance |
 | C2-4 | Concierge and plans | integration pending | Core service, routes, UI, realtime, calendar, and seven focused tests pass; C1 chat/auth merge and live providers remain |
 | C2-5 | Shared memories and recaps | integration pending | Service, grounding, consent, Sharp layouts, editor/cards, and ten focused tests pass; C1 media/chat/group/story integration remains |
-| C2-6 | Muse MCP connector | pending | Depends on C2-4 |
+| C2-6 | Muse MCP connector | integration pending | PATs, UI, 11 tools, confirmation/scopes/audits, SDK smoke, and immediate revocation pass; C1 game/approval plus later C2 services remain |
 | C2-7 | Seed and demo reset | pending | Depends on C2-2 and C2-4 |
 | C2-8 | Find Friends and Common Ground | pending | Depends on C2-1 |
 | C2-9 | Snowflake impact | pending | Depends on C2-4 |
@@ -262,3 +270,19 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
   AI labels, editor/list/card UI, owner revocation, private save/chat share, and governed C1 draft
   handoff. Ten focused tests and API/web typechecks pass. C1's unprovided story-creation interface
   remains a fail-closed handoff; C2-6 is next.
+- **2026-10-24 · C2-5 checkpoint** — Committed and pushed the resumable memories milestone as
+  `8c2fc25` on `c2/intelligence`; no other branch was modified.
+- **2026-10-24 · C2-6 scoped MCP connector** — Implemented unbiased base62 PAT generation,
+  SHA-256-only persistence, one-time UI reveal, session-authenticated token management, immediate
+  revoke, the Connect Muse surface, and a stateless Streamable HTTP MCP server. All 11 required
+  tools are advertised with use/non-action descriptions. Every valid call is scope checked and
+  audited; writes additionally require explicit confirmation; plan votes use only the PAT owner;
+  private recap and unavailable family operations cannot publish directly. C1-owned approval/game
+  and later-C2 family/discovery integrations fail closed and are recorded in the handoff.
+- **2026-10-24 · C2-6 verification** — Added 11 focused policy/service tests. Full verification
+  passes six typechecks, 97 tests (18 AI, 16 shared, 60 API, 3 web), Biome over 428 files, mock AI
+  smoke, production web/API builds, and `git diff --check`. Against the isolated local PostgreSQL
+  and Valkey containers, an actual SDK client completed the Streamable HTTP handshake, listed all
+  11 tools, executed `list_groups`, and produced a credential-free audit row. Revoking the
+  disposable PAT caused the next request to return HTTP 401 immediately. A live plan-vote UI smoke
+  remains gated on C1 auth/chat implementation and C2-7 demo seed data.
