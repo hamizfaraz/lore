@@ -26,7 +26,8 @@
 
 _Rewritten after each step._
 
-- Phase: **C1-10 done** (Facebook Graph import, Friends on LORE, Connections). Next: **C1-12 Solana keepsakes** (depends on C2-5 recaps; build the C1 mint path against the recap table), then C1-13 polish.
+- Phase: **C1-12 done** (Solana keepsakes, flag off). Next: **C1-13 polish** (native-feel, empty/error states, a11y, desktop). Phone side-by-side with Instagram still needs a human.
+- C1-12: keepsakes flag-gated (`FEATURE_KEEPSAKES`, default off). `POST /v1/keepsakes { recapId }` for a member, recap state in ready_private|edited|proposed|saved, tied to a confirmed/completed `group_plans` row (matched on plan id, proposal id, or recap id). One row per recap (`keepsakes_recap_uq`). Worker `keepsakes.mint` mints a Metaplex Core asset on devnet to `SOLANA_VAULT_SECRET` (base58), airdrops 1 SOL if the vault is under 0.05, URI is `GET /v1/keepsakes/:id/metadata` (public). Failure sets `status=failed` and does not touch the recap; a second POST retries. Signup creates `user_wallets.pubkey` only (secret discarded). UI: `features/keepsakes/KeepsakeButton` — C2 must place it on the recap card/editor (HANDOFF). Tests: `keepsakes/service.test.ts` (4) with an injected minter, no devnet. NOT verified: a live devnet signature (no vault key).
 - C1-10: `POST /v1/graph/import` reads the Better Auth Facebook token and calls Graph `/me`, `/me/permissions`, `/me/likes?limit=100`, `/me/friends`. Declined `user_likes` / `user_friends` (Graph error 200/10) still imports. Likes map through `modules/graph/categories.ts` (Movie/TV Show → film-tv, Musician/Band → live-music, …). Tags go to `discovery.recordSignal(..., 'graph')` (NotImplemented is ignored). Friends on LORE = personal accounts whose fb id is in my friend list, who logged in with Facebook, or who listed me. `GET /v1/graph/connections`, `POST /v1/graph/suggestions` (onboarding keeps a subset), `POST /v1/graph/disconnect` (deletes import, facebook `account` row, and those tags on `interest_profiles`). Web: onboarding chips marked "from Facebook", Settings → Facebook (`/settings?section=facebook`), Explore section "Friends on LORE". Tests: `graph/categories.test.ts`, `graph/service.test.ts` (4). NOT verified: live Facebook (no app credentials).
 - C1-9: `GET /v1/explore?q=` (accounts+group accounts by handle/name, posts via `search_tsv @@ websearch_to_tsquery`,
   engagement-ranked grid; private accounts hidden), Explore tab root (search, recent searches, Find Friends/Discover
@@ -129,7 +130,7 @@ _Rewritten after each step._
 | C1-9 | Reels, Explore, notifications | done | web push needs VAPID keys |
 | C1-10 | Graph import | done (live FB unverified: no app creds) | friends match both ways |
 | C1-11 | Pictionary | done (live strokes not browser-tested) | flag FEATURE_GAMES_PICTIONARY |
-| C1-12 | Solana keepsakes | pending | |
+| C1-12 | Solana keepsakes | done (flag off; live devnet unverified) | button placement is a C2 handoff |
 | C1-13 | Polish | pending | |
 
 ## Things that need a human (cannot be done by the agent)
@@ -138,6 +139,7 @@ _Rewritten after each step._
   (`@`, `www`, `mcp`), prod Tiger service, `.env.prod` on the VM, then `VULTR_VM_IP=… ./infra/deploy.sh`.
 - Facebook app credentials + Tester accounts to verify Facebook login (C1-1) and Graph import (C1-10).
 - Generate VAPID keys for web push: `npx web-push generate-vapid-keys` → `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` (+ `NEXT_PUBLIC_VAPID_PUBLIC_KEY`).
+- Solana devnet vault for keepsakes: `solana-keygen new` → base58 secret in `SOLANA_VAULT_SECRET`, then `FEATURE_KEEPSAKES=1`. The worker airdrops when the balance is low.
 
 - Add the teammate (Computer 2) as a collaborator on `hamizfaraz/lore` — GitHub username not known to the agent.
 - Accounts/keys from plan section 14 (C2-0 provisions them): Meta API, Facebook app, Tiger Data, Vultr, domain, etc.
@@ -199,3 +201,4 @@ _Every deviation is also recorded in `docs/IMPLEMENTATION_PLAN.md` (section 18, 
   needed all three rule sets.
 - **2026-10-24 · C1-9 done** — explore API (verified search, groups in results, private hidden) + Explore/Reels/Notifications screens.
 - **2026-10-24 · C1-10 done** — Graph import, category map, Friends on LORE, connections settings, disconnect clears graph tags. 5 graph tests pass. Live Facebook login still needs Tester credentials.
+- **2026-10-24 · C1-12 done** — Devnet keepsake mint (Metaplex Core), public metadata, wallet pubkeys at signup, flag off. 4 service tests with a fake minter. Live explorer link needs `SOLANA_VAULT_SECRET`. C2 still has to render `KeepsakeButton` on the recap.

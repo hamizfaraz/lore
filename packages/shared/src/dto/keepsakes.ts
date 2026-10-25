@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+export const zCreateKeepsakeBody = z.object({ recapId: z.string().uuid() });
+export type CreateKeepsakeBody = z.infer<typeof zCreateKeepsakeBody>;
+
 export const zKeepsakeDTO = z.object({
   id: z.string(),
   recapId: z.string(),

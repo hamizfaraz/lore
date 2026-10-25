@@ -296,19 +296,23 @@ export const facebookImports = pgTable('facebook_imports', {
   importedAt: ts('imported_at'),
 });
 
-export const keepsakes = pgTable('keepsakes', {
-  id: id().primaryKey(),
-  recapId: uuid('recap_id').notNull(),
-  conversationId: uuid('conversation_id').notNull(),
-  mintAddress: text('mint_address'),
-  txSignature: text('tx_signature'),
-  network: text('network').notNull().default('devnet'),
-  status: text('status', { enum: ['pending', 'minted', 'failed'] as const })
-    .notNull()
-    .default('pending'),
-  metadata: jsonb('metadata').$type<Record<string, unknown>>(),
-  createdAt: createdAt(),
-});
+export const keepsakes = pgTable(
+  'keepsakes',
+  {
+    id: id().primaryKey(),
+    recapId: uuid('recap_id').notNull(),
+    conversationId: uuid('conversation_id').notNull(),
+    mintAddress: text('mint_address'),
+    txSignature: text('tx_signature'),
+    network: text('network').notNull().default('devnet'),
+    status: text('status', { enum: ['pending', 'minted', 'failed'] as const })
+      .notNull()
+      .default('pending'),
+    metadata: jsonb('metadata').$type<Record<string, unknown>>(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('keepsakes_recap_uq').on(t.recapId)],
+);
 
 /** per-user devnet keypair generated at signup (keepsake member list). */
 export const userWallets = pgTable('user_wallets', {

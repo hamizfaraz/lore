@@ -22,3 +22,6 @@
    `AI_MODE=live`) to `/home/lore/lore/.env.prod` on the VM.
 6. `VULTR_VM_IP=… ./infra/deploy.sh` → prints `/v1/ready`.
 7. Before the demo: Vultr snapshot + Tiger fork (rollback in minutes).
+8. Keepsakes (P2, flag off until wanted): put a base58 devnet vault key in `SOLANA_VAULT_SECRET`
+   (`solana-keygen new`). The worker airdrops devnet SOL on the first mint if the vault is under 0.05 SOL.
+   Set `FEATURE_KEEPSAKES=1` and `NEXT_PUBLIC_FEATURE_KEEPSAKES=1`. No user wallets and no real SOL.

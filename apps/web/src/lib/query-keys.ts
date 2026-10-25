@@ -18,5 +18,6 @@ export const qk = {
   game: (id: string) => ['game', id] as const,
   notifications: ['notifications'] as const,
   connections: ['connections'] as const,
+  keepsake: (recapId: string) => ['keepsake', recapId] as const,
   userSearch: (q: string) => ['users', 'search', q] as const,
 };
