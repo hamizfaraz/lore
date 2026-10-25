@@ -52,6 +52,7 @@ export function PostCard({ post, handlers }: { post: PostDTO; handlers: PostHand
           playsInline
           loop
           autoPlay
+          aria-label={m.altText || post.altText || post.caption || 'Video'}
         />
       ) : (
         <BlurImage src={m.url} blurhash={m.blurhash} alt={m.altText ?? post.altText ?? ''} />
@@ -80,7 +81,12 @@ export function PostCard({ post, handlers }: { post: PostDTO; handlers: PostHand
           {post.locationLabel && <span className="block truncate text-[12px]">{post.locationLabel}</span>}
         </div>
         {handlers.onMore && (
-          <button type="button" aria-label="More" className="press" onClick={() => handlers.onMore?.(post)}>
+          <button
+            type="button"
+            aria-label="More"
+            className="press flex h-[44px] w-[44px] items-center justify-center"
+            onClick={() => handlers.onMore?.(post)}
+          >
             <MoreHorizontal size={22} />
           </button>
         )}

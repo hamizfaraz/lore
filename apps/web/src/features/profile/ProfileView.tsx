@@ -19,7 +19,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { EmptyState, LoadError } from '@/components/ui/EmptyState';
 import { Grid3 } from '@/components/ui/Grid3';
 import { HighlightsRow } from '@/components/ui/HighlightsRow';
 import { ListRow } from '@/components/ui/ListRow';
@@ -245,6 +245,8 @@ export function ProfileView({ handle, root }: { handle: string; root?: boolean }
                   <Skeleton key={i} className="aspect-square rounded-none" />
                 ))}
               </div>
+            ) : postsQ.isError ? (
+              <LoadError body={(postsQ.error as Error).message} onRetry={() => postsQ.refetch()} />
             ) : posts.length ? (
               <Grid3 posts={posts} />
             ) : (

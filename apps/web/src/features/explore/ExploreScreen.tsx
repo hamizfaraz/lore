@@ -6,7 +6,7 @@ import { X } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Avatar, AvatarStack } from '@/components/ui/Avatar';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { EmptyState, LoadError } from '@/components/ui/EmptyState';
 import { Grid3 } from '@/components/ui/Grid3';
 import { SearchField } from '@/components/ui/SearchField';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -52,7 +52,7 @@ export function ExploreScreen() {
     staleTime: 60_000,
   });
   const search = useQuery({
-    queryKey: qk.explore(debounced),
+    queryKey: [...qk.explore(debounced), 'q'],
     queryFn: () => api.get<ExploreResultDTO>(`/v1/explore?q=${encodeURIComponent(debounced)}`),
     enabled: debounced.length > 0,
   });
@@ -138,7 +138,7 @@ export function ExploreScreen() {
               ))}
             </>
           )}
-          {search.data?.accounts.map((a) => (
+          {(search.data?.accounts ?? []).map((a) => (
             <Link
               key={a.id}
               href={`/${a.type === 'group' ? 'g' : 'u'}/${a.handle}`}
@@ -163,6 +163,9 @@ export function ExploreScreen() {
             <div className="pt-3">
               <Grid3 posts={search.data.posts} />
             </div>
+          )}
+          {debounced && search.isError && (
+            <LoadError body={(search.error as Error).message} onRetry={() => search.refetch()} />
           )}
           {debounced && search.data && !search.data.accounts.length && !search.data.posts.length && (
             <EmptyState title="No results" body={`Nothing found for “${debounced}”.`} />
@@ -193,6 +196,13 @@ export function ExploreScreen() {
                 <Skeleton key={i} className="aspect-square rounded-none" />
               ))}
             </div>
+          ) : grid.isError ? (
+            <LoadError body={(grid.error as Error).message} onRetry={() => grid.refetch()} />
+          ) : (grid.data?.pages.flatMap((p) => p.posts).length ?? 0) === 0 ? (
+            <EmptyState
+              title="No posts yet"
+              body="Photos and reels from people you can see will show up here."
+            />
           ) : (
             <Grid3 posts={grid.data?.pages.flatMap((p) => p.posts) ?? []} tallReels />
           )}

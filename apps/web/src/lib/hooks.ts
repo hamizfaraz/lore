@@ -14,6 +14,24 @@ export function useMe() {
   });
 }
 
+/** Unread dots for the desktop rail. Same query keys as Home, so they share a cache. */
+export function useShellBadges() {
+  const notes = useQuery({
+    queryKey: [...qk.notifications, 'unread'],
+    queryFn: () => api.get<{ unread: number }>('/v1/notifications'),
+    refetchInterval: 60_000,
+  });
+  const inbox = useQuery({
+    queryKey: qk.inbox,
+    queryFn: () => api.get<{ items: { unreadCount: number }[] }>('/v1/conversations'),
+    retry: false,
+  });
+  return {
+    unreadNotes: notes.data?.unread ?? 0,
+    unreadDms: inbox.data?.items.filter((c) => c.unreadCount > 0).length ?? 0,
+  };
+}
+
 /** Track the visual viewport so composers sit exactly on top of the iOS keyboard (section 9.3). */
 export function useKeyboardInset() {
   const [inset, setInset] = useState(0);

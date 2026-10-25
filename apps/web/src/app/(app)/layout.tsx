@@ -8,12 +8,13 @@ import { MyProfileScreen } from '@/features/profile/MyProfileScreen';
 import { ReelsScreen } from '@/features/reels/ReelsScreen';
 import { ApiError } from '@/lib/api';
 import { clientFlags } from '@/lib/flags';
-import { useMe } from '@/lib/hooks';
+import { useMe, useShellBadges } from '@/lib/hooks';
 
 /** Signed-in app shell [C1]: tab roots stay mounted; route children are pushed screens (section 9.3). */
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const me = useMe();
+  const badges = useShellBadges();
 
   useEffect(() => {
     if (me.error instanceof ApiError && me.error.status === 401) router.replace('/login');
@@ -32,6 +33,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <AppShell
       me={acct ? { handle: acct.handle, avatarUrl: acct.avatarUrl, displayName: acct.displayName } : null}
       profileDot={me.data.pendingApprovals > 0}
+      unreadDms={badges.unreadDms}
+      unreadNotes={badges.unreadNotes}
       roots={{
         home: <HomeScreen />,
         explore: <ExploreScreen />,

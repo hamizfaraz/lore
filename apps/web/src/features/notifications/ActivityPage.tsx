@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Heart } from 'lucide-react';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { EmptyState, LoadError } from '@/components/ui/EmptyState';
 import { NotificationRow } from '@/components/ui/NotificationRow';
 import { PullToRefresh } from '@/components/ui/PullToRefresh';
 import { RowSkeleton } from '@/components/ui/Skeleton';
@@ -47,7 +47,8 @@ export function ActivityPage() {
       <div className="mx-auto w-full max-w-[600px]">
         <PullToRefresh onRefresh={() => q.refetch()}>
           {q.isLoading && [0, 1, 2, 3].map((i) => <RowSkeleton key={i} avatar={44} />)}
-          {!q.isLoading && !q.data?.items.length && (
+          {q.isError && <LoadError body={(q.error as Error).message} onRetry={() => q.refetch()} />}
+          {!q.isLoading && !q.isError && !q.data?.items.length && (
             <EmptyState
               icon={Heart}
               title="Activity on your posts"

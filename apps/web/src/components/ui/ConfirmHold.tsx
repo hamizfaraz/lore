@@ -49,7 +49,7 @@ export function ConfirmHold({
       onPointerLeave={end}
       onContextMenu={(e) => e.preventDefault()}
       className={cn(
-        'chrome relative h-11 overflow-hidden rounded-lg bg-ink px-5 font-semibold text-bg disabled:opacity-40',
+        'chrome relative h-[44px] overflow-hidden rounded-lg bg-ink px-5 font-semibold text-bg disabled:opacity-40',
         className,
       )}
     >

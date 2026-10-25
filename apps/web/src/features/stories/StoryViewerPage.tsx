@@ -211,7 +211,7 @@ export function StoryViewerPage({ accountId }: { accountId: string }) {
             onChange={(e) => setReply(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && sendReply(reply)}
             placeholder="Send message"
-            className="h-11 flex-1 rounded-full border border-white/60 bg-transparent px-4 text-[16px] text-white outline-none placeholder:text-white/80"
+            className="h-[44px] flex-1 rounded-full border border-white/60 bg-transparent px-4 text-[16px] text-white outline-none placeholder:text-white/80"
           />
           <button
             type="button"

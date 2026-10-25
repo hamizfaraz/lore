@@ -64,34 +64,41 @@ export function ReelPlayer({
           muted={muted}
           loop
           playsInline
+          aria-label={media.altText || post.altText || post.caption || 'Reel'}
           onClick={onToggleMute}
         />
       ) : (
-        media?.thumbUrl && <img src={media.thumbUrl} alt="" className="h-full w-full object-cover" />
+        media?.thumbUrl && (
+          <img
+            src={media.thumbUrl}
+            alt={media.altText || post.altText || post.caption || ''}
+            className="h-full w-full object-cover"
+          />
+        )
       )}
       <button
         type="button"
         aria-label={muted ? 'Unmute' : 'Mute'}
         onClick={onToggleMute}
-        className="absolute right-3 top-[calc(var(--safe-top)+56px)] rounded-full bg-black/50 p-1.5"
+        className="absolute right-3 top-[calc(var(--safe-top)+56px)] flex h-[44px] w-[44px] items-center justify-center rounded-full bg-black/50"
       >
         {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
       </button>
       <div className="absolute bottom-[calc(var(--tabbar-h)+var(--safe-bottom)+16px)] right-3 flex flex-col items-center gap-5">
-        <RailBtn onClick={onLike} label={compact(post.likeCount)}>
+        <RailBtn name={post.likedByMe ? 'Unlike' : 'Like'} onClick={onLike} label={compact(post.likeCount)}>
           <Heart
             size={28}
             fill={post.likedByMe ? '#FF3040' : 'none'}
             className={cn(post.likedByMe && 'text-heart')}
           />
         </RailBtn>
-        <RailBtn onClick={onComment} label={compact(post.commentCount)}>
+        <RailBtn name="Comment" onClick={onComment} label={compact(post.commentCount)}>
           <MessageCircle size={28} className="-scale-x-100" />
         </RailBtn>
-        <RailBtn onClick={onShare}>
+        <RailBtn name="Share" onClick={onShare}>
           <Send size={26} />
         </RailBtn>
-        <RailBtn onClick={onSave}>
+        <RailBtn name={post.savedByMe ? 'Remove from saved' : 'Save'} onClick={onSave}>
           <Bookmark size={26} fill={post.savedByMe ? 'currentColor' : 'none'} />
         </RailBtn>
         <MoreHorizontal size={24} />
@@ -115,13 +122,15 @@ export function ReelPlayer({
 function RailBtn({
   children,
   label,
+  name,
   onClick,
-}: { children: React.ReactNode; label?: string; onClick: () => void }) {
+}: { children: React.ReactNode; label?: string; name: string; onClick: () => void }) {
   return (
     <button
       type="button"
+      aria-label={name}
       onClick={onClick}
-      className="press flex flex-col items-center gap-1 text-[12px] font-semibold"
+      className="press flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-1 text-[12px] font-semibold"
     >
       {children}
       {label && <span>{label}</span>}

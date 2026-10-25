@@ -3,7 +3,7 @@ import type { ConversationRowDTO } from '@lore/shared/dto/chat';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, MessageCircle, SquarePen } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { EmptyState, LoadError } from '@/components/ui/EmptyState';
 import { PullToRefresh } from '@/components/ui/PullToRefresh';
 import { SearchField } from '@/components/ui/SearchField';
 import { RowSkeleton } from '@/components/ui/Skeleton';
@@ -40,7 +40,12 @@ export function InboxPage() {
           </span>
         }
         right={
-          <button type="button" aria-label="New message" className="press" onClick={() => setCompose(true)}>
+          <button
+            type="button"
+            aria-label="New message"
+            className="press flex h-[44px] w-[44px] items-center justify-center"
+            onClick={() => setCompose(true)}
+          >
             <SquarePen size={24} strokeWidth={1.75} />
           </button>
         }
@@ -55,7 +60,13 @@ export function InboxPage() {
         </div>
         <PullToRefresh onRefresh={() => inbox.refetch()}>
           {inbox.isLoading && [0, 1, 2, 3].map((i) => <RowSkeleton key={i} />)}
-          {!inbox.isLoading && rows.length === 0 && (
+          {inbox.isError && (
+            <LoadError body={(inbox.error as Error).message} onRetry={() => inbox.refetch()} />
+          )}
+          {!inbox.isLoading && !inbox.isError && rows.length === 0 && q && (
+            <EmptyState title="No results" body={`No messages match “${q}”.`} />
+          )}
+          {!inbox.isLoading && !inbox.isError && rows.length === 0 && !q && (
             <EmptyState
               icon={MessageCircle}
               title="Your messages"

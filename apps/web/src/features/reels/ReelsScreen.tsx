@@ -4,7 +4,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { Camera, Clapperboard } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { EmptyState, LoadError } from '@/components/ui/EmptyState';
 import { ReelPlayer } from '@/components/ui/ReelPlayer';
 import { PostSheets } from '@/features/feed/PostSheets';
 import { usePostActions } from '@/features/feed/usePostActions';
@@ -39,11 +39,19 @@ export function ReelsScreen() {
     <div className="relative h-dvh bg-black md:mx-auto md:max-w-[420px]">
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between px-4 pt-[calc(var(--safe-top)+10px)] text-white">
         <span className="text-[22px] font-bold">Reels</span>
-        <Link href="/create" aria-label="New reel" className="pointer-events-auto">
+        <Link
+          href="/create"
+          aria-label="New reel"
+          className="pointer-events-auto flex h-[44px] w-[44px] items-center justify-center"
+        >
           <Camera size={26} />
         </Link>
       </div>
-      {!q.isLoading && reels.length === 0 ? (
+      {q.isError ? (
+        <div className="flex h-full items-center justify-center text-white">
+          <LoadError body={(q.error as Error).message} onRetry={() => q.refetch()} />
+        </div>
+      ) : !q.isLoading && reels.length === 0 ? (
         <div className="flex h-full items-center justify-center text-white">
           <EmptyState
             icon={Clapperboard}

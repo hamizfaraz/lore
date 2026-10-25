@@ -472,7 +472,7 @@ function Pict({
             value={guess}
             onChange={(e) => setGuess(e.target.value)}
             placeholder="Your guess"
-            className="h-11 flex-1 rounded-full bg-surface-2 px-4 text-[16px] outline-none"
+            className="h-[44px] flex-1 rounded-full bg-surface-2 px-4 text-[16px] outline-none"
           />
           <Button type="submit">Guess</Button>
         </form>

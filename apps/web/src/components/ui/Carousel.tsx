@@ -19,7 +19,7 @@ export function Carousel({
     };
   }, [embla, onSelect]);
   return (
-    <div className={className}>
+    <div className={className} data-carousel>
       <div className="relative overflow-hidden" ref={ref}>
         <div className="flex">
           {slides.map((s, k) => (

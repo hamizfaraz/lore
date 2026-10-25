@@ -22,6 +22,7 @@ export function TabBar({
   profileDot,
   onReselect,
   unreadDms,
+  unreadNotes,
 }: {
   tabs: TabDef[];
   active: TabKey | null;
@@ -30,6 +31,7 @@ export function TabBar({
   profileDot?: boolean;
   onReselect: (k: TabKey) => void;
   unreadDms?: number;
+  unreadNotes?: number;
 }) {
   const lastPath = useUi((s) => s.lastPathByTab);
   const pathname = usePathname();
@@ -56,7 +58,9 @@ export function TabBar({
           <span className={cn('relative rounded-full p-[1.5px]', on && 'ring-2 ring-ink')}>
             <Avatar src={avatarUrl} name={name} size={24} />
             {profileDot && (
-              <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-heart ring-2 ring-bg" />
+              <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-heart ring-2 ring-bg">
+                <span className="sr-only">Needs your approval</span>
+              </span>
             )}
           </span>
         );
@@ -132,7 +136,14 @@ export function TabBar({
           href="/activity"
           className="press mb-1 flex items-center gap-4 rounded-lg px-3 py-3 hover:bg-surface-2"
         >
-          <Heart size={26} strokeWidth={1.75} />
+          <span className="relative">
+            <Heart size={26} strokeWidth={1.75} />
+            {!!unreadNotes && (
+              <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-heart">
+                <span className="sr-only">{unreadNotes} unread</span>
+              </span>
+            )}
+          </span>
           <span className="hidden text-[16px] xl:inline">Notifications</span>
         </Link>
         <Link
