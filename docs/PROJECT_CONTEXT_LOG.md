@@ -384,3 +384,9 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
   required MP3 at 81.9 seconds; and returned four distinct avatar images plus exactly three persona
   previews. The isolated database was reset cleanly in 202 ms after the smoke. Both the hotspot and
   Tailscale lobby URLs returned HTTP 200 with the expected test UI.
+- **2026-10-24 · Final C2 branch checkpoint** — Changed the Podcast Noor/Ava demo switch to a full
+  page navigation so the selected local identity cannot remain stale in client state. Re-ran all six
+  typechecks and pushed the complete C2 feature series through `466cfda` on `c2/intelligence`.
+  The worktree is clean and synchronized with `origin/c2/intelligence`; the restored test lobby is
+  running at the verified hotspot URL. Production C1 media/auth/chat integration and paid-provider
+  acceptance remain explicit handoffs, not hidden completion claims.

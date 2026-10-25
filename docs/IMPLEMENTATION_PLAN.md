@@ -1038,4 +1038,4 @@ Computer 2 is complete only when:
 - [x] C2-12 advanced persona implemented; final C1 media persistence acceptance pending.
 - [x] Final mock-mode typecheck, tests, lint, production builds, seeded reset, and C2-10–12 local smoke pass.
 - [ ] Final privacy, labels, native-feel, performance, and live-provider checks pass.
-- [ ] Final branch pushed; plans, contracts, handoffs, and recovery log are current.
+- [x] Final C2 implementation branch pushed through feature head `466cfda`; plans, handoffs, and recovery log are current.
