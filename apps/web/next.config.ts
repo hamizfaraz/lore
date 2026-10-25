@@ -1,7 +1,9 @@
 import withSerwistInit from '@serwist/next';
 import type { NextConfig } from 'next';
 
-const API = process.env.API_INTERNAL_URL ?? 'http://localhost:4000';
+const API =
+  process.env.API_INTERNAL_URL ??
+  (process.env.VERCEL ? 'https://lore-api-c79x.onrender.com' : 'http://localhost:4000');
 
 const withSerwist = withSerwistInit({
   swSrc: 'src/app/sw.ts',
