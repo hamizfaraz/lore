@@ -2,6 +2,7 @@ import { toFile } from 'openai';
 
 import { getAiConfig, type AiConfig } from '../config.js';
 import { mockImages } from '../mocks/media.js';
+import { isRetryableProviderError, withProviderBackoff } from '../retry.js';
 import { getMuseClient } from './muse.js';
 
 export interface MuseImageResult {
@@ -9,6 +10,8 @@ export interface MuseImageResult {
   mime: 'image/png';
   model: string;
   revisedPrompt?: string;
+  degraded: boolean;
+  source: 'live' | 'mock' | 'fallback';
 }
 
 export interface GenerateMuseImageOptions {
@@ -34,6 +37,8 @@ function readImageResponse(
     bytes: Buffer.from(image.b64_json, 'base64'),
     mime: 'image/png',
     model,
+    degraded: false,
+    source: 'live',
     ...(image.revised_prompt ? { revisedPrompt: image.revised_prompt } : {}),
   };
 }
@@ -47,17 +52,32 @@ export async function generateMuseImage(
       bytes: Buffer.from(mockImages[0]!.bytes),
       mime: 'image/png',
       model: config.museImageModel,
+      degraded: false,
+      source: 'mock',
     };
   }
-  const response = await getMuseClient(config).images.generate({
-    model: config.museImageModel,
-    prompt: options.prompt,
-    n: 1,
-    response_format: 'b64_json',
-    size: options.size ?? '1024x1024',
-    ...(options.user ? { user: options.user } : {}),
-  });
-  return readImageResponse(response, config.museImageModel);
+  try {
+    const response = await withProviderBackoff(() =>
+      getMuseClient(config).images.generate({
+        model: config.museImageModel,
+        prompt: options.prompt,
+        n: 1,
+        response_format: 'b64_json',
+        size: options.size ?? '1024x1024',
+        ...(options.user ? { user: options.user } : {}),
+      }),
+    );
+    return readImageResponse(response, config.museImageModel);
+  } catch (error) {
+    if (!isRetryableProviderError(error)) throw error;
+    return {
+      bytes: Buffer.from(mockImages[0]!.bytes),
+      mime: 'image/png',
+      model: config.museImageModel,
+      degraded: true,
+      source: 'fallback',
+    };
+  }
 }
 
 export async function editMuseImage(
@@ -72,20 +92,35 @@ export async function editMuseImage(
       bytes: Buffer.from(mockImages[1]!.bytes),
       mime: 'image/png',
       model: config.museImageModel,
+      degraded: false,
+      source: 'mock',
     };
   }
 
   const images = await Promise.all(
     options.images.map(({ bytes, filename, mime }) => toFile(bytes, filename, { type: mime ?? 'image/png' })),
   );
-  const response = await getMuseClient(config).images.edit({
-    model: config.museImageModel,
-    image: images,
-    prompt: options.prompt,
-    n: 1,
-    response_format: 'b64_json',
-    size: options.size ?? '1024x1024',
-    ...(options.user ? { user: options.user } : {}),
-  });
-  return readImageResponse(response, config.museImageModel);
+  try {
+    const response = await withProviderBackoff(() =>
+      getMuseClient(config).images.edit({
+        model: config.museImageModel,
+        image: images,
+        prompt: options.prompt,
+        n: 1,
+        response_format: 'b64_json',
+        size: options.size ?? '1024x1024',
+        ...(options.user ? { user: options.user } : {}),
+      }),
+    );
+    return readImageResponse(response, config.museImageModel);
+  } catch (error) {
+    if (!isRetryableProviderError(error)) throw error;
+    return {
+      bytes: Buffer.from(mockImages[1]!.bytes),
+      mime: 'image/png',
+      model: config.museImageModel,
+      degraded: true,
+      source: 'fallback',
+    };
+  }
 }

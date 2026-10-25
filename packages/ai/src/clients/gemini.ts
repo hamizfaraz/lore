@@ -1,18 +1,14 @@
 import { createHash } from 'node:crypto';
 
 import { GoogleGenAI } from '@google/genai';
-import { z } from 'zod';
+import { GuardVerdict as GuardVerdictSchema, type GuardVerdict } from '@lore/shared/ai';
 
 import { getAiConfig, requireLiveValue, type AiConfig } from '../config.js';
 import { getMockFixture } from '../mocks/fixtures.js';
+import { isRetryableProviderError, withProviderBackoff } from '../retry.js';
 
-export const GuardVerdictSchema = z.object({
-  allow: z.boolean(),
-  category: z.enum(['ok', 'harassment', 'sexual', 'self_harm', 'hate', 'private_info', 'humiliation']),
-  severity: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]),
-});
-
-export type GuardVerdict = z.infer<typeof GuardVerdictSchema>;
+export { GuardVerdictSchema };
+export type { GuardVerdict };
 
 let cachedClient: GoogleGenAI | undefined;
 let cachedKey: string | undefined;
@@ -26,24 +22,33 @@ export function getGeminiClient(config: AiConfig = getAiConfig()): GoogleGenAI {
   return cachedClient;
 }
 
+function mockEmbeddings(texts: string[]): number[][] {
+  return texts.map((text) => {
+    const digest = createHash('sha256').update(text).digest();
+    return Array.from({ length: 768 }, (_, index) => (digest[index % digest.length]! - 127.5) / 127.5);
+  });
+}
+
 export async function embedTexts(texts: string[], config: AiConfig = getAiConfig()): Promise<number[][]> {
   if (texts.length === 0) return [];
-  if (config.mode === 'mock') {
-    return texts.map((text) => {
-      const digest = createHash('sha256').update(text).digest();
-      return Array.from({ length: 768 }, (_, index) => (digest[index % digest.length]! - 127.5) / 127.5);
-    });
+  if (config.mode === 'mock') return mockEmbeddings(texts);
+  try {
+    const response = await withProviderBackoff(() =>
+      getGeminiClient(config).models.embedContent({
+        model: config.geminiEmbedModel,
+        contents: texts,
+        config: { outputDimensionality: 768 },
+      }),
+    );
+    const vectors = (response.embeddings ?? []).map((embedding) => embedding.values ?? []);
+    if (vectors.length !== texts.length || vectors.some((vector) => vector.length !== 768)) {
+      throw new Error('Gemini returned an invalid 768-dimensional embedding response');
+    }
+    return vectors;
+  } catch (error) {
+    if (!isRetryableProviderError(error)) throw error;
+    return mockEmbeddings(texts);
   }
-  const response = await getGeminiClient(config).models.embedContent({
-    model: config.geminiEmbedModel,
-    contents: texts,
-    config: { outputDimensionality: 768 },
-  });
-  const vectors = (response.embeddings ?? []).map((embedding) => embedding.values ?? []);
-  if (vectors.length !== texts.length || vectors.some((vector) => vector.length !== 768)) {
-    throw new Error('Gemini returned an invalid 768-dimensional embedding response');
-  }
-  return vectors;
 }
 
 const GUARD_JSON_SCHEMA = {
@@ -63,18 +68,25 @@ const GUARD_JSON_SCHEMA = {
 export async function classifySafety(text: string, config: AiConfig = getAiConfig()): Promise<GuardVerdict> {
   if (config.mode === 'mock') return GuardVerdictSchema.parse(getMockFixture('guardVerdict'));
   const model = requireLiveValue(config.geminiGuardModel, 'GEMINI_GUARD_MODEL');
-  const response = await getGeminiClient(config).models.generateContent({
-    model,
-    contents: [
-      "Classify the supplied LORE social-app content for safety. Private information includes exposing another member's private preferences or private-chat content. Return JSON only.",
-      `CONTENT:\n${text}`,
-    ].join('\n\n'),
-    config: {
-      temperature: 0,
-      responseMimeType: 'application/json',
-      responseJsonSchema: GUARD_JSON_SCHEMA,
-    },
-  });
-  if (!response.text) throw new Error('Gemini guard returned no content');
-  return GuardVerdictSchema.parse(JSON.parse(response.text));
+  try {
+    const response = await withProviderBackoff(() =>
+      getGeminiClient(config).models.generateContent({
+        model,
+        contents: [
+          "Classify the supplied LORE social-app content for safety. Private information includes exposing another member's private preferences or private-chat content. Return JSON only.",
+          `CONTENT:\n${text}`,
+        ].join('\n\n'),
+        config: {
+          temperature: 0,
+          responseMimeType: 'application/json',
+          responseJsonSchema: GUARD_JSON_SCHEMA,
+        },
+      }),
+    );
+    if (!response.text) throw new Error('Gemini guard returned no content');
+    return GuardVerdictSchema.parse(JSON.parse(response.text));
+  } catch (error) {
+    if (!isRetryableProviderError(error)) throw error;
+    return GuardVerdictSchema.parse(getMockFixture('guardVerdict'));
+  }
 }

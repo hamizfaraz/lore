@@ -12,6 +12,6 @@ feature code imports these providers through `@lore/ai`; provider SDKs do not le
 calls every paid provider once and additionally requires `AI_SMOKE_WAV_PATH` to point to a short,
 spoken mono PCM16 WAV. The path is local-only and must not be committed.
 
-Until the Computer 1 application scaffold is merged, `pnpm dev` runs this package's mock smoke in
-watch mode. It is a development harness only: it exposes no web page or product API and adds no
-product behavior.
+The application scaffold is now present. Run `pnpm dev` from the repository root to start the web,
+API, worker, and MCP processes. The AI package is exercised through those consumers and through its
+explicit smoke command; it does not start a separate watch process.

@@ -3,10 +3,13 @@ import { createHash } from 'node:crypto';
 import { getJson } from 'serpapi';
 
 import { getAiConfig, requireLiveValue, type AiConfig } from '../config.js';
+import { isRetryableProviderError, withProviderBackoff } from '../retry.js';
 
 export interface SerpCache {
   get(key: string): Promise<string | null>;
-  setEx(key: string, seconds: number, value: string): Promise<unknown>;
+  /** ioredis uses `setex`; node-redis uses `setEx`. Either injected client is accepted. */
+  setex?(key: string, seconds: number, value: string): Promise<unknown>;
+  setEx?(key: string, seconds: number, value: string): Promise<unknown>;
 }
 
 export interface SerpSearchResult {
@@ -14,6 +17,7 @@ export interface SerpSearchResult {
   query: string;
   fetchedAt: string;
   cached: boolean;
+  degraded: boolean;
   raw: Record<string, unknown>;
 }
 
@@ -64,6 +68,7 @@ export class SerpClient {
         query: options.q,
         fetchedAt: new Date(0).toISOString(),
         cached: true,
+        degraded: false,
         raw: {
           search_metadata: { status: 'Success', mock: true },
           search_parameters: { engine, q: options.q },
@@ -83,22 +88,50 @@ export class SerpClient {
     const key = cacheKey(engine, parameters);
     const cached = await this.cache?.get(key);
     if (cached) {
-      const parsed = JSON.parse(cached) as Omit<SerpSearchResult, 'cached'>;
-      return { ...parsed, cached: true };
+      const parsed = JSON.parse(cached) as Omit<SerpSearchResult, 'cached'> & { degraded?: boolean };
+      return { ...parsed, cached: true, degraded: parsed.degraded ?? false };
     }
 
-    const raw = (await getJson(engine, {
-      api_key: apiKey,
-      ...parameters,
-    })) as unknown as Record<string, unknown>;
-    const result: SerpSearchResult = {
-      engine,
-      query: options.q,
-      fetchedAt: new Date().toISOString(),
-      cached: false,
-      raw,
-    };
-    await this.cache?.setEx(key, CACHE_SECONDS, JSON.stringify(result));
-    return result;
+    try {
+      const raw = await withProviderBackoff(
+        () =>
+          getJson(engine, {
+            api_key: apiKey,
+            ...parameters,
+          }) as Promise<Record<string, unknown>>,
+      );
+      if (typeof raw.error === 'string') throw new Error(`SerpAPI failed: ${raw.error}`);
+      const result: SerpSearchResult = {
+        engine,
+        query: options.q,
+        fetchedAt: new Date().toISOString(),
+        cached: false,
+        degraded: false,
+        raw,
+      };
+      if (this.cache) {
+        const write = this.cache.setex ?? this.cache.setEx;
+        if (!write) throw new Error('Serp cache must provide setex or setEx');
+        await write.call(this.cache, key, CACHE_SECONDS, JSON.stringify(result));
+      }
+      return result;
+    } catch (error) {
+      if (!isRetryableProviderError(error)) throw error;
+      return {
+        engine,
+        query: options.q,
+        fetchedAt: new Date().toISOString(),
+        cached: false,
+        degraded: true,
+        raw: {
+          search_metadata: { status: 'Degraded', fallback: true },
+          search_parameters: { engine, q: options.q },
+          events_results: [],
+          local_results: [],
+          news_results: [],
+          organic_results: [],
+        },
+      };
+    }
   }
 }

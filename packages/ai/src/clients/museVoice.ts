@@ -2,11 +2,14 @@ import WebSocket from 'ws';
 
 import { getAiConfig, requireLiveValue, type AiConfig } from '../config.js';
 import { mockVoiceFixtures } from '../mocks/media.js';
+import { isRetryableProviderError, ProviderHttpError, withProviderBackoff } from '../retry.js';
 
 export interface MuseTranscript {
   text: string;
   raw: unknown;
   model: string;
+  degraded: boolean;
+  source: 'live' | 'mock' | 'fallback';
 }
 
 export interface BatchTranscriptionOptions {
@@ -40,40 +43,62 @@ export async function transcribeMuseBatch(
       text: mockVoiceFixtures[0]!.transcript,
       raw: { transcript: mockVoiceFixtures[0]!.transcript, mock: true },
       model: config.museVoiceModel,
+      degraded: false,
+      source: 'mock',
     };
   }
   const apiKey = requireLiveValue(config.metaApiKey, 'META_API_KEY');
-  const body = new FormData();
-  body.append(
-    'audio',
-    new Blob([new Uint8Array(options.audio)], { type: 'audio/wav' }),
-    options.filename ?? `${options.sessionId}.wav`,
-  );
-  body.append(
-    'request',
-    JSON.stringify({
-      mode: 'PUSH_TO_TALK',
-      model: config.museVoiceModel,
-      audioEncoding: 'WAV',
-      keywords: options.keywords ?? [],
-    }),
-  );
-
   const endpoint = new URL(`${config.metaApiBase.replace(/\/$/, '')}/asr/transcribe`);
   endpoint.searchParams.set('sessionId', options.sessionId);
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}` },
-    body,
-  });
-  const raw = (await response.json()) as unknown;
-  if (!response.ok) {
-    throw new Error(`Muse Voice batch transcription failed (${response.status})`);
+  try {
+    return await withProviderBackoff(async () => {
+      const body = new FormData();
+      body.append(
+        'audio',
+        new Blob([new Uint8Array(options.audio)], { type: 'audio/wav' }),
+        options.filename ?? `${options.sessionId}.wav`,
+      );
+      body.append(
+        'request',
+        JSON.stringify({
+          mode: 'PUSH_TO_TALK',
+          model: config.museVoiceModel,
+          audioEncoding: 'WAV',
+          keywords: options.keywords ?? [],
+        }),
+      );
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}` },
+        body,
+      });
+      const raw = (await response.json().catch(() => ({}))) as unknown;
+      if (!response.ok) {
+        throw new ProviderHttpError(
+          `Muse Voice batch transcription failed (${response.status})`,
+          response.status,
+        );
+      }
+      const text = transcriptText(raw);
+      if (!text) throw new Error('Muse Voice returned no transcript');
+      return {
+        text,
+        raw,
+        model: config.museVoiceModel,
+        degraded: false,
+        source: 'live' as const,
+      };
+    });
+  } catch (error) {
+    if (!isRetryableProviderError(error)) throw error;
+    return {
+      text: mockVoiceFixtures[0]!.transcript,
+      raw: { transcript: mockVoiceFixtures[0]!.transcript, fallback: true },
+      model: config.museVoiceModel,
+      degraded: true,
+      source: 'fallback',
+    };
   }
-
-  const text = transcriptText(raw);
-  if (!text) throw new Error('Muse Voice returned no transcript');
-  return { text, raw, model: config.museVoiceModel };
 }
 
 export interface MuseRealtimeOptions {

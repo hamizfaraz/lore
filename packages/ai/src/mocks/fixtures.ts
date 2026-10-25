@@ -1,5 +1,20 @@
 import { readFileSync } from 'node:fs';
 
+import {
+  CommonGroundReason,
+  FamilyStorySpec,
+  FiveWordChoices,
+  GamePrompt,
+  GroupIntentBrief,
+  GuardVerdict,
+  MemeEntrySpec,
+  PhotoNotes,
+  PlanRanking,
+  RecapDraftSpec,
+  SpeakDecision,
+} from '@lore/shared/ai';
+import { z, type ZodType } from 'zod';
+
 export const MOCK_FIXTURE_NAMES = [
   'speakDecision',
   'groupIntentBrief',
@@ -30,7 +45,21 @@ const fixtureFiles: Record<MockFixtureName, string> = {
   guardVerdict: 'guard-verdict.json',
 };
 
+const fixtureSchemas = {
+  speakDecision: SpeakDecision,
+  groupIntentBrief: GroupIntentBrief,
+  planRanking: PlanRanking,
+  photoNotes: z.array(PhotoNotes),
+  recapDraftSpec: RecapDraftSpec,
+  fiveWordChoices: FiveWordChoices,
+  gamePrompt: GamePrompt,
+  memeEntrySpec: MemeEntrySpec,
+  familyStorySpec: FamilyStorySpec,
+  commonGroundReason: CommonGroundReason,
+  guardVerdict: GuardVerdict,
+} satisfies Record<MockFixtureName, ZodType>;
+
 export function getMockFixture(name: MockFixtureName): unknown {
   const source = readFileSync(new URL(`./fixtures/${fixtureFiles[name]}`, import.meta.url), 'utf8');
-  return JSON.parse(source) as unknown;
+  return fixtureSchemas[name].parse(JSON.parse(source));
 }

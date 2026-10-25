@@ -9,7 +9,7 @@ import { generateMuseImage } from './clients/museImage.js';
 import { transcribeMuseBatch } from './clients/museVoice.js';
 import { SerpClient } from './clients/serp.js';
 import { getAiConfig } from './config.js';
-import { getFiveWordChoices, getPrompts } from './games.js';
+import { games } from './games.js';
 import { guardText } from './guard.js';
 import { MOCK_FIXTURE_NAMES, getMockFixture } from './mocks/fixtures.js';
 import { mockImages, mockVoiceFixtures } from './mocks/media.js';
@@ -17,11 +17,17 @@ import { callStructured } from './structured.js';
 
 async function smokeMock(): Promise<Record<string, unknown>> {
   for (const name of MOCK_FIXTURE_NAMES) getMockFixture(name);
-  const choices = await getFiveWordChoices({ story: ['Once'] });
-  const prompts = await getPrompts({
+  const choices = await games.fiveWordChoices({
+    conversationId: 'smoke',
+    storySoFar: ['Once'],
+    contextSource: 'random',
+    memories: [],
+  });
+  const prompts = await games.getPrompts({
     conversationId: 'smoke',
     mode: 'pictionary',
     contextSource: 'random',
+    count: 3,
     memories: [],
   });
   const guard = await guardText('friends planning a movie night');
@@ -33,7 +39,7 @@ async function smokeMock(): Promise<Record<string, unknown>> {
     images: mockImages.length,
     voiceFixtures: mockVoiceFixtures.length,
     choices: choices.words.length,
-    prompts: prompts.length,
+    prompts: prompts.prompts.length,
     guard,
     budget: budgetDecision,
   };
@@ -56,16 +62,19 @@ async function smokeLive(): Promise<Record<string, unknown>> {
   if (structured.degraded) throw new Error(`Muse structured smoke degraded: ${structured.error}`);
 
   const image = await generateMuseImage({ prompt: 'a tiny warm paper-grain calendar icon' }, config);
+  if (image.degraded) throw new Error('Muse Image smoke degraded to a fixture');
   const transcript = await transcribeMuseBatch(
     { audio: await readFile(wavPath), sessionId: `smoke-${Date.now()}` },
     config,
   );
+  if (transcript.degraded) throw new Error('Muse Voice smoke degraded to a fixture');
   const embeddings = await embedTexts(['friends planning a movie night'], config);
   const guard = await guardText('friends planning a movie night', config);
   const serp = await new SerpClient(undefined, config).events({
     q: 'events in Austin this weekend',
     extra: { htichips: 'date:weekend' },
   });
+  if (serp.degraded) throw new Error('SerpAPI smoke degraded to an empty response');
 
   return {
     mode: 'live',

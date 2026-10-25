@@ -13,6 +13,11 @@ export async function guardText(text: string, config: AiConfig = getAiConfig()):
   return classifySafety(text, config);
 }
 
+/** Stable C1-facing guard export from the scaffold contract. */
+export async function guard(text: string): Promise<GuardVerdict> {
+  return guardText(text);
+}
+
 export async function guardGenerated<T>(
   value: T,
   toText: (value: T) => string,

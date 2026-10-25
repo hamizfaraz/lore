@@ -97,26 +97,28 @@ continue against the existing typed stub or a local test fake.
 Status as last verified on October 24, 2026:
 
 - C2 is isolated in a dedicated worktree on `c2/intelligence`.
-- `origin/main` was at C1-0a commit `136e13f`; C1-0b had not yet landed at the last fetch.
+- `origin/main` is at C1-0b commit `73814e9`, and `c2/intelligence` has been rebased onto it.
 - C2-0 external access and credentials are not confirmed.
-- C2-1 is partially implemented in `packages/ai`: provider adapters, structured-output handling,
-  deterministic mocks, budget and guard helpers, prompts, game helpers, reference validation,
-  tests, smoke commands, and a temporary mock watch harness.
-- C2 package checks pass: typecheck, package lint, 13 tests, and mock smoke.
-- Whole-workspace typecheck/tests pass. Workspace lint is blocked by the C1-owned root
-  `biome.json`; the request is already in `docs/HANDOFF.md`.
+- C2-1 is implemented in `packages/ai` against C1's shared schemas and frozen game/guard interface:
+  provider adapters, structured-output repair/fallback, retry policy, deterministic mocks, budgets,
+  guard and reference validation, prompts, game helpers, and live/mock smoke coverage.
+- Mock fixtures now include six distinct 128x128 images and two short spoken mono PCM16 24 kHz WAV
+  samples. The temporary AI watch harness has been removed in favor of C1's real dev processes.
+- All repository verification passes: typecheck, Biome, 17 C2 tests, mock smoke, full workspace tests,
+  and production build.
+- C2-1 is awaiting only the paid live smoke required by its done condition. That is blocked on the
+  human-owned C2-0 provider credentials and model ids, which are not present locally.
 - No C2-2 or later product feature has been implemented.
 
-Before resuming implementation, fetch `origin/main` and compare its head with this baseline. If
-C1-0b has landed, rebase `c2/intelligence`, resolve only C2-owned/additive conflicts, install, and
-run the entire verification suite before continuing C2-1.
+Before resuming implementation, fetch `origin/main` and compare its head with this baseline. Do not
+begin C2-2 until C2-0 credentials permit the C2-1 live smoke and the result is recorded here.
 
 ## 6. Dependencies and Execution Order
 
 | Order | Task | Tier | Depends on | Current state |
 | --- | --- | --- | --- | --- |
 | 0 | C2-0 provisioning | P0 | — | Human action required |
-| 1 | C2-1 AI provider core | P0 | C1-0a; rebase on C1-0b | In progress |
+| 1 | C2-1 AI provider core | P0 | C1-0a; rebase on C1-0b | Implementation green; live smoke blocked on C2-0 |
 | 2 | C2-2 Milo/persona | P0 | C2-1, C1-4 hook | Pending |
 | 3 | C2-3 voice | P0 | C2-1 | Pending |
 | 4 | C2-4 Concierge/plans | P0 | C2-2 | Pending |
@@ -191,34 +193,34 @@ Provide the only supported interface to Muse Spark, Muse Image, Muse Voice, Gemi
 with schema validation, budgets, retries, grounded-reference checks, deterministic mocks, and live
 smoke coverage.
 
-### Existing partial implementation
+### Implementation status
 
-The branch already contains the provider clients, `callStructured`, mock mode, 11 structured JSON
-fixtures, mock media containers, guard/budget helpers, prompts, anti-hallucination validation,
-C1-facing game helpers, tests, a live smoke entrypoint, and a temporary watch-mode dev harness.
-Treat this as a partial task, not completed work.
+The branch contains the provider clients, `callStructured`, mock mode, 11 structured JSON fixtures,
+representative mock media, guard/budget helpers, prompts, anti-hallucination validation, C1-facing
+game helpers, tests, and a live smoke entrypoint. All implementation and local integration work is
+complete; only credential-gated live provider verification remains.
 
-### Remaining implementation sequence
+### Implementation sequence and progress
 
-1. Rebase on C1-0b after it lands on `main`; run install and all checks before editing.
-2. Replace local schema authority with the shared schemas exported by `@lore/shared`, preserving
+- [x] Rebase on C1-0b after it lands on `main`; run install and all checks before editing.
+- [x] Replace local schema authority with the shared schemas exported by `@lore/shared`, preserving
    C2 behavior and using only additive contract changes if a gap exists.
-3. Verify `packages/ai/src/index.ts` is the sole public import surface.
-4. Verify every provider supports `AI_MODE=mock` without keys or network access.
-5. Keep one validation repair attempt, then a schema-valid mock fallback marked `degraded: true`.
-6. Enforce timeouts/backoff and the documented limits: 60 Spark calls per conversation/hour and
+- [x] Verify `packages/ai/src/index.ts` is the sole public import surface.
+- [x] Verify every provider supports `AI_MODE=mock` without keys or network access.
+- [x] Keep one validation repair attempt, then a schema-valid mock fallback marked `degraded: true`.
+- [x] Enforce timeouts/backoff and the documented limits: 60 Spark calls per conversation/hour and
    40 images globally/hour through Valkey-compatible counters.
-7. Connect SerpAPI's six-hour cache and budgets through C1's injected Valkey interface without
+- [x] Connect SerpAPI's six-hour cache and budgets through C1's injected Valkey interface without
    implementing C1 runtime infrastructure.
-8. Enforce reference integrity for memory, candidate, message, media, and user ids; force silence
+- [x] Enforce reference integrity for memory, candidate, message, media, and user ids; force silence
    for unverified news; discard ranking options outside the retrieved candidate set.
-9. Replace placeholder image/voice media with six representative, license-safe image fixtures and
+- [x] Replace placeholder image/voice media with six representative, license-safe image fixtures and
    two short spoken WAV fixtures plus transcripts.
-10. Preserve C1-facing game functions: five distinct one-word choices, game/lore prompts, meme
+- [x] Preserve C1-facing game functions: five distinct one-word choices, game/lore prompts, meme
     entries, safety regeneration, and random fallback when fewer than three safe memories exist.
-11. With C2-0 credentials, run one paid live call for Spark, Image, batch Voice, Gemini embedding,
+- [ ] With C2-0 credentials, run one paid live call for Spark, Image, batch Voice, Gemini embedding,
     Gemini guard, and SerpAPI. Test realtime Voice separately when its proxy exists.
-12. Reconcile or remove the temporary `packages/ai/src/dev.ts` harness after C1's real web/API/
+- [x] Reconcile or remove the temporary `packages/ai/src/dev.ts` harness after C1's real web/API/
     worker dev scripts arrive.
 
 ### Provider and output matrix

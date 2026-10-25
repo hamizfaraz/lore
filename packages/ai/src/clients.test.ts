@@ -49,4 +49,24 @@ describe('mock provider clients', () => {
     expect(result).toMatchObject({ engine: 'google_events', cached: true });
     expect(result.raw.search_metadata).toMatchObject({ status: 'Success', mock: true });
   });
+
+  it('accepts the ioredis cache shape used by the C1 runtime', async () => {
+    const cache = {
+      get: vi.fn(async () =>
+        JSON.stringify({
+          engine: 'google_events',
+          query: 'Austin events',
+          fetchedAt: new Date(0).toISOString(),
+          degraded: false,
+          raw: {},
+        }),
+      ),
+      setex: vi.fn(async () => 'OK'),
+    };
+    const liveConfig = getAiConfig({ mode: 'live', serpApiKey: 'not-used-because-cache-hits' });
+    const result = await new SerpClient(cache, liveConfig).events({ q: 'Austin events' });
+    expect(result.cached).toBe(true);
+    expect(cache.get).toHaveBeenCalledOnce();
+    expect(cache.setex).not.toHaveBeenCalled();
+  });
 });

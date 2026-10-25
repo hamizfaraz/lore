@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 
 import { getAiConfig, requireLiveValue, type AiConfig } from '../config.js';
+import { withProviderBackoff } from '../retry.js';
 
 let cachedClient: OpenAI | undefined;
 let cachedSignature: string | undefined;
@@ -23,7 +24,7 @@ export function getMuseClient(config: AiConfig = getAiConfig()): OpenAI {
 }
 
 export async function listMuseModels(config: AiConfig = getAiConfig()): Promise<string[]> {
-  const page = await getMuseClient(config).models.list();
+  const page = await withProviderBackoff(() => getMuseClient(config).models.list());
   const models: string[] = [];
   for await (const model of page) {
     models.push(model.id);

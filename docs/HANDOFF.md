@@ -17,5 +17,5 @@ Check at every checkpoint (section 10 working agreements).
 
 ## Computer 2
 
-- [ ] C2->C1: Format the C1-owned root `biome.json` with the repository's Biome 1.9.4 formatter.
-  Whole-workspace `pnpm lint` otherwise fails on that file; C2-owned `packages/ai` lint is clean.
+- [x] C2->C1: Root `biome.json` is formatted on C1-0b. Whole-workspace `pnpm lint` now passes after
+  rebasing C2 on `origin/main` at `73814e9`.

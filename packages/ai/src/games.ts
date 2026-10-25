@@ -1,44 +1,41 @@
+import {
+  FiveWordChoices as FiveWordChoicesSchema,
+  GamePrompt as GamePromptSchema,
+  MemeEntrySpec as MemeEntrySpecSchema,
+  type FiveWordChoices,
+  type GamePrompt,
+  type MemeEntrySpec,
+} from '@lore/shared/ai';
+import type { ContextSource, GameMode } from '@lore/shared/enums';
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
-import { z } from 'zod';
 
+import { generateMuseImage } from './clients/museImage.js';
 import { getAiConfig, type AiConfig } from './config.js';
 import { GAMES_SYSTEM_PROMPT } from './prompts/games.js';
+import { withHouseImageStyle } from './prompts/imageStyle.js';
 import { callStructured } from './structured.js';
 
-export const FiveWordChoicesSchema = z.object({
-  words: z.tuple([z.string(), z.string(), z.string(), z.string(), z.string()]),
-  loreTag: z.string().optional(),
-});
-
-export const GamePromptSchema = z.object({
-  prompt: z.string().min(1),
-  hint: z.string().min(1),
-  source: z.enum(['lore', 'random']),
-  loreMemoryId: z.string().optional(),
-});
-
-export const MemeEntrySpecSchema = z.object({
-  caption: z.string().min(1),
-  imagePrompt: z.string().optional(),
-});
-
-export type FiveWordChoices = z.infer<typeof FiveWordChoicesSchema>;
-export type GamePrompt = z.infer<typeof GamePromptSchema>;
-export type MemeEntrySpec = z.infer<typeof MemeEntrySpecSchema>;
-
-export interface GameMemory {
+export type LoreMemoryForGames = {
   id: string;
-  kind: 'joke' | 'preference' | 'event' | 'place' | 'nickname' | 'fact';
+  kind: string;
   summary: string;
-  sensitivity: 'low' | 'medium' | 'high';
-}
+  sensitivity: string;
+};
 
 export interface GetGamePromptsInput {
   conversationId: string;
-  mode: 'pictionary' | 'meme_battle' | 'one_word_story';
-  contextSource: 'lore' | 'random' | 'hybrid';
-  memories: GameMemory[];
-  count?: number;
+  mode: GameMode;
+  contextSource: ContextSource;
+  count: number;
+  memories: LoreMemoryForGames[];
+  config?: AiConfig;
+}
+
+export interface FiveWordInput {
+  conversationId: string;
+  storySoFar: string[];
+  contextSource: ContextSource;
+  memories: LoreMemoryForGames[];
   config?: AiConfig;
 }
 
@@ -49,7 +46,9 @@ const RANDOM_PROMPTS: GamePrompt[] = [
   { prompt: 'a very serious squirrel detective', hint: 'animal, mystery, magnifier', source: 'random' },
 ];
 
-function eligibleMemories(memories: GameMemory[]): GameMemory[] {
+const FALLBACK_WORDS = ['suddenly', 'together', 'noticed', 'another', 'doorway'] as const;
+
+function eligibleMemories(memories: LoreMemoryForGames[]): LoreMemoryForGames[] {
   return memories.filter(
     (memory) =>
       memory.sensitivity === 'low' &&
@@ -61,15 +60,44 @@ function randomPrompt(index: number): GamePrompt {
   return { ...RANDOM_PROMPTS[index % RANDOM_PROMPTS.length]! };
 }
 
-export async function getPrompts(input: GetGamePromptsInput): Promise<GamePrompt[]> {
-  const count = Math.max(1, Math.min(input.count ?? 3, 12));
+function validWordChoices(value: FiveWordChoices, previous?: string): boolean {
+  const normalized = value.words.map((word) => word.trim().toLocaleLowerCase());
+  return (
+    new Set(normalized).size === 5 &&
+    normalized.every((word) => /^\p{L}[\p{L}'-]*$/u.test(word)) &&
+    (!previous || normalized.every((word) => word !== previous.toLocaleLowerCase()))
+  );
+}
+
+function sixWordTitle(words: string[]): string {
+  const clean = words.map((word) => word.replace(/[^\p{L}\p{N}'-]/gu, '').trim()).filter(Boolean);
+  const fallback = ['our', 'strange', 'little', 'story', 'made', 'together'];
+  const titleWords = [...clean.slice(0, 6), ...fallback].slice(0, 6);
+  const title = titleWords.join(' ');
+  return title.charAt(0).toLocaleUpperCase() + title.slice(1);
+}
+
+export async function getPrompts(input: GetGamePromptsInput): Promise<{
+  prompts: GamePrompt[];
+  usedLore: boolean;
+  degraded: boolean;
+}> {
+  const count = Math.max(1, Math.min(input.count, 12));
   const lore = eligibleMemories(input.memories);
   const useLore = input.contextSource !== 'random' && lore.length >= 3;
-  if (!useLore) return Array.from({ length: count }, (_, index) => randomPrompt(index));
+  if (!useLore) {
+    return {
+      prompts: Array.from({ length: count }, (_, index) => randomPrompt(index)),
+      usedLore: false,
+      degraded: false,
+    };
+  }
 
   const allowedIds = new Set(lore.map((memory) => memory.id));
   const memoryBlock = lore.map((memory) => `${memory.id}: ${memory.summary}`).join('\n');
   const prompts: GamePrompt[] = [];
+  let degraded = false;
+
   for (let index = 0; index < count; index += 1) {
     const messages: ChatCompletionMessageParam[] = [
       { role: 'system', content: GAMES_SYSTEM_PROMPT },
@@ -90,6 +118,7 @@ export async function getPrompts(input: GetGamePromptsInput): Promise<GamePrompt
         loreMemoryId: lore[index % lore.length]!.id,
       },
     });
+    degraded ||= result.degraded;
     const prompt = result.data;
     if (prompt.source !== 'lore' || !prompt.loreMemoryId || !allowedIds.has(prompt.loreMemoryId)) {
       prompts.push(randomPrompt(index));
@@ -97,33 +126,24 @@ export async function getPrompts(input: GetGamePromptsInput): Promise<GamePrompt
       prompts.push(prompt);
     }
   }
-  return prompts;
+
+  return {
+    prompts,
+    usedLore: prompts.some((prompt) => prompt.source === 'lore'),
+    degraded,
+  };
 }
 
-export interface FiveWordInput {
-  story: string[];
-  lore?: GameMemory[];
-  config?: AiConfig;
-}
-
-const FALLBACK_WORDS = ['suddenly', 'together', 'noticed', 'another', 'doorway'] as const;
-
-function validWordChoices(value: FiveWordChoices, previous?: string): boolean {
-  const normalized = value.words.map((word) => word.trim().toLocaleLowerCase());
-  return (
-    new Set(normalized).size === 5 &&
-    normalized.every((word) => /^\p{L}[\p{L}'-]*$/u.test(word)) &&
-    (!previous || normalized.every((word) => word !== previous.toLocaleLowerCase()))
-  );
-}
-
-export async function getFiveWordChoices(input: FiveWordInput): Promise<FiveWordChoices> {
-  const previous = input.story.at(-1);
+export async function fiveWordChoices(
+  input: FiveWordInput,
+): Promise<FiveWordChoices & { degraded: boolean }> {
+  const previous = input.storySoFar.at(-1);
+  const lore = eligibleMemories(input.memories);
   const messages: ChatCompletionMessageParam[] = [
     { role: 'system', content: GAMES_SYSTEM_PROMPT },
     {
       role: 'user',
-      content: `Continue this one-word story with exactly five distinct single-word choices. Do not repeat the last word.\nSTORY: ${input.story.join(' ')}\nLORE: ${(input.lore ?? []).map((memory) => memory.summary).join('; ')}`,
+      content: `Continue this one-word story with exactly five distinct single-word choices. Do not repeat the last word.\nSTORY: ${input.storySoFar.join(' ')}\nLORE: ${lore.map((memory) => memory.summary).join('; ')}`,
     },
   ];
   const result = await callStructured(FiveWordChoicesSchema, messages, {
@@ -132,11 +152,66 @@ export async function getFiveWordChoices(input: FiveWordInput): Promise<FiveWord
     timeoutMs: 4_000,
     config: input.config ?? getAiConfig(),
   });
-  if (validWordChoices(result.data, previous)) return result.data;
+  if (validWordChoices(result.data, previous)) {
+    return { ...result.data, degraded: result.degraded };
+  }
 
   const words = FALLBACK_WORDS.filter((word) => word !== previous?.toLocaleLowerCase()).slice(0, 5);
   while (words.length < 5) words.push(`word${words.length + 1}` as (typeof FALLBACK_WORDS)[number]);
-  return { words: words as [string, string, string, string, string] };
+  return {
+    words: words as [string, string, string, string, string],
+    degraded: true,
+  };
+}
+
+export async function getFiveWordChoices(input: {
+  story: string[];
+  lore?: LoreMemoryForGames[];
+  config?: AiConfig;
+}): Promise<FiveWordChoices> {
+  const result = await fiveWordChoices({
+    conversationId: 'direct-helper',
+    storySoFar: input.story,
+    contextSource: input.lore?.length ? 'hybrid' : 'random',
+    memories: input.lore ?? [],
+    ...(input.config ? { config: input.config } : {}),
+  });
+  return FiveWordChoicesSchema.parse(result);
+}
+
+export async function storyTitle(input: {
+  words: string[];
+}): Promise<{ title: string; degraded: boolean }> {
+  return { title: sixWordTitle(input.words), degraded: false };
+}
+
+export async function storyImage(input: {
+  story: string;
+  title: string;
+}): Promise<{ image: Buffer; mime: string; degraded: boolean }> {
+  const result = await generateMuseImage({
+    prompt: withHouseImageStyle(`One-word story ending art for "${input.title}": ${input.story}`),
+  });
+  return { image: result.bytes, mime: result.mime, degraded: result.degraded };
+}
+
+export async function memeEntry(input: {
+  promptText: string | null;
+  imageCaption?: string | null;
+}): Promise<MemeEntrySpec & { degraded: boolean }> {
+  const prompt =
+    [input.promptText, input.imageCaption].filter(Boolean).join(' — ') || 'friends being chaotic';
+  const messages: ChatCompletionMessageParam[] = [
+    { role: 'system', content: GAMES_SYSTEM_PROMPT },
+    { role: 'user', content: `Write one concise meme entry for this prompt: ${prompt}` },
+  ];
+  const result = await callStructured(MemeEntrySpecSchema, messages, {
+    name: 'memeEntrySpec',
+    reasoningEffort: 'minimal',
+    timeoutMs: 6_000,
+    config: getAiConfig(),
+  });
+  return { ...result.data, degraded: result.degraded };
 }
 
 export async function getMemeEntry(prompt: string, config: AiConfig = getAiConfig()): Promise<MemeEntrySpec> {
@@ -153,4 +228,20 @@ export async function getMemeEntry(prompt: string, config: AiConfig = getAiConfi
   return result.data;
 }
 
-export const games = { getPrompts, getFiveWordChoices, getMemeEntry };
+export async function memeImage(input: {
+  prompt: string;
+}): Promise<{ image: Buffer; mime: string; degraded: boolean }> {
+  const result = await generateMuseImage({
+    prompt: withHouseImageStyle(`Playful meme battle prompt image: ${input.prompt}`),
+  });
+  return { image: result.bytes, mime: result.mime, degraded: result.degraded };
+}
+
+export const games = {
+  getPrompts,
+  fiveWordChoices,
+  storyTitle,
+  storyImage,
+  memeEntry,
+  memeImage,
+};

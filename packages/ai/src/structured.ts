@@ -1,10 +1,11 @@
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { zodResponseFormat } from 'openai/helpers/zod';
-import type { ZodType } from 'zod';
+import { ZodError, type ZodType } from 'zod';
 
 import { getAiConfig, type AiConfig } from './config.js';
 import { getMuseClient } from './clients/muse.js';
 import { getMockFixture, type MockFixtureName } from './mocks/fixtures.js';
+import { isRetryableProviderError, PROVIDER_BACKOFF_MS } from './retry.js';
 
 export type ReasoningEffort = 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
 
@@ -30,12 +31,6 @@ export interface StructuredResult<T> {
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
-}
-
-function isRetryable(error: unknown): boolean {
-  if (!error || typeof error !== 'object') return false;
-  const status = (error as { status?: unknown }).status;
-  return status === 429 || (typeof status === 'number' && status >= 500);
 }
 
 function sleep(ms: number): Promise<void> {
@@ -111,7 +106,8 @@ export async function callStructured<T>(
   let lastError: unknown;
   let repairMessages = [...messages];
   for (let validationAttempt = 0; validationAttempt < 2; validationAttempt += 1) {
-    for (const delayMs of [0, 500, 1_000, 2_000]) {
+    let shouldRepair = false;
+    for (const delayMs of PROVIDER_BACKOFF_MS) {
       if (delayMs) await sleep(delayMs);
       attempts += 1;
       try {
@@ -119,11 +115,13 @@ export async function callStructured<T>(
         return { data, degraded: false, source: 'live', attempts, model };
       } catch (error) {
         lastError = error;
-        if (!isRetryable(error)) break;
+        if (isRetryableProviderError(error)) continue;
+        shouldRepair = error instanceof ZodError || errorMessage(error).includes('schema-valid');
+        break;
       }
     }
 
-    if (validationAttempt === 0) {
+    if (validationAttempt === 0 && shouldRepair) {
       repairMessages = [
         ...messages,
         {
@@ -131,6 +129,8 @@ export async function callStructured<T>(
           content: `Your previous output failed validation: ${errorMessage(lastError)}. Return only JSON matching the requested schema.`,
         },
       ];
+    } else {
+      break;
     }
   }
 

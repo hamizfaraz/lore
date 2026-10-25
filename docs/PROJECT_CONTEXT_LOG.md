@@ -26,32 +26,30 @@
 
 _Rewritten after each step._
 
-- Phase: C2-1 in progress; provider core and mock runtime implemented and verified.
+- Phase: C2-1 implementation and local integration are complete; paid live smoke remains blocked on
+  human-owned C2-0 credentials.
 - Active Computer 2 branch: `c2/intelligence`, in a dedicated worktree. All implementation changes
-  in this run are confined to this branch; the original checkout remains clean on `main`. The
-  latest pushed implementation checkpoint is `2c43f97`.
-- `origin/main` is still commit `136e13f` (`chore(c1-0a): bootstrap monorepo, commit implementation
-  plan`). C1-0b's full scaffold has not landed yet, so C2 must not create or implement C1-owned
-  scaffold paths. C2-1 may proceed inside `packages/ai` in mock mode and must rebase on C1-0b before
-  it is considered complete.
+  in this run are confined to this branch; the original checkout remains clean on `main`.
+- `origin/main` is commit `73814e9` (`feat(c1-0b): full scaffold`). C2 has rebased onto it and
+  reconciled `packages/ai` with the authoritative shared AI schemas and frozen game/guard interface.
 - C2-0 external account provisioning is a human-owned prerequisite. No credentials are present in
   the repo, and no live provider smoke tests have run.
 - C2-1 currently includes Muse text/image/voice adapters, Gemini embeddings and safety, cached
   SerpAPI access, schema-validated structured output with one repair and mock fallback, Valkey-ready
-  budgets, prompt rules, six mock image assets, two mock voice assets, and game prompt helpers.
+  budgets, retryable-provider backoff, prompt rules, six distinct 128x128 mock images, two spoken
+  mono PCM16 24 kHz WAV fixtures, and game prompt helpers matching C1's service contract.
   Every provider path now honors `AI_MODE=mock`. Server-side reference filters remove model-supplied
   memory, candidate, message, media, and user ids that were not in the input, force unverified news
-  to silence, and reject unsupported recap citations. Package typecheck, lint, 13 unit tests, and
-  mock smoke pass. Remaining before C2-1 is done: rebase
-  on C1-0b, consume its shared schemas, run whole-repo checks, and run the live provider smoke with
-  C2-0 credentials plus a spoken WAV fixture.
-- Whole-workspace typecheck and tests pass. Whole-workspace lint reaches all files but fails only
-  because C1-owned root `biome.json` is not formatted; `packages/ai` lint passes. A C2->C1 handoff
-  records the required owner fix.
-- Latest run: the root `pnpm dev` command now keeps the existing C2 mock runtime alive through a
-  temporary `packages/ai` watch-mode harness. It exposes no page, server, port, or product API. The
-  harness must be reviewed against C1's real dev processes at merge time rather than carried over
-  blindly.
+  to silence, and reject unsupported recap citations. The retry policy is immediate attempt plus
+  0.5 s, 1 s, and 2 s retries for 429/5xx responses only; provider exhaustion degrades to valid
+  mock output.
+- Full verification passes: six workspace typechecks, 17 C2 unit tests, 11 shared policy tests,
+  whole-workspace Biome over 399 files, mock smoke, production web/API builds, and `git diff --check`.
+  The mock smoke validates 11 JSON fixtures, 6 images, 2 voice fixtures, 5 choices, 3 prompts, guard,
+  and budget paths without credentials or network calls.
+- The temporary `packages/ai` dev watcher is removed. Root `pnpm dev` now uses C1's actual web, API,
+  worker, and MCP processes. The local app is run with `AI_MODE=mock`; absent database/Valkey values
+  affect readiness and unfinished C1 features, not the C2-1 package smoke.
 - `docs/IMPLEMENTATION_PLAN.md` is now the single active plan and covers C2-0 through C2-12, exact
   ownership, dependencies, acceptance tests, merge rules, cut lines, and recovery. The previous
   broad plan and `docs/C2_NOW.md` workflow were removed from the working tree and remain only in git
@@ -62,7 +60,7 @@ _Rewritten after each step._
 | ID | Task | Status | Notes |
 | --- | --- | --- | --- |
 | C1-0a | Bootstrap repo | done | Landed on `main` at `136e13f` |
-| C1-0b | Full scaffold on main | pending | |
+| C1-0b | Full scaffold on main | done | Landed on `main` at `73814e9` |
 | C1-1 | Auth | pending | |
 | C1-2 | Media pipeline | pending | |
 | C1-3 | Social core | pending | |
@@ -81,8 +79,8 @@ _Rewritten after each step._
 
 | ID | Task | Status | Notes |
 | --- | --- | --- | --- |
-| C2-0 | Provision accounts and keys | human action required | Section 14 checklist; secrets must use a password manager, never git/chat |
-| C2-1 | AI package, mocks, guard, budget, game prompts, smoke script | in progress | Mock/provider core green; pending C1-0b rebase and live smoke |
+| C2-0 | Provision accounts and keys | human action required | Section 7 checklist; secrets must use a password manager, never git/chat |
+| C2-1 | AI package, mocks, guard, budget, game prompts, smoke script | live verification pending | Implementation, C1-0b reconciliation, and all local checks pass; paid live smoke awaits C2-0 |
 | C2-2 | Milo persona, proactivity, memory, basic studio | pending | Depends on C2-1 and C1-4 hook |
 | C2-3 | Voice transcription and live captions | pending | Depends on C2-1 |
 | C2-4 | Concierge and plans | pending | Depends on C2-2 |
@@ -172,3 +170,18 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
   previous plan and temporary `C2_NOW.md` remain recoverable through git history but are no longer
   instructions. Updated the recovery path and the AI package README's environment reference
   accordingly; no product code was changed.
+- **2026-10-24 · C1-0b integration** — Fetched `origin/main` at `73814e9` and rebased only
+  `c2/intelligence` onto it. Resolved the scaffold conflicts by retaining C1's shared schemas and
+  frozen public interface while preserving the C2 implementation behind them. Regenerated the
+  dependency lockfile during the rebase; no C1 branch or `main` was modified.
+- **2026-10-24 · C2-1 completion pass** — Replaced local schema authority with `@lore/shared`,
+  completed all frozen game and guard methods, added retry/fallback behavior for Muse, Gemini, and
+  SerpAPI, connected SerpAPI cache calls to C1's ioredis-compatible shape, and made degraded state
+  explicit. Added six distinct image fixtures, two synthesized spoken WAV fixtures, schema checks
+  for every structured fixture, media validation tests, and stricter live smoke failure detection.
+  Removed the temporary AI-only dev watcher now that C1's real processes exist.
+- **2026-10-24 · C2-1 integrated verification** — Repository typecheck, tests, lint, build, mock
+  smoke, and `git diff --check` all pass. C2 has 17 passing tests across six files; shared policy has
+  11 passing tests. Local configuration contains none of the required Meta, Gemini, or SerpAPI
+  credentials, so the paid live smoke was not attempted and remains the only C2-1 done-condition
+  outstanding.
