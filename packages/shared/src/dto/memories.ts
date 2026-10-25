@@ -24,6 +24,7 @@ export const zCreateRecapBody = z.object({
   planId: z.string().optional(),
   mediaIds: z.array(z.string()).optional(),
 });
+export type CreateRecapBody = z.infer<typeof zCreateRecapBody>;
 export const zPatchRecapBody = z.object({
   title: z.string().optional(),
   caption: z.string().optional(),
@@ -31,5 +32,14 @@ export const zPatchRecapBody = z.object({
   mediaIds: z.array(z.string()).optional(),
   regenerateCover: z.boolean().optional(),
 });
+export type PatchRecapBody = z.infer<typeof zPatchRecapBody>;
 export const zRecapConsentBody = z.object({ mediaId: z.string(), include: z.boolean() });
+export type RecapConsentBody = z.infer<typeof zRecapConsentBody>;
 export const zProposePostBody = z.object({ accountId: z.string(), caption: z.string().optional() });
+export type ProposePostBody = z.infer<typeof zProposePostBody>;
+
+export const zShareRecapBody = z.object({ target: z.enum(['chat', 'story']) });
+export type ShareRecapBody = z.infer<typeof zShareRecapBody>;
+
+export const zRecapListDTO = z.object({ recaps: z.array(zRecapCardDTO) });
+export type RecapListDTO = z.infer<typeof zRecapListDTO>;

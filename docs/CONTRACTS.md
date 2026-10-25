@@ -18,3 +18,6 @@ Format: `- YYYY-MM-DD · file · change · reason`
 - 2026-10-24 · `packages/shared/src/dto/plans.ts` · added preference, overview, RSVP, and suggestion
   response contracts without changing the frozen plan card shapes · C2-4 REST and UI now share
   validated plan-list, clarifier, preference, and confirmation state
+- 2026-10-24 · `packages/shared/src/dto/memories.ts` · added typed recap list and chat/story share
+  contracts plus request type exports · C2-5 list/editor/card and REST mutations use the same
+  private-by-default recap shapes

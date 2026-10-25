@@ -4,6 +4,7 @@ import {
   conversationMembers,
   desc,
   eq,
+  eventCandidates,
   groupPlans,
   groupPreferences,
   isNull,
@@ -222,6 +223,17 @@ export class PlansRepository {
       .update(planProposals)
       .set({ status: 'confirmed' })
       .where(eq(planProposals.id, input.proposal.id));
+    await getDb().insert(eventCandidates).values({
+      id: uuidv7(),
+      conversationId: input.proposal.conversationId,
+      title: input.candidate.name,
+      kind: 'outing',
+      startsAt: input.startsAt,
+      confidence: 1,
+      sourceMessageIds: [],
+      planId,
+      state: 'confirmed',
+    });
     await getDb()
       .insert(planRsvps)
       .values({ planId, userId: input.userId, status: 'going' })

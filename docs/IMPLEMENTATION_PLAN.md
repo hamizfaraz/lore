@@ -133,7 +133,7 @@ plan.
 | 2 | C2-2 Milo/persona | P0 | C2-1, C1-4 hook | Implementation green; integration pending |
 | 3 | C2-3 voice | P0 | C2-1 | Implementation green; C1 merge/live acceptance pending |
 | 4 | C2-4 Concierge/plans | P0 | C2-2 | Implementation green; C1 integration pending |
-| 5 | C2-5 memories/recaps | P0 | C2-1, C1-2, C1-5 stub | Pending |
+| 5 | C2-5 memories/recaps | P0 | C2-1, C1-2, C1-5 stub | Implementation green; C1 integration pending |
 | 6 | C2-6 MCP connector | P0 | C2-4 | Pending |
 | 7 | C2-7 demo seed/reset | P0 | C2-2, C2-4 | Pending |
 | 8 | C2-8 discovery | P1 | C2-1 | Pending |
@@ -515,6 +515,23 @@ an explicit handoff into C1's governed group-draft workflow.
 
 The recap card/editor works end to end, captions are grounded, consent changes propagate, private
 content remains private by default, and proposing a post creates a C1-owned approval draft.
+
+### Current implementation status
+
+- Confirmed plans now create confirmed event candidates. Recap creation clusters recent group media,
+  splits 90-minute gaps, requires event-like groups unless media is explicitly selected, filters
+  recap consent, removes pHash-near-duplicates, reviews signed photos at 1024 px, composes only from
+  the latest 30 scoped messages, and rejects every unsupported fact or media id.
+- Four deterministic Sharp layouts render metadata-free 1080×1350 assets through C1's media
+  interface. Recaps start `ready_private`, carry AI-arranged/AI-illustration labels, support editing,
+  layouts, cover regeneration, owner revocation, private save, chat share, and governed group-draft
+  proposal without direct publishing.
+- The Memories list, recap card, and editor replace their placeholders. Ten focused tests cover
+  cluster boundaries, duplicates, revoked/scoped-out media, source grounding, all collage layouts,
+  private defaults, AI labels, owner consent, and governed draft handoff; API/web typechecks pass.
+- C1's frozen media/chat/group implementations are still required for integrated assets/cards/drafts.
+  A story-creation service was not included in the frozen C1 handoff, so that action fails closed and
+  is recorded on the handoff board instead of bypassing C1 ownership.
 
 ## 13. C2-6 — MCP Integrations
 

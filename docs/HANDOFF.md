@@ -37,3 +37,11 @@ Check at every checkpoint (section 10 working agreements).
   routes. C2 best-effort calls `chat.service.postMessage` for a new plan card; after C1 merges its
   implementation, refresh `cardRefId` through the existing card payload path and retain C2's
   `plan.updated` realtime event.
+- [ ] C2->C1: C2-5 consumes `media.service.signedUrl` for 1024 px photo review,
+  `media.service.createFromBuffer` for labeled collage/cover assets, `chat.service.postMessage` for
+  private recap offer/share cards, and `groups.service.createDraft` for governed public proposals.
+  Preserve those interfaces and the C2 `recap.updated` renderer/event when merging.
+- [ ] C2->C1: Provide a frozen story-creation service for the Recap editor. C2 exposes and validates
+  the `target: story` action but intentionally refuses it until a C1 service can create a story
+  without bypassing media ownership/consent checks; chat share, private save, and governed group
+  draft proposal are implemented.

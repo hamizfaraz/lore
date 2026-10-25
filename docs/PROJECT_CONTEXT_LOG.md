@@ -26,7 +26,7 @@
 
 _Rewritten after each step._
 
-- Phase: C2-4 concierge/plans implementation is green on the C2 branch; C2-5 memories is next.
+- Phase: C2-5 private memories/recaps implementation is green on the C2 branch; C2-6 MCP is next.
   C1 merge and live-provider acceptance remain open for the implemented C2 P0 chain.
   C2-1's paid live smoke remains blocked on human-owned C2-0 credentials.
 - Active Computer 2 branch: `c2/intelligence`, in a dedicated worktree. All implementation changes
@@ -99,7 +99,7 @@ _Rewritten after each step._
 | C2-2 | Milo persona, proactivity, memory, basic studio | integration pending | Implementation and local checks pass; requires C1-4 hook plus live DB/Valkey acceptance |
 | C2-3 | Voice transcription and live captions | integration pending | Implementation and local checks pass; requires C1 auth/media/chat merge and live Muse acceptance |
 | C2-4 | Concierge and plans | integration pending | Core service, routes, UI, realtime, calendar, and seven focused tests pass; C1 chat/auth merge and live providers remain |
-| C2-5 | Shared memories and recaps | pending | Depends on C2-1, C1-2, and C1-5 stub |
+| C2-5 | Shared memories and recaps | integration pending | Service, grounding, consent, Sharp layouts, editor/cards, and ten focused tests pass; C1 media/chat/group/story integration remains |
 | C2-6 | Muse MCP connector | pending | Depends on C2-4 |
 | C2-7 | Seed and demo reset | pending | Depends on C2-2 and C2-4 |
 | C2-8 | Find Friends and Common Ground | pending | Depends on C2-1 |
@@ -254,3 +254,11 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
   calendar output, `plan.updated`, source labels, fair-fit cards, confirmed cards, and the Plans
   surface. Seven focused tests plus shared/API/web typechecks pass. Chat-card integration remains
   pending on C1's frozen service implementations; C2-5 is next.
+- **2026-10-24 · C2-4 checkpoint** — Committed and pushed the resumable plans milestone as
+  `1c5b015` on `c2/intelligence`; `main` and C1 branches were untouched.
+- **2026-10-24 · C2-5 memories/recaps** — Implemented confirmed-plan event creation, proximity
+  clustering, pHash duplicate removal, consent propagation, real 1024 px signed-photo review,
+  grounded recap composition, four metadata-free 1080×1350 Sharp layouts, private recap storage,
+  AI labels, editor/list/card UI, owner revocation, private save/chat share, and governed C1 draft
+  handoff. Ten focused tests and API/web typechecks pass. C1's unprovided story-creation interface
+  remains a fail-closed handoff; C2-6 is next.
