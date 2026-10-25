@@ -26,7 +26,8 @@
 
 _Rewritten after each step._
 
-- Phase: C2-8 opt-in discovery is implementation-green on the C2 branch; C2-9 impact is next.
+- Phase: C2-9 privacy-safe impact analytics is implementation-green on the C2 branch; C2-10 family
+  story is next and has not started.
   C1 merge and live-provider acceptance remain open for the complete C2 P0 chain.
   C2-1's paid live smoke remains blocked on human-owned C2-0 credentials.
 - Active Computer 2 branch: `c2/intelligence`, in a dedicated worktree. All implementation changes
@@ -69,8 +70,11 @@ _Rewritten after each step._
   inference with 14-day decay/removal/freeze, embeddings and top-30 reranking, permitted-tag-only
   cached reasons, match cards, editable intro requests, recipient accept/decline, and a proposal-only
   MCP action. It never accepts private chat content and does not open a DM before C1 integration.
-- Full verification passes: six workspace typechecks, 18 AI tests, 16 shared tests, 60 API tests,
-  3 web tests (97 total), whole-workspace Biome over 428 files, mock smoke, production web/API builds, a direct
+- C2-9 supplies allowlisted pseudonymous product events, composite cursor sync in batches of 500,
+  idempotent Snowflake SQL API v2 `MERGE`, six aggregate views, optional aggregate-only Cortex pulse,
+  cached/local degradation, the public summary route, metric cards, and two small charts.
+- Full verification passes: six workspace typechecks and 110 tests across 28 files, whole-workspace
+  Biome over 444 files, mock smoke, production web/API builds, and a direct
   browser-bundle provider-secret scan, and `git diff --check`.
   The mock smoke validates 11 JSON fixtures, 6 images, 2 voice fixtures, 5 choices, 3 prompts, guard,
   and budget paths without credentials or network calls.
@@ -84,7 +88,7 @@ _Rewritten after each step._
 - `docs/IMPLEMENTATION_PLAN.md` is now the single active plan and covers C2-0 through C2-12, exact
   ownership, dependencies, acceptance tests, merge rules, cut lines, and recovery. The previous
   broad plan and `docs/C2_NOW.md` workflow were removed from the working tree and remain only in git
-  history. C2-9 is the next ordered milestone under the human's current three-milestone direction.
+  history. C2-10 is the next ordered milestone and requires a new human continuation instruction.
 
 ## Computer 1 task tracker
 
@@ -119,7 +123,7 @@ _Rewritten after each step._
 | C2-6 | Muse MCP connector | integration pending | PATs, UI, 11 tools, confirmation/scopes/audits, SDK smoke, and immediate revocation pass; C1 game/approval plus later C2 services remain |
 | C2-7 | Seed and demo reset | integration pending | Seed 382 ms, reset 201 ms, consent/secret audits pass; C1 demo auth/media and browser chain remain |
 | C2-8 | Find Friends and Common Ground | integration pending | Seven focused tests and typechecks pass; C1 public-signal/block/DM hooks remain |
-| C2-9 | Snowflake impact | pending | Depends on C2-4 |
+| C2-9 | Snowflake impact | live verification pending | Service, sync, six views, route/UI, six tests, and local smoke pass; live Snowflake/Cortex awaits C2-0 |
 | C2-10 | Family story | pending | Depends on C2-5 |
 | C2-11 | Podcast stations and render | pending | Depends on C2-3 |
 | C2-12 | Advanced persona studio and AI polish | pending | Depends on C2-2 |
@@ -314,3 +318,20 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
   typechecks pass. The MCP Common Ground tool now prepares an unsent editable proposal after explicit
   confirmation. C1 public-action signals, block exclusion, and post-accept DM creation are recorded
   as merge handoffs; C2-9 is next.
+- **2026-10-24 · C2-9 impact analytics** — Added a fixed event allowlist, SHA-256 hashes for
+  group/actor/object identities, strict coarse-property sanitization, random event ids, and a
+  timestamp/event-id sync cursor. The 60-second worker sends at most 500 rows through Snowflake SQL
+  API v2 using PAT auth, bounded retries, stable request ids, and idempotent `MERGE`; six secure views
+  drive the required metrics. Cortex sees only aggregate metric keys and numbers.
+- **2026-10-24 · C2-9 local acceptance** — Applied the two analytics cursor columns to the isolated
+  local database. A 90-second intent-to-confirm pair appeared immediately as one confirmed plan per
+  active group and a 1.5-minute median; the public DTO contained no raw group id. Snowflake correctly
+  reported unconfigured without advancing its cursor. Six focused tests and affected typechecks pass;
+  live Snowflake/Cortex verification remains blocked on human-owned C2-0 credentials.
+- **2026-10-24 · Three-milestone verification** — C2-7, C2-8, and C2-9 now pass all six workspace
+  typechecks, 110 tests across 28 files, Biome over 444 files, mock provider smoke, production API
+  and web builds, and `git diff --check`. The impact and Find Friends routes are present in the
+  production route manifest. Paid-provider, live Snowflake, and C1 merge acceptance remain explicit.
+- **2026-10-24 · Pre-checkpoint remote audit** — A read-only fetch confirmed `origin/main` remains
+  `73814e9`. `origin/c1/platform` advanced independently to `14fe779`; C2 did not merge, copy, or
+  modify that branch, preserving the agreed integration boundary.

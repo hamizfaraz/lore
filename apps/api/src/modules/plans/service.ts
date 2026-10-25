@@ -21,6 +21,7 @@ import { type Actor, actorUserId, userActor } from '../../lib/actor';
 import { badRequest, conflict, forbidden, notFound } from '../../lib/errors';
 import { getRedis } from '../../lib/redis';
 import { postMessage } from '../chat/service';
+import { recordImpactEvent } from '../impact/service';
 import { emitPlanUpdated } from './events';
 import {
   applyHardConstraints,
@@ -72,6 +73,7 @@ export type PlansDependencies = {
   ) => Promise<{ data: PlanRankingType; degraded: boolean }>;
   post: typeof postMessage;
   emit: typeof emitPlanUpdated;
+  impact?: typeof recordImpactEvent;
 };
 
 function stableKey(value: string): string {
@@ -235,6 +237,7 @@ const defaultDependencies: PlansDependencies = {
   },
   post: postMessage,
   emit: emitPlanUpdated,
+  impact: recordImpactEvent,
 };
 
 function sourceRows(result: SearchResult): Record<string, unknown>[] {
@@ -479,6 +482,15 @@ export class PlansService {
       brief,
       options,
     });
+    await this.deps
+      .impact?.({
+        kind: 'plan_suggested',
+        groupId: conversationId,
+        actorId: userId,
+        objectId: proposal.id,
+        props: { candidateCount: rankedOptions.length },
+      })
+      .catch(() => undefined);
     const plan = await this.card(proposal, userId);
     await this.deps
       .post(
@@ -514,6 +526,15 @@ export class PlansService {
       throw badRequest('Candidate is not part of the current proposal version');
     }
     await this.deps.store.vote({ proposalId, version: proposal.version, userId, ...body });
+    await this.deps
+      .impact?.({
+        kind: 'plan_vote_cast',
+        groupId: proposal.conversationId,
+        actorId: userId,
+        objectId: proposal.id,
+        props: { response: body.response },
+      })
+      .catch(() => undefined);
     const card = await this.card(proposal, userId);
     this.deps.emit(card);
     return card;
@@ -554,6 +575,19 @@ export class PlansService {
     const candidate = await this.deps.store.candidate(body.candidateId);
     if (!candidate) throw notFound('Candidate not found');
     const plan = await this.deps.store.confirm({ proposal, candidate, userId, startsAt, tz: body.tz });
+    const votes = await this.deps.store.votes(proposal.id, proposal.version);
+    await this.deps
+      .impact?.({
+        kind: 'plan_confirmed',
+        groupId: proposal.conversationId,
+        actorId: userId,
+        objectId: proposal.id,
+        props: {
+          voteCount: votes.length,
+          intentToConfirmMs: Math.max(0, this.deps.now().getTime() - proposal.createdAt.getTime()),
+        },
+      })
+      .catch(() => undefined);
     const row = await this.deps.store.plan(plan.id);
     if (!row) throw notFound('Confirmed plan not found');
     return this.confirmedCard(row as Awaited<ReturnType<PlanStore['confirmedPlans']>>[number]);

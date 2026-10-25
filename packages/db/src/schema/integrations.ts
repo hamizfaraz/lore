@@ -32,6 +32,7 @@ export const agentActionAudit = pgTable('agent_action_audit', {
 
 /** HYPERTABLE(at) — hashed ids only, no message text. */
 export const analyticsEvents = pgTable('analytics_events', {
+  eventId: text('event_id').notNull(),
   at: ts('at').notNull().defaultNow(),
   kind: text('kind').notNull(),
   groupHash: text('group_hash'),
@@ -42,4 +43,5 @@ export const analyticsEvents = pgTable('analytics_events', {
 export const syncCursors = pgTable('sync_cursors', {
   name: text('name').primaryKey(),
   lastAt: ts('last_at'),
+  lastEventId: text('last_event_id'),
 });

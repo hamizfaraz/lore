@@ -127,8 +127,8 @@ Status as last verified on October 24, 2026:
   interfaces and the later C2 family service remain explicit fail-closed integrations. C2-8 now
   supplies the Common Ground proposal tool without sending an introduction.
 
-Before resuming implementation, fetch `origin/main` and compare its head with this baseline. C2-9
-is the next ordered milestone under the human's current three-milestone direction.
+Before resuming implementation, fetch `origin/main` and compare its head with this baseline. C2-10
+is the next ordered milestone; do not begin it unless the human explicitly continues the plan.
 
 ## 6. Dependencies and Execution Order
 
@@ -143,7 +143,7 @@ is the next ordered milestone under the human's current three-milestone directio
 | 6 | C2-6 MCP connector | P0 | C2-4 | Implementation green; integrated C1 tools pending |
 | 7 | C2-7 demo seed/reset | P0 | C2-2, C2-4 | Implementation green; C1 demo login/media smoke pending |
 | 8 | C2-8 discovery | P1 | C2-1 | Implementation green; C1 signal/block/DM integration pending |
-| 9 | C2-9 impact | P1 | C2-4 | Pending |
+| 9 | C2-9 impact | P1 | C2-4 | Implementation green; live Snowflake acceptance pending |
 | 10 | C2-10 family story | P1 | C2-5 | Pending |
 | 11 | C2-11 podcast | P2 | C2-3 | Pending |
 | 12 | C2-12 advanced persona | P2 | C2-2 | Pending |
@@ -725,6 +725,18 @@ Snowflake, with no message text or real identifiers.
 
 The impact page updates within two minutes of a plan confirmation, works in degraded cached mode,
 and Snowflake contains no raw text or real ids.
+
+### Current implementation status
+
+- Added the fixed event allowlist, server-side SHA-256 group/actor/object hashing, per-kind coarse
+  property filters, event identity, and a composite timestamp/event cursor that batches at most 500.
+- Added Snowflake SQL API v2 PAT transport with bounded retry, stable request IDs, idempotent `MERGE`,
+  six secure aggregate views, aggregate-only optional Cortex prompting, and cached/local degradation.
+- Instrumented C2 plans, recaps, Milo, and introductions without making analytics a product-action
+  failure point. Actual governed recap publication remains a C1 post-publish handoff.
+- Added the public summary route and responsive impact cards plus two charts. Six focused tests,
+  affected typechecks, and an isolated PostgreSQL/Valkey smoke pass; the 90-second confirmation was
+  immediately visible with no raw-id leak. Live Snowflake/Cortex acceptance awaits C2-0 credentials.
 
 ## 17. C2-10 — Family
 

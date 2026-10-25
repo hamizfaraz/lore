@@ -11,6 +11,7 @@ import type {
 import { z } from 'zod';
 import { badRequest, forbidden, notFound } from '../../lib/errors';
 import { getRedis } from '../../lib/redis';
+import { recordImpactEvent } from '../impact/service';
 import { decayScores, matchScore, safeTags, visibleInferred } from './policy';
 import { discoveryRepository, type DiscoveryRepository } from './repository';
 import type { DiscoveryCandidate, StoredInterestProfile, StoredIntroduction } from './types';
@@ -43,6 +44,7 @@ export type DiscoveryDependencies = {
   embed: typeof embedTexts;
   cache: () => Cache;
   now: () => Date;
+  impact?: typeof recordImpactEvent;
 };
 
 function profileTags(profile: StoredInterestProfile) {
@@ -232,6 +234,13 @@ export class DiscoveryService {
       basis: { sharedTags: match.sharedTags, reason: match.reason },
       firstMessage: firstMessage?.trim() || match.starter,
     });
+    await this.deps
+      .impact?.({
+        kind: 'intro_requested',
+        actorId: userId,
+        objectId: intro.id,
+      })
+      .catch(() => undefined);
     return this.introDTO(intro);
   }
 
@@ -256,9 +265,16 @@ export class DiscoveryService {
     if (intro.toUserId !== userId) throw forbidden('Only the recipient can respond');
     if (intro.state !== 'requested') throw badRequest('Introduction was already answered');
     // C1 opens the direct conversation only after the accepted state is returned.
-    return this.introDTO(
-      await this.deps.store.setIntroductionState(id, action === 'accept' ? 'accepted' : 'declined'),
+    const updated = await this.deps.store.setIntroductionState(
+      id,
+      action === 'accept' ? 'accepted' : 'declined',
     );
+    if (action === 'accept') {
+      await this.deps
+        .impact?.({ kind: 'intro_accepted', actorId: userId, objectId: intro.id })
+        .catch(() => undefined);
+    }
+    return this.introDTO(updated);
   }
 
   async editStarter(id: string, userId: string, firstMessage: string) {
@@ -299,6 +315,7 @@ const service = new DiscoveryService({
   embed: embedTexts,
   cache: getRedis,
   now: () => new Date(),
+  impact: recordImpactEvent,
 });
 export const getDiscoveryOverview = (userId: string) => service.overview(userId);
 export const getDiscoveryProfile = (userId: string) => service.profile(userId);

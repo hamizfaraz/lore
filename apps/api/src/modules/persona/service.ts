@@ -23,6 +23,7 @@ import type {
 } from '@lore/shared/dto/persona';
 import { postMessage } from '../chat/service';
 import { createFromBuffer } from '../media/service';
+import { recordImpactEvent } from '../impact/service';
 import { forbidden } from '../../lib/errors';
 import { enqueue } from '../../lib/queues';
 import { getRedis } from '../../lib/redis';
@@ -92,6 +93,7 @@ type PersonaDependencies = {
   emitTyping: (conversationId: string, personaId: string, on: boolean) => void;
   createImage: typeof generateMuseImage;
   storeImage: typeof createFromBuffer;
+  impact?: typeof recordImpactEvent;
 };
 
 type PersonaPromptMessage = { role: 'system' | 'user'; content: string };
@@ -144,6 +146,7 @@ const defaultDependencies: PersonaDependencies = {
   emitTyping: emitPersonaTyping,
   createImage: generateMuseImage,
   storeImage: createFromBuffer,
+  impact: recordImpactEvent,
 };
 
 function cleanWords(value: string): Set<string> {
@@ -299,7 +302,18 @@ export class PersonaService {
         : body.duration === 'until_unmuted'
           ? new Date('9999-12-31T23:59:59.999Z')
           : new Date(now.getTime() + (body.duration === 'one_hour' ? 60 : 480) * 60_000);
-    return this.deps.store.mutePersona(conversationId, mutedUntil);
+    const persona = await this.deps.store.mutePersona(conversationId, mutedUntil);
+    if (body.duration !== 'unmute') {
+      await this.deps
+        .impact?.({
+          kind: 'ai_muted',
+          groupId: conversationId,
+          actorId: userId,
+          props: { duration: body.duration },
+        })
+        .catch(() => undefined);
+    }
+    return persona;
   }
 
   async removePersona(conversationId: string, userId: string): Promise<void> {
@@ -491,6 +505,13 @@ export class PersonaService {
         latencyMs: this.deps.now().getTime() - startedAt,
       }),
     );
+    await this.deps
+      .impact?.({
+        kind: 'ai_interaction',
+        groupId: input.conversationId,
+        props: { outcome: speak ? 'spoke' : 'silent' },
+      })
+      .catch(() => undefined);
     if (!speak) return { spoke: false, reason };
 
     this.deps.emitTyping(input.conversationId, context.persona.id, true);

@@ -19,6 +19,7 @@ import { z } from 'zod';
 import { forbidden, notFound, badRequest } from '../../lib/errors';
 import { postMessage } from '../chat/service';
 import { createDraft } from '../groups/service';
+import { recordImpactEvent } from '../impact/service';
 import { createFromBuffer, signedUrl } from '../media/service';
 import { renderCollage } from './collage';
 import { emitRecapUpdated } from './events';
@@ -56,6 +57,7 @@ export type MemoriesDependencies = {
   createDraft: typeof createDraft;
   emit: typeof emitRecapUpdated;
   fetchBytes: (url: string) => Promise<Buffer>;
+  impact?: typeof recordImpactEvent;
 };
 
 function mockNotes(media: MemoryMedia[]): PhotoNotesType[] {
@@ -155,6 +157,7 @@ const defaultDependencies: MemoriesDependencies = {
   createDraft,
   emit: emitRecapUpdated,
   fetchBytes: fetchMediaBytes,
+  impact: recordImpactEvent,
 };
 
 export class MemoriesService {
@@ -291,6 +294,15 @@ export class MemoriesService {
       clustered,
     );
     const card = await this.card(stored);
+    await this.deps
+      .impact?.({
+        kind: 'recap_ready',
+        groupId: conversationId,
+        actorId: userId,
+        objectId: stored.id,
+        props: { mediaCount: stored.mediaIds.length },
+      })
+      .catch(() => undefined);
     await this.deps
       .post(
         conversationId,

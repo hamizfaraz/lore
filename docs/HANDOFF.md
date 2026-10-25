@@ -63,3 +63,7 @@ Check at every checkpoint (section 10 working agreements).
 - [ ] C2->C1: After a C2-8 introduction changes to `accepted`, create/open the C1 direct conversation
   with the accepted editable starter. Never create a conversation on request or decline. Preserve
   the C2 match, intro, and default-off profile UI during merge.
+- [ ] C2->C1: After a governed recap draft is actually published, call C2-9
+  `recordImpactEvent({ kind: 'recap_posted', groupId, actorId, objectId: recapId, props:
+  { destination: 'group_post' } })`. Do not count C2's draft proposal as a publication and do not
+  pass captions, handles, names, or raw ids through `props`; the impact service hashes identifiers.
