@@ -104,7 +104,7 @@ Status as last verified on October 24, 2026:
   guard and reference validation, prompts, game helpers, and live/mock smoke coverage.
 - Mock fixtures now include six distinct 128x128 images and two short spoken mono PCM16 24 kHz WAV
   samples. The temporary AI watch harness has been removed in favor of C1's real dev processes.
-- All repository verification passes: six workspace typechecks, Biome over 404 files, 51 tests,
+- All repository verification passes: six workspace typechecks, Biome over 414 files, 69 tests,
   mock smoke, and the production web/API build.
 - C2-1 is awaiting only the paid live smoke required by its done condition. That is blocked on the
   human-owned C2-0 provider credentials and model ids, which are not present locally.
@@ -115,9 +115,14 @@ Status as last verified on October 24, 2026:
   The persona engine, APIs, jobs, basic studio, explanations, memory controls, and focused tests are
   implemented on the C2 branch. Integrated acceptance still requires C1-4's committed-message hook
   plus a reachable database and Valkey runtime.
+- At the human's explicit direction, C2-3 implementation also began before C2-2 integrated
+  acceptance. Batch voice jobs, ffmpeg normalization, transcript persistence/update behavior, the
+  authenticated live proxy, browser PCM framing/captions, and the required test matrix are green.
+  End-to-end acceptance still requires C1's auth/media/chat work to merge and C2-0 live Muse access.
 
 Before resuming implementation, fetch `origin/main` and compare its head with this baseline. Do not
-begin C2-3 until C2-2 is integrated and accepted, unless the human explicitly changes the plan.
+begin C2-4 until C2-2 and C2-3 are integrated and accepted, unless the human explicitly changes the
+plan.
 
 ## 6. Dependencies and Execution Order
 
@@ -126,7 +131,7 @@ begin C2-3 until C2-2 is integrated and accepted, unless the human explicitly ch
 | 0 | C2-0 provisioning | P0 | — | Human action required |
 | 1 | C2-1 AI provider core | P0 | C1-0a; rebase on C1-0b | Implementation green; live smoke blocked on C2-0 |
 | 2 | C2-2 Milo/persona | P0 | C2-1, C1-4 hook | Implementation green; integration pending |
-| 3 | C2-3 voice | P0 | C2-1 | Pending |
+| 3 | C2-3 voice | P0 | C2-1 | Implementation green; C1 merge/live acceptance pending |
 | 4 | C2-4 Concierge/plans | P0 | C2-2 | Pending |
 | 5 | C2-5 memories/recaps | P0 | C2-1, C1-2, C1-5 stub | Pending |
 | 6 | C2-6 MCP connector | P0 | C2-4 | Pending |
@@ -380,6 +385,34 @@ ever exposing the Meta key to the browser.
 
 A voice note gains its transcript within the performance budget, live captions stream during
 recording, and the authenticated uploader remains the authoritative speaker identity.
+
+### Current implementation status
+
+- `voice.service.transcribeMedia` idempotently queues a three-attempt `voice.transcribe` job; manual
+  retry after terminal failure gets a fresh job id, while completed media is never retranscribed.
+- Batch processing downloads a signed voice object, enforces the 15 MB limit, converts through
+  ffmpeg to metadata-free mono 24 kHz PCM16 WAV, supplies member/persona keywords to Muse, enforces a
+  six-second processing deadline, persists status/transcript, emits `message.updated` through C1's
+  frozen service, and writes privacy-safe audit metadata.
+- `/v1/voice/live` authenticates the Better Auth session, verifies conversation membership and
+  origin, permits one live session per user, accepts only 3,840-byte 80 ms PCM16 frames, performs the
+  server-side Muse handshake, relays cumulative partial/final text, handles `endStream` and provider
+  disconnects, and attributes every transcript to the authenticated uploader.
+- `LiveCaption` resamples the C1 recorder stream in-browser, frames PCM without provider credentials,
+  renders cumulative captions, and degrades without blocking the saved voice note.
+- Eighteen new focused tests cover contracts, real ffmpeg output, persistence/update behavior,
+  retry/failure semantics, authentication, framing, partial/final relay, provider disconnect,
+  handshake order, browser framing, and credential isolation. Full workspace verification passes
+  69 tests, typecheck, Biome over 414 files, mock smoke, production build, browser-bundle secret
+  scan, and `git diff --check`.
+- Integrated acceptance remains open until C1 auth/media/chat is merged from its branch and a live
+  Muse Voice batch/realtime run succeeds with the human-owned C2-0 credentials.
+
+### Recorded plan deviation
+
+On October 24, 2026, the human explicitly instructed Computer 2 to implement the next milestone.
+Under the execution-order exception in section 6, C2-3 work therefore began while C2-2 integrated
+acceptance remained open. This does not waive C2-2 acceptance or C2-3's C1/live integration checks.
 
 ## 11. C2-4 — Concierge
 

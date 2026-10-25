@@ -108,6 +108,8 @@ export interface MuseRealtimeOptions {
   onReady?: (sessionId: string) => void;
   onError?: (error: Error) => void;
   onClose?: (code: number, reason: string) => void;
+  /** Test seam; production always uses the server-side `ws` client. */
+  socketFactory?: (url: string) => WebSocket;
 }
 
 export interface MuseRealtimeSession {
@@ -150,8 +152,9 @@ export function createMuseRealtimeSession(
   httpBase.pathname = `${httpBase.pathname.replace(/\/$/, '')}/asr/realtime`;
   httpBase.searchParams.set('sessionId', options.sessionId);
 
-  const socket = new WebSocket(httpBase);
+  const socket = options.socketFactory?.(httpBase.toString()) ?? new WebSocket(httpBase);
   let ready = false;
+  let ended = false;
   const pending: Array<Buffer | ArrayBuffer | Uint8Array> = [];
 
   const sendFrame = (frame: Buffer | ArrayBuffer | Uint8Array) => {
@@ -184,6 +187,7 @@ export function createMuseRealtimeSession(
         ready = true;
         options.onReady?.(payload.sessionId);
         for (const frame of pending.splice(0)) socket.send(frame);
+        if (ended) socket.send(JSON.stringify({ type: 'endStream' }));
       }
       if ('transcript' in payload || payload.type === 'transcript') options.onTranscript(payload);
     } catch (error) {
@@ -197,7 +201,9 @@ export function createMuseRealtimeSession(
     socket,
     sendPcm: sendFrame,
     end() {
-      if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'endStream' }));
+      if (ended) return;
+      ended = true;
+      if (socket.readyState === WebSocket.OPEN && ready) socket.send(JSON.stringify({ type: 'endStream' }));
     },
     close() {
       socket.close();

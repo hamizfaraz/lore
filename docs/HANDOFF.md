@@ -25,3 +25,11 @@ Check at every checkpoint (section 10 working agreements).
 - [ ] C2->C1: In C1-4 chat/details UI, render C2's `AiMemberPanel`, and pass AI-bubble `onWhy` state
   into C2's `WhySheet` with the conversation id, message id, `meta.reason`, and
   `meta.memoryIdsUsed`. The components and explanation endpoint are ready on `c2/intelligence`.
+- [ ] C2->C1: Preserve the voice hooks already present on `origin/c1/platform` when merging C2-3:
+  `media.service.complete` must call `voice.service.transcribeMedia(mediaId)` after an audio upload,
+  C1's implemented `media.service.signedUrl` and `chat.service.updateMessage` satisfy C2's frozen
+  calls, and `ChatPage`/`VoiceRecorder` must retain the C2 `LiveCaption` slot.
+- [ ] C2->C1: In `VoicePlayer`, label transcripts when message metadata contains
+  `transcriptDegraded: true` (and distinguish `transcriptStatus: failed`). C2-3 emits the metadata;
+  the saved media transcript remains authoritative and the uploader id, never diarization, is the
+  speaker identity.
