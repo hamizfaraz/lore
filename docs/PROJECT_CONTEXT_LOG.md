@@ -26,7 +26,12 @@
 
 _Rewritten after each step._
 
-- Phase: **C1-7 games + C1-8 Meme Battle + C1-11 Pictionary done** (engine + UI). Next: **C1-9** reels, Explore, notifications screen; then C1-10 Graph, C1-12 keepsakes, C1-13 polish.
+- Phase: **C1-9 done** (reels, Explore, notifications). Next: **C1-10 Graph import**, then C1-12 keepsakes, C1-13 polish.
+- C1-9: `GET /v1/explore?q=` (accounts+group accounts by handle/name, posts via `search_tsv @@ websearch_to_tsquery`,
+  engagement-ranked grid; private accounts hidden), Explore tab root (search, recent searches, Find Friends/Discover
+  tiles behind FEATURE_FIND_FRIENDS, masonry grid with tall reels), Reels tab root (snap pager, single playing video,
+  mute toggle, action rail), Notifications screen (Today/This week/This month, Review button for approvals),
+  `maybeAskPush()` after approving a draft or sharing a post (never at launch).
 - Games: `modules/games/{engine,meme,pictionary,prompts,words,service,routes,jobs,module}.ts` — pure engine (tested),
   runtime in Valkey `game:{id}` under a SET-NX lock, mirrored to `game_sessions.result.runtime` on every change,
   caller-filtered `game.state` per member user room, BullMQ `games.tick` (turn/phase timers, abandon) + `games.sweep`,
@@ -120,7 +125,7 @@ _Rewritten after each step._
 | C1-6 | Infra | code done; deploy blocked | needs Vultr VM, Object Storage keys, DNS, prod Tiger |
 | C1-7 | Game engine + One-Word Story | done | engine tests + HTTP flow |
 | C1-8 | Meme Battle | done | flag FEATURE_GAMES_MEME |
-| C1-9 | Reels, Explore, notifications | pending | |
+| C1-9 | Reels, Explore, notifications | done | web push needs VAPID keys |
 | C1-10 | Graph import | pending | |
 | C1-11 | Pictionary | done (live strokes not browser-tested) | flag FEATURE_GAMES_PICTIONARY |
 | C1-12 | Solana keepsakes | pending | |
@@ -191,3 +196,4 @@ _Every deviation is also recorded in `docs/IMPLEMENTATION_PLAN.md` (section 18, 
   can't share), Meme (anonymous gallery incl. AI entry, no author ids leak, self-vote blocked, reveal), Pictionary
   (prompt hidden from guesser, case/punctuation-insensitive guess). Built ahead of C1-9 because the shared engine
   needed all three rule sets.
+- **2026-10-24 · C1-9 done** — explore API (verified search, groups in results, private hidden) + Explore/Reels/Notifications screens.

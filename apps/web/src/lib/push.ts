@@ -18,3 +18,15 @@ export async function enablePush(): Promise<string> {
   await api.post('/v1/notifications/push-subscriptions', sub.toJSON());
   return 'Notifications on';
 }
+
+/** Ask once, right after a meaningful action (approving a draft, sharing a post) — never at launch. */
+export function maybeAskPush() {
+  try {
+    if (typeof Notification === 'undefined' || Notification.permission !== 'default') return;
+    if (localStorage.getItem('lore.push.asked') === '1') return;
+    localStorage.setItem('lore.push.asked', '1');
+  } catch {
+    return;
+  }
+  setTimeout(() => void enablePush().catch(() => {}), 600);
+}

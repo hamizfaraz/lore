@@ -44,6 +44,11 @@ const routes: FastifyPluginAsync = async (base) => {
     return { ok: true };
   });
 
+  app.get(
+    '/explore',
+    { schema: { querystring: zCursor.extend({ q: z.string().max(80).optional() }) } },
+    async (req) => svc.explore(me(req).id, req.query.q, req.query.cursor),
+  );
   app.get('/feed', { schema: { querystring: zCursor } }, async (req) =>
     svc.feed(me(req).id, req.query.cursor),
   );

@@ -15,6 +15,7 @@ import type { CardProps } from '@/features/chat/cards/types';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { tap } from '@/lib/haptics';
+import { maybeAskPush } from '@/lib/push';
 import { qk } from '@/lib/query-keys';
 import { onEvent } from '@/lib/socket';
 import { toast } from '@/lib/store';
@@ -65,6 +66,7 @@ export default function DraftCard({ message, data, meUserId }: CardProps<'draft_
   };
   const vote = (decision: 'approve' | 'request_changes') => {
     tap();
+    maybeAskPush();
     return run(() => api.post<DraftCardDTO>(`/v1/drafts/${id}/approvals`, { decision }));
   };
 

@@ -16,6 +16,7 @@ import { ModalScreen } from '@/components/ui/StackScreen';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useMe } from '@/lib/hooks';
+import { maybeAskPush } from '@/lib/push';
 import { qk } from '@/lib/query-keys';
 import { toast } from '@/lib/store';
 import { readVideoDuration, uploadFile } from '@/lib/upload';
@@ -136,6 +137,7 @@ export function CreatePage() {
         qc.invalidateQueries({ queryKey: qk.feed });
         qc.invalidateQueries({ queryKey: ['account'] });
       }
+      maybeAskPush();
       router.replace(author.group ? `/g/${author.handle}` : '/');
     } catch (e) {
       toast((e as Error).message, 'error');

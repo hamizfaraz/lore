@@ -758,3 +758,78 @@ export async function viewStory(userId: string, storyId: string) {
   await getDb().insert(storyViews).values({ storyId, viewerUserId: userId }).onConflictDoNothing();
   void recordEngagement(userId, 'story', storyId, 'view_3s');
 }
+
+// ── explore ─────────────────────────────────────────────────────────────────────────────────
+/**
+ * Explore (section 8.1 step 7): search accounts + group accounts (handle/name) and posts by caption via
+ * `search_tsv` (GIN, sql/005). Without a query: public posts ranked by recent engagement. Private accounts'
+ * posts never appear for non-followers.
+ */
+export async function explore(userId: string, q: string | undefined, cursor?: string) {
+  const v = await viewer(userId);
+  const db = getDb();
+  const offset = Number(cursor ?? 0) || 0;
+  const visible = sql`(${socialAccounts.visibility} = 'public' or ${posts.authorAccountId} in (${sql.join(
+    [v.accountId, ...v.following, ...v.groupAccountIds].map((id) => sql`${id}::uuid`),
+    sql`, `,
+  )}))`;
+  if (q?.trim()) {
+    const term = `%${q.trim().replace(/[%_]/g, '')}%`;
+    const acctRows = await db
+      .select({ id: socialAccounts.id })
+      .from(socialAccounts)
+      .where(
+        and(
+          sql`(${socialAccounts.handle}::text ilike ${term} or ${socialAccounts.displayName} ilike ${term})`,
+          sql`${socialAccounts.onboardedAt} is not null`,
+        ),
+      )
+      .orderBy(
+        sql`case when ${socialAccounts.handle}::text ilike ${`${q.trim()}%`} then 0 else 1 end`,
+        socialAccounts.handle,
+      )
+      .limit(20);
+    const postRows = await db
+      .select({ p: posts })
+      .from(posts)
+      .innerJoin(socialAccounts, eq(socialAccounts.id, posts.authorAccountId))
+      .where(
+        and(
+          isNull(posts.deletedAt),
+          visible,
+          sql`${posts.searchTsv} @@ websearch_to_tsquery('simple', ${q.trim()})`,
+        ),
+      )
+      .orderBy(desc(posts.publishedAt))
+      .limit(30)
+      .offset(offset);
+    const summaries = await users.accountSummaries(acctRows.map((r) => r.id));
+    return {
+      accounts: acctRows.map((r) => summaries.get(r.id)!).filter(Boolean),
+      posts: await postDTOs(
+        postRows.map((r) => r.p),
+        userId,
+      ),
+      nextCursor: postRows.length === 30 ? String(offset + 30) : null,
+    };
+  }
+  const rows = await db
+    .select({ p: posts })
+    .from(posts)
+    .innerJoin(socialAccounts, eq(socialAccounts.id, posts.authorAccountId))
+    .where(and(isNull(posts.deletedAt), visible, sql`${posts.authorAccountId} <> ${v.accountId}`))
+    .orderBy(
+      sql`(${posts.likeCount} * 2 + ${posts.commentCount} * 3) / power(extract(epoch from (now() - ${posts.publishedAt})) / 3600 + 2, 1.3) desc`,
+      desc(posts.publishedAt),
+    )
+    .limit(30)
+    .offset(offset);
+  return {
+    accounts: [],
+    posts: await postDTOs(
+      rows.map((r) => r.p),
+      userId,
+    ),
+    nextCursor: rows.length === 30 ? String(offset + 30) : null,
+  };
+}
