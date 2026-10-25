@@ -10,7 +10,7 @@ export const Field = forwardRef<
     <input
       ref={ref}
       className={cn(
-        'h-11 w-full rounded-[6px] border border-line bg-surface-2/40 px-3 text-[16px] outline-none placeholder:text-ink-2 focus:border-ink-2',
+        'h-[44px] w-full rounded-[6px] border border-line bg-surface-2/40 px-3 text-[16px] outline-none placeholder:text-ink-2 focus:border-ink-2',
         error && 'border-heart',
         className,
       )}

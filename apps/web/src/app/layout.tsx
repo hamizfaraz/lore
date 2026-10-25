@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Fraunces } from 'next/font/google';
+import { THEME_BOOT } from '@/lib/theme';
 import { Providers } from './providers';
 import './globals.css';
 
@@ -57,6 +58,10 @@ function splashLinks() {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={fraunces.variable} suppressHydrationWarning>
+      <head>
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static theme boot script avoids a theme flash */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+      </head>
       <body>
         <Providers>{children}</Providers>
       </body>

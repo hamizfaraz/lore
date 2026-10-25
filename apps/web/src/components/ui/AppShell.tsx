@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/cn';
 import { type TabKey, useUi } from '@/lib/store';
 import { InstallPrompt } from './InstallPrompt';
+import { OfflineBanner } from './OfflineBanner';
 import { type TabDef, TabBar } from './TabBar';
 
 /**
@@ -17,12 +18,14 @@ export function AppShell({
   me,
   profileDot,
   unreadDms,
+  unreadNotes,
 }: {
   roots: Partial<Record<TabKey, React.ReactNode>>;
   children: React.ReactNode;
   me: { handle: string; avatarUrl: string | null; displayName: string } | null;
   profileDot?: boolean;
   unreadDms?: number;
+  unreadNotes?: number;
 }) {
   const pathname = usePathname();
   const setLastPath = useUi((s) => s.setLastPath);
@@ -90,8 +93,10 @@ export function AppShell({
           profileDot={profileDot}
           onReselect={reselect}
           unreadDms={unreadDms}
+          unreadNotes={unreadNotes}
         />
       )}
+      <OfflineBanner />
       <InstallPrompt />
     </div>
   );

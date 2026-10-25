@@ -23,6 +23,11 @@
     "e2e:smoke": "playwright test -c e2e/playwright.config.ts",
     "prepare": "lefthook install || true"
   },
+  "pnpm": {
+    "overrides": {
+      "@metaplex-foundation/mpl-core>@noble/hashes": "1.8.0"
+    }
+  },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@playwright/test": "^1.48.0",

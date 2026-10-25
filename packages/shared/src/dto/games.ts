@@ -115,6 +115,8 @@ export const zGameStateDTO = z.object({
       title: z.string().nullable(),
       text: z.string().nullable(),
       imageUrl: z.string().nullable(),
+      /** additive (C1, 2026-10-24): true when the result image came from Muse Image → show the AI label */
+      imageAiGenerated: z.boolean().optional(),
       winners: z.array(z.string()),
       words: z.array(z.object({ word: z.string(), userId: z.string() })).optional(),
     })

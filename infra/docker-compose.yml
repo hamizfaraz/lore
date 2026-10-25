@@ -1,0 +1,63 @@
+# Production on one Vultr VM (section 14). Run from the repo root: docker compose -f infra/docker-compose.yml up -d
+name: lore
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443", "443:443/udp"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [web, api, mcp]
+  web:
+    build:
+      context: ..
+      dockerfile: infra/web.Dockerfile
+      args:
+        NEXT_PUBLIC_FEATURE_REELS: ${FEATURE_REELS:-1}
+        NEXT_PUBLIC_FEATURE_EXPLORE: ${FEATURE_EXPLORE:-1}
+        NEXT_PUBLIC_FEATURE_GAMES_MEME: ${FEATURE_GAMES_MEME:-0}
+        NEXT_PUBLIC_FEATURE_GAMES_PICTIONARY: ${FEATURE_GAMES_PICTIONARY:-0}
+        NEXT_PUBLIC_FEATURE_FIND_FRIENDS: ${FEATURE_FIND_FRIENDS:-0}
+        NEXT_PUBLIC_FEATURE_FAMILY_STORY: ${FEATURE_FAMILY_STORY:-0}
+        NEXT_PUBLIC_FEATURE_PODCAST: ${FEATURE_PODCAST:-0}
+        NEXT_PUBLIC_FEATURE_IMPACT: ${FEATURE_IMPACT:-0}
+        NEXT_PUBLIC_FEATURE_KEEPSAKES: ${FEATURE_KEEPSAKES:-0}
+        NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+    image: lore-web
+    restart: unless-stopped
+    env_file: ../.env.prod
+    environment:
+      API_INTERNAL_URL: http://api:4000
+    expose: ["3000"]
+  api:
+    build: { context: .., dockerfile: infra/api.Dockerfile }
+    image: lore-api
+    restart: unless-stopped
+    command: node dist/server.js
+    env_file: ../.env.prod
+    expose: ["4000"]
+    depends_on: [valkey]
+  mcp:
+    image: lore-api
+    restart: unless-stopped
+    command: node dist/mcp.js
+    env_file: ../.env.prod
+    expose: ["4100"]
+    depends_on: [api, valkey]
+  worker:
+    image: lore-api
+    restart: unless-stopped
+    command: node dist/worker.js
+    env_file: ../.env.prod
+    depends_on: [api, valkey]
+  valkey:
+    image: valkey/valkey:8
+    restart: unless-stopped
+    command: valkey-server --appendonly yes
+    volumes: [valkey:/data]
+volumes:
+  caddy_data: {}
+  caddy_config: {}
+  valkey: {}

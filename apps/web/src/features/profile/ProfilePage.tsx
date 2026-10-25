@@ -1,15 +1,12 @@
 'use client';
 import { StackScreen } from '@/components/ui/StackScreen';
-import { TopBar } from '@/components/ui/TopBar';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { Hammer } from 'lucide-react';
+import { ProfileView } from './ProfileView';
 
-/** Profile [C1] — placeholder created by the C1-0b scaffold; the owner replaces this file's contents. */
-export function ProfilePage(_props: { handle: string; group?: boolean }) {
+/** /u/[handle] and /g/[handle] [C1]. Group profiles share the component (section 8.1 step 8). */
+export function ProfilePage({ handle }: { handle: string; group?: boolean }) {
   return (
     <StackScreen>
-      <TopBar title="Profile" back={true} />
-      <EmptyState icon={Hammer} title="Profile" body="Coming soon." />
+      <ProfileView handle={decodeURIComponent(handle)} />
     </StackScreen>
   );
 }

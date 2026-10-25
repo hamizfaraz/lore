@@ -22,22 +22,32 @@ export function ActionRow({
   className?: string;
 }) {
   return (
-    <div className={cn('chrome flex items-center px-3 pt-2.5', className)}>
-      <div className="flex items-center gap-4">
+    <div className={cn('chrome flex items-center px-1', className)}>
+      <div className="flex items-center">
         <motion.button
           type="button"
           whileTap={{ scale: 0.85 }}
           aria-label={liked ? 'Unlike' : 'Like'}
           aria-pressed={liked}
           onClick={onLike}
-          className={cn('press', liked && 'text-heart')}
+          className={cn('press flex h-[44px] w-[44px] items-center justify-center', liked && 'text-heart')}
         >
           <Heart size={24} strokeWidth={1.75} fill={liked ? 'currentColor' : 'none'} />
         </motion.button>
-        <button type="button" aria-label="Comment" onClick={onComment} className="press">
+        <button
+          type="button"
+          aria-label="Comment"
+          onClick={onComment}
+          className="press flex h-[44px] w-[44px] items-center justify-center"
+        >
           <MessageCircle size={24} strokeWidth={1.75} className="-scale-x-100" />
         </button>
-        <button type="button" aria-label="Share" onClick={onShare} className="press">
+        <button
+          type="button"
+          aria-label="Share"
+          onClick={onShare}
+          className="press flex h-[44px] w-[44px] items-center justify-center"
+        >
           <Send size={23} strokeWidth={1.75} />
         </button>
       </div>
@@ -46,7 +56,7 @@ export function ActionRow({
         aria-label={saved ? 'Remove from saved' : 'Save'}
         aria-pressed={saved}
         onClick={onSave}
-        className="press ml-auto"
+        className="press ml-auto flex h-[44px] w-[44px] items-center justify-center"
       >
         <Bookmark size={24} strokeWidth={1.75} fill={saved ? 'currentColor' : 'none'} />
       </button>

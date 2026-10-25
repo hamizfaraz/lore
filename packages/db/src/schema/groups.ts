@@ -35,6 +35,10 @@ export const postDrafts = pgTable(
     createdByUserId: uuid('created_by_user_id'),
     createdByAi: boolean('created_by_ai').notNull().default(false),
     kind: text('kind', { enum: POST_KINDS }).notNull(),
+    /** what publishing creates: a feed post or a group story (stories follow story_mode) */
+    target: text('target', { enum: ['post', 'story'] as const })
+      .notNull()
+      .default('post'),
     caption: text('caption').notNull().default(''),
     mediaIds: uuid('media_ids').array().notNull().default(sql`'{}'::uuid[]`),
     audioLabel: text('audio_label'),

@@ -21,3 +21,30 @@ export function EmptyState({
     </div>
   );
 }
+
+/** Failed load, distinct from an empty list. Retry stays a text button so it meets the 44px target. */
+export function LoadError({
+  title = "Couldn't load this",
+  body = 'Check your connection and try again.',
+  onRetry,
+  className,
+}: { title?: string; body?: string; onRetry?: () => void; className?: string }) {
+  return (
+    <EmptyState
+      title={title}
+      body={body}
+      className={className}
+      action={
+        onRetry ? (
+          <button
+            type="button"
+            className="press min-h-[44px] px-3 font-semibold text-action"
+            onClick={onRetry}
+          >
+            Try again
+          </button>
+        ) : undefined
+      }
+    />
+  );
+}

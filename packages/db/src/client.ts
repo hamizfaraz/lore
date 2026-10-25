@@ -17,3 +17,7 @@ export function createDb(url = process.env.DATABASE_URL, opts: { max?: number } 
   const db = drizzle(sql, { schema, casing: 'snake_case' });
   return { db, sql };
 }
+
+/** Postgres array literal for binding a list as ONE parameter, e.g. sql`= any(${pgArray(ids)}::uuid[])`. */
+export const pgArray = (values: string[]) =>
+  `{${values.map((v) => `"${v.replace(/["\\]/g, '\\$&')}"`).join(',')}}`;

@@ -8,7 +8,8 @@ const joined = new Map<string, number>();
 
 export function getSocket(): Socket {
   if (!socket) {
-    socket = io({ path: '/socket.io', withCredentials: true, transports: ['websocket', 'polling'] });
+    // polling first then upgrade: works through Next dev rewrites (no WS proxy) and Caddy in prod
+    socket = io({ path: '/socket.io', withCredentials: true });
     socket.on('connect', () => {
       // re-join rooms after reconnect; screens backfill via REST on `reconnected`
       for (const room of joined.keys()) socket!.emit('room.join', { room });

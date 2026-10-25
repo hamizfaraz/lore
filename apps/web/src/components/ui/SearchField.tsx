@@ -7,7 +7,9 @@ export const SearchField = forwardRef<
   HTMLInputElement,
   React.InputHTMLAttributes<HTMLInputElement> & { onClear?: () => void }
 >(({ className, value, onClear, ...props }, ref) => (
-  <label className={cn('flex h-9 items-center gap-2 rounded-[10px] bg-surface-2 px-3 text-ink-2', className)}>
+  <label
+    className={cn('flex h-[44px] items-center gap-2 rounded-[10px] bg-surface-2 px-3 text-ink-2', className)}
+  >
     <Search size={16} strokeWidth={2} aria-hidden />
     <input
       ref={ref}

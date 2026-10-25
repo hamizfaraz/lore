@@ -51,9 +51,11 @@ export function StoriesRail({
               type="button"
               aria-label="Add to your story"
               onClick={onCreate}
-              className="absolute bottom-0 right-0 flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 border-bg bg-action text-white"
+              className="absolute -bottom-2.5 -right-2.5 flex h-[44px] w-[44px] items-center justify-center"
             >
-              <Plus size={14} strokeWidth={3} />
+              <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 border-bg bg-action text-white">
+                <Plus size={14} strokeWidth={3} />
+              </span>
             </button>
           </div>
           <span className="w-full truncate text-center text-[12px] text-ink-2">Your story</span>

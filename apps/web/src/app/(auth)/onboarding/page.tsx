@@ -1,5 +1,10 @@
+import { Suspense } from 'react';
 import { OnboardingPage } from '@/features/auth/OnboardingPage';
 
 export default function Page() {
-  return <OnboardingPage />;
+  return (
+    <Suspense>
+      <OnboardingPage />
+    </Suspense>
+  );
 }
