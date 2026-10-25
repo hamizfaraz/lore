@@ -108,6 +108,9 @@ Status as last verified on October 24, 2026:
   and production build.
 - C2-1 is awaiting only the paid live smoke required by its done condition. That is blocked on the
   human-owned C2-0 provider credentials and model ids, which are not present locally.
+- The web scaffold runs at `http://localhost:3000` in mock-AI mode. On this machine the API, worker,
+  and MCP processes require Valkey and exit because no local Valkey is running and the current user
+  cannot access the Docker daemon; this is an environment prerequisite, not a C2-1 package failure.
 - No C2-2 or later product feature has been implemented.
 
 Before resuming implementation, fetch `origin/main` and compare its head with this baseline. Do not

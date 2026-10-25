@@ -48,8 +48,10 @@ _Rewritten after each step._
   The mock smoke validates 11 JSON fixtures, 6 images, 2 voice fixtures, 5 choices, 3 prompts, guard,
   and budget paths without credentials or network calls.
 - The temporary `packages/ai` dev watcher is removed. Root `pnpm dev` now uses C1's actual web, API,
-  worker, and MCP processes. The local app is run with `AI_MODE=mock`; absent database/Valkey values
-  affect readiness and unfinished C1 features, not the C2-1 package smoke.
+  worker, and MCP processes. The local web app is currently running with `AI_MODE=mock` at
+  `http://localhost:3000`; `/login` is the visible testable scaffold route. API, worker, and MCP
+  cannot stay up on this machine without Valkey. No Valkey binary is installed, and Docker exists
+  but its daemon socket denies the current user. This does not affect the passing C2-1 package smoke.
 - `docs/IMPLEMENTATION_PLAN.md` is now the single active plan and covers C2-0 through C2-12, exact
   ownership, dependencies, acceptance tests, merge rules, cut lines, and recovery. The previous
   broad plan and `docs/C2_NOW.md` workflow were removed from the working tree and remain only in git
@@ -185,3 +187,8 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
   11 passing tests. Local configuration contains none of the required Meta, Gemini, or SerpAPI
   credentials, so the paid live smoke was not attempted and remains the only C2-1 done-condition
   outstanding.
+- **2026-10-24 · Local test run** — Started the rebased application with `AI_MODE=mock` and verified
+  the web server returns HTTP 200 at `http://localhost:3000`; opened the visible `/login` scaffold
+  for the human to test. The API, worker, and MCP initially listen but exit after ioredis exhausts
+  retries because Valkey is unavailable. Docker cannot be used by the current user due daemon-socket
+  permissions. The web process remains running, and the separate AI mock smoke is fully green.
