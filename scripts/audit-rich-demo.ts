@@ -25,6 +25,10 @@ const [summary] = await sql<
     reels: number;
     carousels: number;
     group_posts: number;
+    min_comments: number;
+    max_comments: number;
+    min_likes: number;
+    max_likes: number;
     group_conversations: number;
     dm_conversations: number;
     messages: number;
@@ -60,6 +64,10 @@ const [summary] = await sql<
     (select count(*)::int from demo_posts where kind='reel') reels,
     (select count(*)::int from demo_posts where kind='carousel') carousels,
     (select count(*)::int from demo_posts dp join demo_groups g on g.id=dp.author_account_id) group_posts,
+    (select min(comment_count)::int from demo_posts) min_comments,
+    (select max(comment_count)::int from demo_posts) max_comments,
+    (select min(like_count)::int from demo_posts) min_likes,
+    (select max(like_count)::int from demo_posts) max_likes,
     (select count(*)::int from conversations where id::text like '10000000-0000-7000-8000-1400%') group_conversations,
     (select count(*)::int from conversations where id::text like '10000000-0000-7000-8000-1500%') dm_conversations,
     (select count(*)::int from messages where meta->>'demo'='true') messages
@@ -112,6 +120,7 @@ const checks: Record<string, boolean> = {
   everyPostHasMedia: summary.posts_with_media === summary.posts,
   everyPostHasComments: summary.posts_with_comments === summary.posts,
   everyPostHasLikes: summary.posts_with_likes === summary.posts,
+  variedEngagement: summary.min_comments < summary.max_comments && summary.min_likes < summary.max_likes,
   mixedMedia: summary.reels > 0 && summary.carousels > 0,
   groupPosts: summary.group_posts === 36,
   groupChats: summary.group_conversations === 12,

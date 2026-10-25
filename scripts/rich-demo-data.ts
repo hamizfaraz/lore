@@ -763,8 +763,8 @@ export async function seedRichDemo(db: DemoDb, now = new Date()) {
   const likeRows: Array<typeof postLikes.$inferInsert> = [];
   const saveRows: Array<typeof postSaves.$inferInsert> = [];
   postRows.forEach((post, i) => {
-    const commentsForPost = 2 + ((i * 7) % 7);
-    const likesForPost = 6 + ((i * 11) % 22);
+    const commentsForPost = 1 + ((i * 5) % 8);
+    const likesForPost = 3 + ((i * 13) % 25);
     for (let c = 0; c < commentsForPost; c++) {
       const author = (i + c * 5 + 3) % 30;
       commentRows.push({
