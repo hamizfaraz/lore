@@ -623,7 +623,12 @@ export async function seedRichDemo(db: DemoDb, now = new Date()) {
 
   const followRows = RICH.accounts.flatMap((from, i) =>
     RICH.accounts
-      .filter((_, j) => i !== j)
+      // A dense but incomplete graph keeps feeds lively while leaving realistic room for
+      // Common Ground to introduce people who do not already follow one another.
+      .filter((_, j) => {
+        const distance = (j - i + RICH.accounts.length) % RICH.accounts.length;
+        return distance > 0 && distance <= 8;
+      })
       .map((to, j) => ({
         followerAccountId: from,
         targetAccountId: to,

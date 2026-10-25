@@ -528,3 +528,13 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
 - **2026-10-24 · final merge** — Combined `c1/platform` and `c2/intelligence` on `integrate/final-2227`. Conflicts: `docs/IMPLEMENTATION_PLAN.md` (M7, both records kept), `docs/PROJECT_CONTEXT_LOG.md` (M7, both records kept), `pnpm-lock.yaml` (M2, regenerated). Deploy and the remaining human keys are deferred.
 - **2026-10-24 · local finish without external accounts** — Wired `recap_posted` onto an actual group-post publish, speaker-labeled podcast MP4 after the MP3, signed persona avatar URLs, voice transcript failed/approximate labels, and demo-seed credential passwords (`password123` on the `*.demo@ourlore.test` users). Extended `e2e/smoke.spec.ts` past `/v1/ready`. Did not register the domain, create cloud accounts, move `main`, or run the demo seed against the live local database.
 - **2026-10-25 · essential completion pass** — Added source-tracked replacement/revocation semantics for Facebook discovery tags and covered replacement plus legacy disconnect cleanup. Replaced the unsupported Timescale `unnest()` continuous aggregate with a standard materialized view and a 15-minute worker refresh. Fixed Milo's invalid BullMQ deduplication id and handled chat fan-out promises cleanly. Removed the `x-lore-demo-user` bridge after two deterministic local resets (122 ms/98 ms) and successful Better Auth credential login plus `/v1/me`. Removed the Google Fonts build-time network dependency. Six workspace typechecks, Biome, mock AI smoke, API build, web production build, focused media/discovery tests, and all 112 API assertions pass; the native database lacks optional Vectorscale/DiskANN as documented.
+- **2026-10-25 · reproducible product-demo recorder** — Added a separate Playwright video project and
+  one-command recorder on `demo/playwright-video`. The directed 1280×720 tour signs in to the rich
+  local demo world and stages every major product surface with branded transitions, explanatory
+  lower-thirds, eased cursor motion, click ripples, and smooth scrolling. `pnpm demo:record` enforces
+  a local-only database reset, materializes missing media, starts the complete local stack with all
+  feature flags enabled, captures WebM, and exports a shareable MP4 using the best local encoder.
+  The rich seed now uses a dense but intentionally incomplete social graph so Common Ground can show
+  real unconnected matches instead of an empty state. The final 3:45 recording passed end-to-end and
+  was visually checked at its feature chapters and closing card. `docs/DEMO_VIDEO.md` documents the
+  flow and artifact paths; main remains untouched.

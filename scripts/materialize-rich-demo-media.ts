@@ -6,10 +6,19 @@ import { promisify } from 'node:util';
 
 const exec = promisify(execFile);
 const root = join(process.cwd(), '.data/media/demo/rich');
+let videoEncoder: string | undefined;
 const exists = async (path: string) =>
   stat(path)
     .then(() => true)
     .catch(() => false);
+
+async function pickVideoEncoder() {
+  if (videoEncoder) return videoEncoder;
+  const { stdout } = await exec('ffmpeg', ['-hide_banner', '-encoders']);
+  videoEncoder = ['libx264', 'libopenh264', 'mpeg4'].find((encoder) => stdout.includes(` ${encoder} `));
+  if (!videoEncoder) throw new Error('ffmpeg needs an H.264 or MPEG-4 video encoder');
+  return videoEncoder;
+}
 
 async function downloadPhoto(index: number) {
   const name = `photo-${String(index).padStart(2, '0')}.jpg`;
@@ -27,6 +36,7 @@ async function renderReel(index: number) {
   const path = join(root, name);
   if (!(await exists(path))) {
     const source = join(root, `photo-${String(index * 5).padStart(2, '0')}.jpg`);
+    const encoder = await pickVideoEncoder();
     await exec('ffmpeg', [
       '-y',
       '-loop',
@@ -39,7 +49,7 @@ async function renderReel(index: number) {
       "scale=1080:1350:force_original_aspect_ratio=increase,crop=1080:1350,zoompan=z='min(zoom+0.0008,1.08)':d=180:s=1080x1350:fps=30,format=yuv420p",
       '-an',
       '-c:v',
-      'libx264',
+      encoder,
       '-movflags',
       '+faststart',
       path,

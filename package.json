@@ -20,6 +20,7 @@
     "seed:prod": "dotenv -e .env.prod -- tsx scripts/seed.ts",
     "demo:reset": "tsx scripts/reset-demo.ts",
     "demo:media": "tsx scripts/materialize-rich-demo-media.ts",
+    "demo:record": "tsx scripts/record-demo.ts",
     "ai:smoke": "pnpm --filter @lore/ai smoke",
     "e2e:smoke": "playwright test -c e2e/playwright.config.ts",
     "prepare": "lefthook install || true"
