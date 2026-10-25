@@ -1,4 +1,5 @@
 import type { SpeakDecision } from '@lore/shared/ai';
+import type { PersonaDTO } from '@lore/shared/dto/persona';
 import { describe, expect, it, vi } from 'vitest';
 import { buildPersonaPrompt, createPersonaServiceForTest, normalizeExtractedMemories } from './service';
 import type { Membership } from './repository';
@@ -88,7 +89,7 @@ function decision(overrides: Partial<SpeakDecision> = {}): SpeakDecision {
 function fakeStore(ctx: PersonaContext) {
   return {
     membership: vi.fn(async (): Promise<Membership> => ({ role: 'admin', aiHistoryConsent: true })),
-    getPersona: vi.fn(async () => null),
+    getPersona: vi.fn(async (): Promise<PersonaDTO | null> => null),
     upsertPersona: vi.fn(),
     mutePersona: vi.fn(),
     removePersona: vi.fn(),
@@ -284,6 +285,66 @@ describe('persona decision service', () => {
       expect.objectContaining({ kind: 'system', body: expect.stringContaining('AI member') }),
       { type: 'system' },
     );
+  });
+
+  it('renders three no-write persona previews', async () => {
+    const ctx = context();
+    const store = fakeStore(ctx);
+    const decide = vi.fn(async () => ({
+      data: decision(),
+      degraded: false,
+      model: 'mock',
+      attempts: 0,
+    }));
+    const service = createPersonaServiceForTest({ store, decide });
+    const result = await service.testPersona(ctx.conversationId, 'user-1', {
+      name: 'Milo',
+      samplePrompt: 'what should we do?',
+    });
+    expect(result.previews).toHaveLength(3);
+    expect(decide).toHaveBeenCalledTimes(3);
+    expect(store.upsertPersona).not.toHaveBeenCalled();
+    expect(store.saveMemories).not.toHaveBeenCalled();
+  });
+
+  it('generates four house-style avatars and stores only the chosen option', async () => {
+    const ctx = context();
+    const store = fakeStore(ctx);
+    store.getPersona.mockResolvedValue({
+      id: ctx.persona.id,
+      conversationId: ctx.conversationId,
+      name: 'Milo',
+      avatarUrl: null,
+      tone: ['warm'],
+      interests: [],
+      boundaries: null,
+      initiative: 'balanced',
+      quietHours: null,
+      allowHistory: true,
+      allowNews: true,
+      allowImages: true,
+      allowPlans: true,
+      allowLocation: false,
+      surpriseImagesPerWeek: 1,
+      enabled: true,
+      mutedUntil: null,
+    });
+    const createImage = vi.fn(async ({ prompt }: { prompt: string }) => ({
+      bytes: Buffer.from(prompt),
+      mime: 'image/png' as const,
+      model: 'muse-image-test',
+      degraded: false,
+      source: 'mock' as const,
+    }));
+    const storeImage = vi.fn(async () => ({ id: 'media-1' }));
+    const service = createPersonaServiceForTest({ store, createImage, storeImage: storeImage as never });
+    const options = await service.avatarOptions(ctx.conversationId, 'user-1');
+    expect(options.options).toHaveLength(4);
+    expect(new Set(options.options.map((option) => option.style)).size).toBe(4);
+    expect(storeImage).not.toHaveBeenCalled();
+    const selected = await service.selectAvatar(ctx.conversationId, 'user-1', 'cosmic');
+    expect(selected.mediaId).toBe('media-1');
+    expect(storeImage).toHaveBeenCalledOnce();
   });
 
   it('queues human messages after the twenty-second typing window', async () => {

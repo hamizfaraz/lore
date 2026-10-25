@@ -8,6 +8,7 @@ import {
   generateMuseImage,
   guardText,
   sanitizeSpeakDecision,
+  withHouseImageStyle,
 } from '@lore/ai';
 import { SpeakDecision, type GuardVerdict, type SpeakDecision as SpeakDecisionType } from '@lore/shared/ai';
 import type { MessageDTO } from '@lore/shared/dto/chat';
@@ -20,11 +21,14 @@ import type {
   PersonaTestBody,
   PersonaTestResponse,
   PersonaUpdateBody,
+  PersonaAvatarOptionDTO,
+  PersonaAvatarSelectionDTO,
 } from '@lore/shared/dto/persona';
 import { postMessage } from '../chat/service';
 import { createFromBuffer } from '../media/service';
 import { recordImpactEvent } from '../impact/service';
 import { forbidden } from '../../lib/errors';
+import { env } from '../../lib/env';
 import { enqueue } from '../../lib/queues';
 import { getRedis } from '../../lib/redis';
 import { emitPersonaTyping } from './events';
@@ -97,6 +101,35 @@ type PersonaDependencies = {
 };
 
 type PersonaPromptMessage = { role: 'system' | 'user'; content: string };
+type AvatarStyle = PersonaAvatarOptionDTO['style'];
+
+const AVATAR_STYLES: Array<{ style: AvatarStyle; label: string; prompt: string }> = [
+  { style: 'warm', label: 'Warm guide', prompt: 'a friendly glowing house spirit, coral scarf, calm smile' },
+  {
+    style: 'playful',
+    label: 'Playful spark',
+    prompt: 'a playful rounded helper spirit, bouncing star shapes, joyful energy',
+  },
+  {
+    style: 'minimal',
+    label: 'Quiet orbit',
+    prompt: 'a minimal geometric companion, soft cream circle and navy orbit',
+  },
+  {
+    style: 'cosmic',
+    label: 'Cosmic pal',
+    prompt: 'a tiny cosmic companion made of gentle starlight and sage clouds',
+  },
+];
+
+const avatarPrompt = (style: AvatarStyle, name: string) => {
+  const option = AVATAR_STYLES.find((item) => item.style === style)!;
+  return withHouseImageStyle(
+    `Square avatar portrait for the AI group member named ${name}. ${option.prompt}. No text.`,
+  );
+};
+
+const dataUrl = (bytes: Buffer, mime: string) => `data:${mime};base64,${bytes.toString('base64')}`;
 
 let textBudget: AiBudget | undefined;
 const surpriseBudgets = new Map<number, AiBudget>();
@@ -358,19 +391,91 @@ export class PersonaService {
     await this.requireMember(conversationId, userId);
     const name =
       body.name ?? (body.preset === 'juniper' ? 'Juniper' : body.preset === 'sol' ? 'Sol' : 'Milo');
-    const prompt: PersonaPromptMessage[] = [
-      { role: 'system', content: buildPersonaSystemPrompt(name) },
-      {
-        role: 'user',
-        content: `Preview only. Do not extract or store memories. GROUP\ninitiative: ${body.initiative ?? 'balanced'}\ntone: ${(body.tone ?? ['warm', 'brief']).join(', ')}\nboundaries: ${body.boundaries ?? 'standard house rules'}\nTRANSCRIPT\nMember: ${body.samplePrompt ?? 'any ideas for something fun this weekend?'}`,
-      },
+    const scenarios = [
+      { label: 'Direct reply', transcript: body.samplePrompt ?? 'any ideas for something fun this weekend?' },
+      { label: 'Helpful plan', transcript: 'we need a low-key plan that works for everyone' },
+      { label: 'Knowing when to pause', transcript: 'okay, we have it handled from here' },
     ];
-    const result = await this.deps.decide(prompt);
+    const results = await Promise.all(
+      scenarios.map(({ label, transcript }) =>
+        this.deps.decide([
+          { role: 'system', content: buildPersonaSystemPrompt(name) },
+          {
+            role: 'user',
+            content: `Preview only. Do not join the chat, extract memories, or write data. SCENARIO: ${label}\nGROUP\ninitiative: ${body.initiative ?? 'balanced'}\ntone: ${(body.tone ?? ['warm', 'brief']).join(', ')}\nboundaries: ${body.boundaries ?? 'standard house rules'}\nTRANSCRIPT\nMember: ${transcript}`,
+          },
+        ]),
+      ),
+    );
     return {
-      previews: result.data.message
-        ? [{ message: result.data.message, reason: result.data.reason }]
-        : [{ message: `${name} would stay quiet here.`, reason: result.data.reason }],
-      degraded: result.degraded,
+      previews: results.map((result, index) => ({
+        message: result.data.message ?? `${name} would stay quiet here.`,
+        reason: `${scenarios[index]!.label}: ${result.data.reason}`.slice(0, 140),
+      })),
+      degraded: results.some((result) => result.degraded),
+    };
+  }
+
+  async avatarOptions(
+    conversationId: string,
+    userId: string,
+  ): Promise<{ options: PersonaAvatarOptionDTO[] }> {
+    await this.requireAdmin(conversationId, userId);
+    const persona = await this.deps.store.getPersona(conversationId);
+    const name = persona?.name ?? 'Milo';
+    const images = await Promise.all(
+      AVATAR_STYLES.map(async (option) => {
+        const image = await this.deps.createImage({
+          prompt: avatarPrompt(option.style, name),
+          size: '512x512',
+          user: userId,
+        });
+        return {
+          style: option.style,
+          label: option.label,
+          imageUrl: dataUrl(image.bytes, image.mime),
+          generator: image.model,
+          degraded: image.degraded,
+        };
+      }),
+    );
+    return { options: images };
+  }
+
+  async selectAvatar(
+    conversationId: string,
+    userId: string,
+    style: AvatarStyle,
+  ): Promise<PersonaAvatarSelectionDTO> {
+    await this.requireAdmin(conversationId, userId);
+    const persona = await this.deps.store.getPersona(conversationId);
+    const image = await this.deps.createImage({
+      prompt: avatarPrompt(style, persona?.name ?? 'Milo'),
+      size: '512x512',
+      user: userId,
+    });
+    let mediaId: string | null = null;
+    try {
+      mediaId = (
+        await this.deps.storeImage(image.bytes, {
+          ownerUserId: userId,
+          kind: 'generated_image',
+          mime: image.mime,
+          aiGenerated: true,
+          generator: image.model,
+          width: 512,
+          height: 512,
+          captionAi: `AI-generated ${style} avatar for ${persona?.name ?? 'Milo'}`,
+        })
+      ).id;
+    } catch (error) {
+      if (env.NODE_ENV === 'production') throw error;
+    }
+    return {
+      mediaId,
+      imageUrl: dataUrl(image.bytes, image.mime),
+      generator: image.model,
+      degraded: image.degraded,
     };
   }
 
@@ -563,6 +668,8 @@ export const updateMemory = service.updateMemory.bind(service);
 export const deleteMemory = service.deleteMemory.bind(service);
 export const explanation = service.explanation.bind(service);
 export const testPersona = service.testPersona.bind(service);
+export const avatarOptions = service.avatarOptions.bind(service);
+export const selectAvatar = service.selectAvatar.bind(service);
 export const onMessage = service.onMessage.bind(service);
 export const tick = service.tick.bind(service);
 export const consider = service.consider.bind(service);

@@ -1,7 +1,14 @@
 'use client';
-import type { MemoryDTO, PersonaDTO, PersonaTestResponse, PersonaUpdateBody } from '@lore/shared/dto/persona';
+import type {
+  MemoryDTO,
+  PersonaAvatarOptionDTO,
+  PersonaAvatarSelectionDTO,
+  PersonaDTO,
+  PersonaTestResponse,
+  PersonaUpdateBody,
+} from '@lore/shared/dto/persona';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Brain, Check, ChevronDown, Sparkles, Trash2 } from 'lucide-react';
+import { Brain, Check, ChevronDown, ImageIcon, Sparkles, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ListRow, SectionHeader } from '@/components/ui/ListRow';
 import { Sheet } from '@/components/ui/Sheet';
@@ -10,6 +17,7 @@ import { TopBar } from '@/components/ui/TopBar';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { MuteMiloSheet } from './MuteMiloSheet';
+import { c2DemoHeaders } from './demo-user';
 
 const PRESETS = [
   { id: 'milo', name: 'Milo', note: 'Warm, witty, and brief' },
@@ -91,24 +99,35 @@ export function AiStudioPage({ conversationId }: { conversationId: string }) {
   const memoryKey = ['persona', conversationId, 'memories'] as const;
   const personaQuery = useQuery({
     queryKey: personaKey,
-    queryFn: () => api.get<PersonaDTO | null>(`/v1/conversations/${conversationId}/persona`),
+    queryFn: () =>
+      api.get<PersonaDTO | null>(`/v1/conversations/${conversationId}/persona`, {
+        headers: c2DemoHeaders(),
+      }),
   });
   const memoryQuery = useQuery({
     queryKey: memoryKey,
-    queryFn: () => api.get<MemoryDTO[]>(`/v1/conversations/${conversationId}/persona/memories`),
+    queryFn: () =>
+      api.get<MemoryDTO[]>(`/v1/conversations/${conversationId}/persona/memories`, {
+        headers: c2DemoHeaders(),
+      }),
   });
   const [draft, setDraft] = useState<Draft>(DEFAULT_DRAFT);
   const [muteOpen, setMuteOpen] = useState(false);
   const [memory, setMemory] = useState<MemoryDTO | null>(null);
   const [memorySummary, setMemorySummary] = useState('');
   const [preview, setPreview] = useState<PersonaTestResponse | null>(null);
+  const [avatarOptions, setAvatarOptions] = useState<PersonaAvatarOptionDTO[]>([]);
+  const [selectedAvatar, setSelectedAvatar] = useState<PersonaAvatarSelectionDTO | null>(null);
 
   useEffect(() => {
     if (personaQuery.data) setDraft(fromPersona(personaQuery.data));
   }, [personaQuery.data]);
 
   const save = useMutation({
-    mutationFn: () => api.put<PersonaDTO>(`/v1/conversations/${conversationId}/persona`, draft),
+    mutationFn: () =>
+      api.put<PersonaDTO>(`/v1/conversations/${conversationId}/persona`, draft, {
+        headers: c2DemoHeaders(),
+      }),
     onSuccess: (persona) => {
       client.setQueryData(personaKey, persona);
       setDraft(fromPersona(persona));
@@ -116,14 +135,19 @@ export function AiStudioPage({ conversationId }: { conversationId: string }) {
   });
   const test = useMutation({
     mutationFn: () =>
-      api.post<PersonaTestResponse>(`/v1/conversations/${conversationId}/persona/test`, {
-        ...draft,
-        samplePrompt: 'any ideas for something fun this weekend?',
-      }),
+      api.post<PersonaTestResponse>(
+        `/v1/conversations/${conversationId}/persona/test`,
+        {
+          ...draft,
+          samplePrompt: 'any ideas for something fun this weekend?',
+        },
+        { headers: c2DemoHeaders() },
+      ),
     onSuccess: setPreview,
   });
   const remove = useMutation({
-    mutationFn: () => api.del<void>(`/v1/conversations/${conversationId}/persona`),
+    mutationFn: () =>
+      api.del<void>(`/v1/conversations/${conversationId}/persona`, { headers: c2DemoHeaders() }),
     onSuccess: () => {
       client.setQueryData(personaKey, null);
       client.setQueryData(memoryKey, []);
@@ -132,19 +156,47 @@ export function AiStudioPage({ conversationId }: { conversationId: string }) {
   });
   const patchMemory = useMutation({
     mutationFn: () =>
-      api.patch<MemoryDTO>(`/v1/conversations/${conversationId}/persona/memories/${memory?.id}`, {
-        summary: memorySummary,
-      }),
+      api.patch<MemoryDTO>(
+        `/v1/conversations/${conversationId}/persona/memories/${memory?.id}`,
+        {
+          summary: memorySummary,
+        },
+        { headers: c2DemoHeaders() },
+      ),
     onSuccess: async () => {
       setMemory(null);
       await client.invalidateQueries({ queryKey: memoryKey });
     },
   });
   const deleteMemory = useMutation({
-    mutationFn: (id: string) => api.del<void>(`/v1/conversations/${conversationId}/persona/memories/${id}`),
+    mutationFn: (id: string) =>
+      api.del<void>(`/v1/conversations/${conversationId}/persona/memories/${id}`, {
+        headers: c2DemoHeaders(),
+      }),
     onSuccess: async () => {
       setMemory(null);
       await client.invalidateQueries({ queryKey: memoryKey });
+    },
+  });
+  const generateAvatars = useMutation({
+    mutationFn: () =>
+      api.post<{ options: PersonaAvatarOptionDTO[] }>(
+        `/v1/conversations/${conversationId}/persona/avatars`,
+        {},
+        { headers: c2DemoHeaders() },
+      ),
+    onSuccess: (result) => setAvatarOptions(result.options),
+  });
+  const chooseAvatar = useMutation({
+    mutationFn: (style: PersonaAvatarOptionDTO['style']) =>
+      api.post<PersonaAvatarSelectionDTO>(
+        `/v1/conversations/${conversationId}/persona/avatar`,
+        { style },
+        { headers: c2DemoHeaders() },
+      ),
+    onSuccess: (result) => {
+      setSelectedAvatar(result);
+      if (result.mediaId) setDraft((current) => ({ ...current, avatarMediaId: result.mediaId }));
     },
   });
 
@@ -182,6 +234,72 @@ export function AiStudioPage({ conversationId }: { conversationId: string }) {
           </p>
         </section>
 
+        <SectionHeader
+          action={
+            <button
+              type="button"
+              onClick={() => generateAvatars.mutate()}
+              className="press text-[13px] font-semibold text-ai"
+            >
+              {generateAvatars.isPending ? 'Drawing…' : avatarOptions.length ? 'New set' : 'Generate 4'}
+            </button>
+          }
+        >
+          Avatar
+        </SectionHeader>
+        <section className="mx-4 rounded-2xl bg-surface-2 p-3">
+          {selectedAvatar && (
+            <div className="mb-3 flex items-center gap-3 rounded-xl bg-bg p-3">
+              <img
+                src={selectedAvatar.imageUrl}
+                alt="Selected AI-generated avatar"
+                className="h-14 w-14 rounded-full object-cover"
+              />
+              <div>
+                <p className="font-semibold">Selected avatar</p>
+                <p className="text-[11px] text-ink-2">Generated with AI · {selectedAvatar.generator}</p>
+                {!selectedAvatar.mediaId && (
+                  <p className="text-[11px] text-ink-2">Preview only until C1 media storage is merged.</p>
+                )}
+              </div>
+            </div>
+          )}
+          {avatarOptions.length ? (
+            <div className="grid grid-cols-2 gap-2">
+              {avatarOptions.map((option) => (
+                <button
+                  type="button"
+                  key={option.style}
+                  disabled={chooseAvatar.isPending}
+                  onClick={() => chooseAvatar.mutate(option.style)}
+                  className="press overflow-hidden rounded-xl bg-bg text-left"
+                >
+                  <img
+                    src={option.imageUrl}
+                    alt={`${option.label}, AI-generated avatar option`}
+                    className="aspect-square w-full object-cover"
+                  />
+                  <span className="block px-3 pt-2 text-sm font-semibold">{option.label}</span>
+                  <span className="block px-3 pb-3 text-[10px] text-ink-2">Generated with AI</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => generateAvatars.mutate()}
+              className="press flex w-full items-center justify-center gap-2 rounded-xl border border-dashed p-6 text-sm text-ink-2 hairline"
+            >
+              <ImageIcon size={20} /> Generate four house-style options
+            </button>
+          )}
+          {generateAvatars.error && (
+            <p role="alert" className="mt-2 text-xs text-heart">
+              {generateAvatars.error.message}
+            </p>
+          )}
+        </section>
+
         <SectionHeader>Personality</SectionHeader>
         <section className="mx-4 overflow-hidden rounded-2xl bg-surface-2 p-3">
           <div className="grid grid-cols-2 gap-2">
@@ -210,6 +328,40 @@ export function AiStudioPage({ conversationId }: { conversationId: string }) {
               className="w-full rounded-xl border bg-bg px-3 py-2.5 outline-none hairline focus:border-ai"
             />
           </label>
+          <label className="mt-3 block">
+            <span className="mb-1 block text-[12px] font-semibold text-ink-2">Tone · comma separated</span>
+            <input
+              value={(draft.tone ?? []).join(', ')}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  tone: event.target.value
+                    .split(',')
+                    .map((item) => item.trim())
+                    .filter(Boolean),
+                }))
+              }
+              className="w-full rounded-xl border bg-bg px-3 py-2.5 outline-none hairline focus:border-ai"
+            />
+          </label>
+          <label className="mt-3 block">
+            <span className="mb-1 block text-[12px] font-semibold text-ink-2">
+              Interests · comma separated
+            </span>
+            <input
+              value={(draft.interests ?? []).join(', ')}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  interests: event.target.value
+                    .split(',')
+                    .map((item) => item.trim())
+                    .filter(Boolean),
+                }))
+              }
+              className="w-full rounded-xl border bg-bg px-3 py-2.5 outline-none hairline focus:border-ai"
+            />
+          </label>
         </section>
 
         <SectionHeader>Initiative</SectionHeader>
@@ -231,6 +383,49 @@ export function AiStudioPage({ conversationId }: { conversationId: string }) {
         <p className="px-5 pt-2 text-[12px] text-ink-2">
           Quiet: up to 3 messages/day · Balanced: 8 · Lively: 15
         </p>
+
+        <SectionHeader>Quiet hours</SectionHeader>
+        <section className="mx-4 grid grid-cols-2 gap-3 rounded-2xl bg-surface-2 p-3">
+          <label>
+            <span className="mb-1 block text-[12px] font-semibold text-ink-2">Start</span>
+            <input
+              type="time"
+              value={draft.quietHours?.start ?? '22:00'}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  quietHours: {
+                    start: event.target.value,
+                    end: current.quietHours?.end ?? '08:00',
+                    tz: current.quietHours?.tz ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+                  },
+                }))
+              }
+              className="w-full rounded-xl border bg-bg p-2 hairline"
+            />
+          </label>
+          <label>
+            <span className="mb-1 block text-[12px] font-semibold text-ink-2">End</span>
+            <input
+              type="time"
+              value={draft.quietHours?.end ?? '08:00'}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  quietHours: {
+                    start: current.quietHours?.start ?? '22:00',
+                    end: event.target.value,
+                    tz: current.quietHours?.tz ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+                  },
+                }))
+              }
+              className="w-full rounded-xl border bg-bg p-2 hairline"
+            />
+          </label>
+          <p className="col-span-2 text-[11px] text-ink-2">
+            Time zone: {draft.quietHours?.tz ?? Intl.DateTimeFormat().resolvedOptions().timeZone}
+          </p>
+        </section>
 
         <SectionHeader>Permissions</SectionHeader>
         <section className="mx-4 overflow-hidden rounded-2xl bg-surface-2">
@@ -292,13 +487,28 @@ export function AiStudioPage({ conversationId }: { conversationId: string }) {
           Preview
         </SectionHeader>
         <section className="mx-4 rounded-2xl bg-ai-tint p-4">
-          {preview?.previews[0] ? (
-            <>
-              <p className="text-[15px]">{preview.previews[0].message}</p>
-              <p className="mt-2 text-[11px] text-ink-2">Why: {preview.previews[0].reason}</p>
-            </>
+          {preview?.previews.length ? (
+            <div className="space-y-3">
+              {preview.previews.map((item, index) => (
+                <article key={`${item.reason}-${index}`} className="rounded-xl bg-bg p-3">
+                  <div className="flex flex-wrap gap-1 text-[10px] font-semibold text-ai">
+                    <span>AI assistant</span>
+                    <span>·</span>
+                    <span>Generated with AI</span>
+                  </div>
+                  <p className="mt-2 text-[15px]">{item.message}</p>
+                  <p className="mt-2 text-[11px] text-ink-2">Why? {item.reason}</p>
+                </article>
+              ))}
+              {preview.degraded && <p className="text-[11px] text-ink-2">Preview used a safe fallback.</p>}
+            </div>
           ) : (
             <p className="text-[13px] text-ink-2">Try the personality without adding it to the chat.</p>
+          )}
+          {test.error && (
+            <p role="alert" className="mt-2 text-xs text-heart">
+              {test.error.message}
+            </p>
           )}
         </section>
 

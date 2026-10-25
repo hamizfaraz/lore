@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Bell, BellOff, Clock3 } from 'lucide-react';
 import { Sheet, SheetAction } from '@/components/ui/Sheet';
 import { api } from '@/lib/api';
+import { c2DemoHeaders } from './demo-user';
 
 export function MuteMiloSheet(_props: {
   open: boolean;
@@ -14,7 +15,11 @@ export function MuteMiloSheet(_props: {
   const { open, onOpenChange, conversationId, onMuted } = _props;
   const mutation = useMutation({
     mutationFn: (duration: PersonaMuteBody['duration']) =>
-      api.post<PersonaDTO>(`/v1/conversations/${conversationId}/persona/mute`, { duration }),
+      api.post<PersonaDTO>(
+        `/v1/conversations/${conversationId}/persona/mute`,
+        { duration },
+        { headers: c2DemoHeaders() },
+      ),
     onSuccess: (persona) => {
       onMuted?.(persona);
       onOpenChange(false);

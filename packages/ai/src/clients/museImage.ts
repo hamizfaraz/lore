@@ -48,8 +48,14 @@ export async function generateMuseImage(
   config: AiConfig = getAiConfig(),
 ): Promise<MuseImageResult> {
   if (config.mode === 'mock') {
+    let promptHash = 2_166_136_261;
+    for (const character of options.prompt) {
+      promptHash ^= character.charCodeAt(0);
+      promptHash = Math.imul(promptHash, 16_777_619);
+    }
+    const fixtureIndex = (promptHash >>> 0) % mockImages.length;
     return {
-      bytes: Buffer.from(mockImages[0]!.bytes),
+      bytes: Buffer.from(mockImages[fixtureIndex]!.bytes),
       mime: 'image/png',
       model: config.museImageModel,
       degraded: false,

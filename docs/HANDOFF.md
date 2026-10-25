@@ -79,3 +79,7 @@ Check at every checkpoint (section 10 working agreements).
   MP3. Preserve duration/transcript/uploader metadata on media completion. The local mock build uses
   synthesized, clearly demo-only tones when physical seeded assets are absent; production fails
   closed until C1 storage is available. Optional MP4 rendering is deliberately cut.
+- [ ] C2->C1: C2-12 generates four ephemeral Muse Image avatar previews and calls
+  `media.service.createFromBuffer` only for the selected style. Preserve the generated-image flag,
+  model/generator label, 512×512 dimensions, owner id, and AI caption. Once C1 storage lands, expose
+  the selected `ai_personas.avatar_media_id` through a signed `PersonaDTO.avatarUrl`.

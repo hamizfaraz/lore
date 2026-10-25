@@ -37,15 +37,36 @@ export const zPersonaTestBody = zPersonaUpdateBody.extend({
 export type PersonaTestBody = z.infer<typeof zPersonaTestBody>;
 
 export const zPersonaTestResponse = z.object({
-  previews: z.array(
-    z.object({
-      message: z.string().max(280),
-      reason: z.string().max(140),
-    }),
-  ),
+  previews: z
+    .array(
+      z.object({
+        message: z.string().max(280),
+        reason: z.string().max(140),
+      }),
+    )
+    .length(3),
   degraded: z.boolean(),
 });
 export type PersonaTestResponse = z.infer<typeof zPersonaTestResponse>;
+
+export const zPersonaAvatarStyle = z.enum(['warm', 'playful', 'minimal', 'cosmic']);
+export const zPersonaAvatarOptionDTO = z.object({
+  style: zPersonaAvatarStyle,
+  label: z.string(),
+  imageUrl: z.string(),
+  generator: z.string(),
+  degraded: z.boolean(),
+});
+export type PersonaAvatarOptionDTO = z.infer<typeof zPersonaAvatarOptionDTO>;
+export const zPersonaAvatarOptionsDTO = z.object({ options: z.array(zPersonaAvatarOptionDTO).length(4) });
+export const zPersonaAvatarSelectBody = z.object({ style: zPersonaAvatarStyle });
+export const zPersonaAvatarSelectionDTO = z.object({
+  mediaId: z.string().nullable(),
+  imageUrl: z.string(),
+  generator: z.string(),
+  degraded: z.boolean(),
+});
+export type PersonaAvatarSelectionDTO = z.infer<typeof zPersonaAvatarSelectionDTO>;
 
 export const zPersonaMuteBody = z.object({
   duration: z.enum(['one_hour', 'eight_hours', 'until_unmuted', 'unmute']),

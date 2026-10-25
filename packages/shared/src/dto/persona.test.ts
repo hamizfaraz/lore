@@ -18,10 +18,14 @@ describe('persona DTO contracts', () => {
   it('keeps previews and explanations bounded to disclosed fields', () => {
     expect(
       zPersonaTestResponse.parse({
-        previews: [{ message: 'movie night?', reason: 'the group asked for an idea' }],
+        previews: [
+          { message: 'movie night?', reason: 'the group asked for an idea' },
+          { message: 'pizza could work too', reason: 'the group asked for a plan' },
+          { message: 'Milo would stay quiet here.', reason: 'the group has it handled' },
+        ],
         degraded: false,
       }).previews,
-    ).toHaveLength(1);
+    ).toHaveLength(3);
     expect(
       zPersonaExplanationDTO.parse({
         reason: 'a relevant shared preference',

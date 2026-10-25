@@ -146,7 +146,7 @@ is the next ordered milestone; do not begin it unless the human explicitly conti
 | 9 | C2-9 impact | P1 | C2-4 | Implementation green; live Snowflake acceptance pending |
 | 10 | C2-10 family story | P1 | C2-5 | Implementation complete; C1 draft/media integration pending |
 | 11 | C2-11 podcast | P2 | C2-3 | Audio implementation complete; C1 media integration pending; MP4 cut |
-| 12 | C2-12 advanced persona | P2 | C2-2 | Pending |
+| 12 | C2-12 advanced persona | P2 | C2-2 | Implementation complete; C1 media integration pending |
 
 Task order is binding. A task starts only after its dependencies and the previous C2 task are done
 or the human explicitly changes the plan. P0 is the protected demo chain; P1 follows only after P0
@@ -1035,6 +1035,6 @@ Computer 2 is complete only when:
 - [ ] C2-9 impact accepted or Cortex portion deliberately cut.
 - [x] C2-10 family implemented; final integrated acceptance awaits C1 draft/media services.
 - [x] C2-11 podcast audio implementation complete; optional video cut; final C1 media acceptance pending.
-- [ ] C2-12 advanced persona accepted or deliberately cut/flagged off.
+- [x] C2-12 advanced persona implemented; final C1 media persistence acceptance pending.
 - [ ] Final privacy, labels, native-feel, performance, and live-provider checks pass.
 - [ ] Final branch pushed; plans, contracts, handoffs, and recovery log are current.

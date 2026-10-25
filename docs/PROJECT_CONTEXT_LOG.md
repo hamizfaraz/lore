@@ -26,7 +26,8 @@
 
 _Rewritten after each step._
 
-- Phase: C2-11 Podcast Stations is implementation-green on the C2 branch; C2-12 Advanced Persona is next.
+- Phase: C2-10 through C2-12 are implementation-green on the C2 branch. Final whole-workspace
+  verification and the phone test run are in progress.
   C1 merge and live-provider acceptance remain open for the complete C2 P0 chain.
   C2-1's paid live smoke remains blocked on human-owned C2-0 credentials.
 - Active Computer 2 branch: `c2/intelligence`, in a dedicated worktree. All implementation changes
@@ -82,6 +83,11 @@ _Rewritten after each step._
   and missing-member state, host wrap/finish gates, and MP3 composition in station order with
   300 ms gaps and intro/outro tones. The optional MP4 render was deliberately cut. Seeded exact
   clips and a mobile recorder make the flow testable before C1's upload/storage implementation.
+- C2-12 supplies four distinct Muse Image house-style avatar choices, selected-only C1 media
+  persistence, tone/interests/boundaries, time-zone-aware quiet hours, permission controls, and
+  exactly three preview-only scenarios with no join or memory write. Loading, empty, degraded,
+  error, dark, mobile, accessibility, reduced-motion, and the three required AI labels are present.
+  `/c2-lab` links Family, Podcast, and Advanced Persona into one seeded test lobby.
 - Full verification passes: six workspace typechecks and 110 tests across 28 files, whole-workspace
   Biome over 444 files, mock smoke, production web/API builds, and a direct
   browser-bundle provider-secret scan, and `git diff --check`.
@@ -135,7 +141,7 @@ _Rewritten after each step._
 | C2-9 | Snowflake impact | live verification pending | Service, sync, six views, route/UI, six tests, and local smoke pass; live Snowflake/Cortex awaits C2-0 |
 | C2-10 | Family story | implementation complete | C1 draft/media integration remains |
 | C2-11 | Podcast stations and render | implementation complete | Audio retained; MP4 cut; C1 media integration remains |
-| C2-12 | Advanced persona studio and AI polish | pending | Depends on C2-2 |
+| C2-12 | Advanced persona studio and AI polish | implementation complete | C1 selected-avatar media persistence remains |
 
 ## Things that need a human (cannot be done by the agent)
 
@@ -359,3 +365,11 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
   isolated local database in 237 ms; it now contains nine consent-scoped media rows. Focused policy
   tests and affected typechecks pass. Optional MP4 is cut; C1 signed-media/storage remains the final
   production integration. C2-12 is next.
+- **2026-10-24 · C2-12 Advanced Persona Studio** — Added four distinct house-style Muse Image
+  avatar choices, a selected-only storage boundary, editable tone/interests/boundaries, quiet hours
+  in the browser's IANA time zone, existing permission controls, and exactly three preview-only
+  scenarios that never join the chat or write memories. Applied AI assistant, Generated with AI,
+  and Why labels to every preview; completed loading/empty/degraded/error/mobile/dark/reduced-motion
+  states. Added `/c2-lab` as a single seeded launcher for milestones 10–12 and extended the local
+  demo identity bridge to the persona routes. Focused shared/AI/API tests and affected typechecks
+  pass; final whole-workspace verification and phone smoke are next.
