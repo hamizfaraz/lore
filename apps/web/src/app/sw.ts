@@ -19,7 +19,9 @@ const serwist = new Serwist({
   runtimeCaching: [
     {
       matcher: ({ url }) => url.pathname === '/v1/feed' || url.pathname === '/v1/conversations',
-      handler: new NetworkFirst({ cacheName: 'lore-api', networkTimeoutSeconds: 4 }),
+      // Bump this when the bundled demo dataset changes so an installed app cannot keep serving
+      // an older feed/inbox snapshot after a reset.
+      handler: new NetworkFirst({ cacheName: 'lore-api-rich-demo-v1', networkTimeoutSeconds: 4 }),
     },
     ...defaultCache,
   ],

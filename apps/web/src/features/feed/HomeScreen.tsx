@@ -30,7 +30,12 @@ export function HomeScreen() {
   const actions = usePostActions();
   const feed = useInfiniteQuery({
     queryKey: qk.feed,
-    queryFn: ({ pageParam }) => api.get<Page>(`/v1/feed${pageParam ? `?cursor=${pageParam}` : ''}`),
+    // Keep the initial URL versioned so an older service-worker demo snapshot cannot mask a
+    // freshly seeded dataset. Cursor pages are naturally unique, but retain the version too.
+    queryFn: ({ pageParam }) =>
+      api.get<Page>(
+        `/v1/feed?dataset=rich-demo-v1${pageParam ? `&cursor=${encodeURIComponent(pageParam)}` : ''}`,
+      ),
     initialPageParam: '' as string,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
   });
