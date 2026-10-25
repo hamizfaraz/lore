@@ -26,7 +26,14 @@
 
 _Rewritten after each step._
 
-- Phase: **C1-4 Chat done** on `c1/platform`. Next task: **C1-5 Group accounts** (then C1-6 infra).
+- Phase: **C1-5 Group accounts done** on `c1/platform`. **P0 platform chain complete (C1-0…C1-5).** Next: **C1-6 Infra** (needs Vultr/DNS creds from C2-0) — code-side done next, then C1-7 games.
+- C1-5: groups module — create group account (admin; handle, avatar, visibility, policy), GET/PUT policy (admin, audited,
+  system message), drafts (createDraft cross-boundary DONE, submit freezes snapshot, human author auto-approves on submit,
+  edits bump version + void approvals, approve/request changes, explicit publish for direct/courtesy, cancel),
+  `tryPublish` = mayPublish under `SELECT … FOR UPDATE`, auto-publish on last approval, effective voters = snapshot ∩
+  current eligible members, group stories via `post_drafts.target='story'` + story_mode, `postFromComposer`/`storyFromComposer`,
+  draft_card resolver, notifications (draft_needs_approval, post_published). Web: DraftCard (live), GroupAccountSection
+  (create + policy editor). Tests: `groups/service.test.ts` (5) — all pass.
 - C1-4: chat module — inbox (lateral last-message + unread), DM dedupe, group create, messages (cursor in SQL for µs
   precision), idempotent send by clientId, postMessage/updateMessage (cross-boundary, done), refreshCard, card resolver
   registry (`registerCardResolver`), reactions, unsend, read state, members add/remove/roles/mute (scope+duration), AI
@@ -96,7 +103,7 @@ _Rewritten after each step._
 | C1-2 | Media pipeline | done | local disk fallback when no S3 |
 | C1-3 | Social core | done | group posting via groups.service in C1-5 |
 | C1-4 | Chat | done | 8.2 acceptance verified via scratch socket script |
-| C1-5 | Group accounts | pending | |
+| C1-5 | Group accounts | done | 8.4 acceptance verified (tests + HTTP flow) |
 | C1-6 | Infra | pending | |
 | C1-7 | Game engine + One-Word Story | pending | |
 | C1-8 | Meme Battle | pending | |
@@ -156,3 +163,7 @@ _Every deviation is also recorded in `docs/IMPLEMENTATION_PLAN.md` (section 18, 
   backfill without duplicates (fixed µs-vs-ms cursor bug), typing relay, removed member 403 + no events, guest join.
   CI now runs a Timescale Postgres + Valkey service, `db:push` + `db:setup`, then DB-backed tests. Added `pgArray()` in
   @lore/db for binding arrays as one parameter.
+- **2026-10-24 · C1-5 done** — group accounts, 4 policies, drafts/approvals/publish with row lock, DraftCard, policy UI.
+  Added `post_drafts.target` (post|story). Decision: the human author's submit counts as their approval (matches the
+  section 16 e2e "Ava proposes; Leo approves; a third approval injected"); edits void ALL approvals incl. the author's
+  (matches "editing after 2 approvals resets the count to 0").

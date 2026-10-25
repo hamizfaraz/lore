@@ -1506,3 +1506,5 @@ Kept in sync with `docs/PROJECT_CONTEXT_LOG.md`. Each line: date · task · chan
 - 2026-10-24 · C1-0b · Added routes `/p/[id]` (post detail) and `/offline` (SW fallback) [C1]. Profile tab root is `/u/<own handle>`.
 - 2026-10-24 · C1-0b · `@lore/ai` scaffold index exports typed stubs `games.{getPrompts,fiveWordChoices,storyTitle,storyImage,memeEntry,memeImage}` and `guard()`; C2 keeps these signatures.
 - 2026-10-24 · C1-2 · Dev without Vultr credentials stores media on disk (`LOCAL_MEDIA_DIR`) behind HMAC-signed expiring URLs served by the api; production uses presigned S3 exactly as planned.
+- 2026-10-24 · C1-5 · `post_drafts.target` ('post'|'story') added so group stories go through `story_mode`.
+- 2026-10-24 · C1-5 · A human author's submit counts as their own approval of that version; editing voids all approvals (incl. the author's). Effective voters = snapshot voters still active and eligible (removed/publishing-muted members stop counting).

@@ -38,3 +38,20 @@ export async function makeGroup(memberIds: string[], title = 'Test group') {
     );
   return id;
 }
+
+/** A completed image media row owned by `userId` (no bytes needed for policy tests). */
+export async function makeMedia(userId: string | null) {
+  const { mediaAssets } = await import('@lore/db');
+  const id = uuidv7();
+  await getDb()
+    .insert(mediaAssets)
+    .values({
+      id,
+      ownerUserId: userId,
+      kind: 'image',
+      storageKey: `test/${id}.jpg`,
+      mime: 'image/jpeg',
+      completedAt: new Date(),
+    });
+  return id;
+}
