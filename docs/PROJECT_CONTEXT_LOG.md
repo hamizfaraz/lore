@@ -26,7 +26,7 @@
 
 _Rewritten after each step._
 
-- Phase: **C1-13 code done** (empty/error states, 44px targets, desktop feed column, offline banner, home swipe). Phone side-by-side with Instagram, Facebook Tester login, Vultr deploy, VAPID keys, and the Solana vault key still need a human. Computer 1's task list is otherwise complete.
+- Phase: **C1-13 done.** Phone side-by-side with Instagram was completed by the presenter on 2026-10-24; no mismatches were sent back. Still need a human: Facebook Tester login, Vultr deploy, VAPID keys, and the Solana vault key.
 - C1-12: keepsakes flag-gated (`FEATURE_KEEPSAKES`, default off). `POST /v1/keepsakes { recapId }` for a member, recap state in ready_private|edited|proposed|saved, tied to a confirmed/completed `group_plans` row (matched on plan id, proposal id, or recap id). One row per recap (`keepsakes_recap_uq`). Worker `keepsakes.mint` mints a Metaplex Core asset on devnet to `SOLANA_VAULT_SECRET` (base58), airdrops 1 SOL if the vault is under 0.05, URI is `GET /v1/keepsakes/:id/metadata` (public). Failure sets `status=failed` and does not touch the recap; a second POST retries. Signup creates `user_wallets.pubkey` only (secret discarded). UI: `features/keepsakes/KeepsakeButton` — C2 must place it on the recap card/editor (HANDOFF). Tests: `keepsakes/service.test.ts` (4) with an injected minter, no devnet. NOT verified: a live devnet signature (no vault key).
 - C1-10: `POST /v1/graph/import` reads the Better Auth Facebook token and calls Graph `/me`, `/me/permissions`, `/me/likes?limit=100`, `/me/friends`. Declined `user_likes` / `user_friends` (Graph error 200/10) still imports. Likes map through `modules/graph/categories.ts` (Movie/TV Show → film-tv, Musician/Band → live-music, …). Tags go to `discovery.recordSignal(..., 'graph')` (NotImplemented is ignored). Friends on LORE = personal accounts whose fb id is in my friend list, who logged in with Facebook, or who listed me. `GET /v1/graph/connections`, `POST /v1/graph/suggestions` (onboarding keeps a subset), `POST /v1/graph/disconnect` (deletes import, facebook `account` row, and those tags on `interest_profiles`). Web: onboarding chips marked "from Facebook", Settings → Facebook (`/settings?section=facebook`), Explore section "Friends on LORE". Tests: `graph/categories.test.ts`, `graph/service.test.ts` (4). NOT verified: live Facebook (no app credentials).
 - C1-9: `GET /v1/explore?q=` (accounts+group accounts by handle/name, posts via `search_tsv @@ websearch_to_tsquery`,
@@ -131,10 +131,11 @@ _Rewritten after each step._
 | C1-10 | Graph import | done (live FB unverified: no app creds) | friends match both ways |
 | C1-11 | Pictionary | done (live strokes not browser-tested) | flag FEATURE_GAMES_PICTIONARY |
 | C1-12 | Solana keepsakes | done (flag off; live devnet unverified) | button placement is a C2 handoff |
-| C1-13 | Polish | code done; phone QA needs a human | error states, 44px targets, desktop column, offline banner, home swipe |
+| C1-13 | Polish | done | phone side-by-side finished 2026-10-24; no mismatches reported |
 
 ## Things that need a human (cannot be done by the agent)
 
+- Phone side-by-side with Instagram (C1-13, section 9.7): done by the presenter on 2026-10-24. No layout mismatches were reported.
 - **First deploy (C1-6)**: follow `infra/README.md` checklist — create Vultr VM + Object Storage, DNS A records
   (`@`, `www`, `mcp`), prod Tiger service, `.env.prod` on the VM, then `VULTR_VM_IP=… ./infra/deploy.sh`.
 - Facebook app credentials + Tester accounts to verify Facebook login (C1-1) and Graph import (C1-10).
@@ -204,3 +205,4 @@ _Every deviation is also recorded in `docs/IMPLEMENTATION_PLAN.md` (section 18, 
 - **2026-10-24 · C1-12 done** — Devnet keepsake mint (Metaplex Core), public metadata, wallet pubkeys at signup, flag off. 4 service tests with a fake minter. Live explorer link needs `SOLANA_VAULT_SECRET`. C2 still has to render `KeepsakeButton` on the recap.
 - **2026-10-24 · C1-13 done (code)** — LoadError on Home, Inbox, Activity, Reels, Explore, and profile grids. Offline banner. Desktop home is a 470px column plus a suggestions aside at xl; the phone top bar hides from md up. Home swipe left opens inbox and right opens the story camera, and ignores carousels. Tap targets that were `h-11` under the 14px root font are now 44px. Explore search no longer shares the grid query key (that crashed search on the first keystroke). Browser-checked on the local app: desktop column, phone home, explore search, inbox, notifications, profile. Not checked on a physical phone.
 - **2026-10-24 · collaborator** — `shreekardittakavi` has write access on `hamizfaraz/lore` and can clone and push `c2/intelligence`.
+- **2026-10-24 · C1-13 phone check** — Presenter finished the side-by-side with Instagram. No mismatches were reported, so C1-13 is closed.
