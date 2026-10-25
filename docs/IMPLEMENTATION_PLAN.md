@@ -104,17 +104,20 @@ Status as last verified on October 24, 2026:
   guard and reference validation, prompts, game helpers, and live/mock smoke coverage.
 - Mock fixtures now include six distinct 128x128 images and two short spoken mono PCM16 24 kHz WAV
   samples. The temporary AI watch harness has been removed in favor of C1's real dev processes.
-- All repository verification passes: typecheck, Biome, 17 C2 tests, mock smoke, full workspace tests,
-  and production build.
+- All repository verification passes: six workspace typechecks, Biome over 404 files, 51 tests,
+  mock smoke, and the production web/API build.
 - C2-1 is awaiting only the paid live smoke required by its done condition. That is blocked on the
   human-owned C2-0 provider credentials and model ids, which are not present locally.
 - The web scaffold runs at `http://localhost:3000` in mock-AI mode. On this machine the API, worker,
   and MCP processes require Valkey and exit because no local Valkey is running and the current user
   cannot access the Docker daemon; this is an environment prerequisite, not a C2-1 package failure.
-- No C2-2 or later product feature has been implemented.
+- At the human's explicit direction, C2-2 implementation began before the C2-1 paid live smoke.
+  The persona engine, APIs, jobs, basic studio, explanations, memory controls, and focused tests are
+  implemented on the C2 branch. Integrated acceptance still requires C1-4's committed-message hook
+  plus a reachable database and Valkey runtime.
 
 Before resuming implementation, fetch `origin/main` and compare its head with this baseline. Do not
-begin C2-2 until C2-0 credentials permit the C2-1 live smoke and the result is recorded here.
+begin C2-3 until C2-2 is integrated and accepted, unless the human explicitly changes the plan.
 
 ## 6. Dependencies and Execution Order
 
@@ -122,7 +125,7 @@ begin C2-2 until C2-0 credentials permit the C2-1 live smoke and the result is r
 | --- | --- | --- | --- | --- |
 | 0 | C2-0 provisioning | P0 | — | Human action required |
 | 1 | C2-1 AI provider core | P0 | C1-0a; rebase on C1-0b | Implementation green; live smoke blocked on C2-0 |
-| 2 | C2-2 Milo/persona | P0 | C2-1, C1-4 hook | Pending |
+| 2 | C2-2 Milo/persona | P0 | C2-1, C1-4 hook | Implementation green; integration pending |
 | 3 | C2-3 voice | P0 | C2-1 | Pending |
 | 4 | C2-4 Concierge/plans | P0 | C2-2 | Pending |
 | 5 | C2-5 memories/recaps | P0 | C2-1, C1-2, C1-5 stub | Pending |
@@ -323,6 +326,28 @@ explain itself, and remain silent when privacy, timing, safety, or group setting
 Milo can reply without an @mention when useful, stays silent while muted/quiet/ineligible, discloses
 its permissions, never crosses conversation/privacy boundaries, and every AI message offers a
 working explanation.
+
+### Current implementation status
+
+- Implemented the deterministic prefilter, hard gates, thresholds, scoring, quiet hours, budgets,
+  typing delay, message-style rules, privacy filtering, grounded decisions, and image permission
+  checks.
+- Implemented member/admin-scoped persona, mute, test, memory, and explanation APIs; decision logs;
+  low/medium-sensitivity memory persistence; grounded tentative event persistence; the 120-second
+  tick; and the delayed human-message hook entry point.
+- Implemented the basic persona studio, join disclosure, mute/remove controls, memory correction and
+  deletion, explanation sheet, and labeled AI-image card.
+- Focused persona coverage passes 23 tests; full workspace verification passes 51 tests, typecheck,
+  lint, production build, and `git diff --check`.
+- Acceptance remains open until C1-4 calls `persona.service.onMessage` after committing each eligible
+  human message and the flow is exercised against reachable PostgreSQL/Timescale and Valkey services.
+
+### Recorded plan deviation
+
+On October 24, 2026, the human explicitly instructed Computer 2 to start the next milestone. Under
+the execution-order exception in section 6, C2-2 work therefore began while C2-1's paid live smoke
+remained blocked on human-owned C2-0 credentials. This does not waive either live verification or
+C2-2 integrated acceptance.
 
 ## 10. C2-3 — Voice Runtime
 

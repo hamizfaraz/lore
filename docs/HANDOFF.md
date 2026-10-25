@@ -19,3 +19,9 @@ Check at every checkpoint (section 10 working agreements).
 
 - [x] C2->C1: Root `biome.json` is formatted on C1-0b. Whole-workspace `pnpm lint` now passes after
   rebasing C2 on `origin/main` at `73814e9`.
+- [ ] C2->C1: In C1-4 chat, call `persona.service.onMessage(message)` fire-and-forget immediately
+  after each committed human message. C2 debounces by conversation and waits 20.5 seconds before
+  evaluation; do not call it for AI or system messages.
+- [ ] C2->C1: In C1-4 chat/details UI, render C2's `AiMemberPanel`, and pass AI-bubble `onWhy` state
+  into C2's `WhySheet` with the conversation id, message id, `meta.reason`, and
+  `meta.memoryIdsUsed`. The components and explanation endpoint are ready on `c2/intelligence`.

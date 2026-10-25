@@ -26,8 +26,9 @@
 
 _Rewritten after each step._
 
-- Phase: C2-1 implementation and local integration are complete; paid live smoke remains blocked on
-  human-owned C2-0 credentials.
+- Phase: C2-2 implementation is green on the C2 branch; integrated persona acceptance is waiting on
+  the C1-4 chat hook and a reachable database/Valkey runtime. C2-1's paid live smoke remains blocked
+  on human-owned C2-0 credentials.
 - Active Computer 2 branch: `c2/intelligence`, in a dedicated worktree. All implementation changes
   in this run are confined to this branch; the original checkout remains clean on `main`.
 - `origin/main` is commit `73814e9` (`feat(c1-0b): full scaffold`). C2 has rebased onto it and
@@ -43,8 +44,13 @@ _Rewritten after each step._
   to silence, and reject unsupported recap citations. The retry policy is immediate attempt plus
   0.5 s, 1 s, and 2 s retries for 429/5xx responses only; provider exhaustion degrades to valid
   mock output.
-- Full verification passes: six workspace typechecks, 17 C2 unit tests, 11 shared policy tests,
-  whole-workspace Biome over 399 files, mock smoke, production web/API builds, and `git diff --check`.
+- C2-2 now includes the Milo/persona decision engine, deterministic hard gates and scoring, quiet
+  hours and budgets, privacy-redacted prompt assembly, grounded structured decisions, guarded and
+  labeled output, low/medium-sensitivity memory capture, tentative event capture, decision logs,
+  explanation data, delayed message and repeating tick jobs, member/admin-scoped APIs, and the basic
+  persona studio with disclosure, mute/remove, preview, memory controls, and explanation UI.
+- Full verification passes: six workspace typechecks, 17 AI tests, 14 shared tests, 20 API tests,
+  whole-workspace Biome over 404 files, mock smoke, production web/API builds, and `git diff --check`.
   The mock smoke validates 11 JSON fixtures, 6 images, 2 voice fixtures, 5 choices, 3 prompts, guard,
   and budget paths without credentials or network calls.
 - The temporary `packages/ai` dev watcher is removed. Root `pnpm dev` now uses C1's actual web, API,
@@ -55,7 +61,7 @@ _Rewritten after each step._
 - `docs/IMPLEMENTATION_PLAN.md` is now the single active plan and covers C2-0 through C2-12, exact
   ownership, dependencies, acceptance tests, merge rules, cut lines, and recovery. The previous
   broad plan and `docs/C2_NOW.md` workflow were removed from the working tree and remain only in git
-  history. Product implementation remains paused pending a new instruction.
+  history. C2-3 must not begin until C2-2 is accepted unless the human explicitly changes the plan.
 
 ## Computer 1 task tracker
 
@@ -83,7 +89,7 @@ _Rewritten after each step._
 | --- | --- | --- | --- |
 | C2-0 | Provision accounts and keys | human action required | Section 7 checklist; secrets must use a password manager, never git/chat |
 | C2-1 | AI package, mocks, guard, budget, game prompts, smoke script | live verification pending | Implementation, C1-0b reconciliation, and all local checks pass; paid live smoke awaits C2-0 |
-| C2-2 | Milo persona, proactivity, memory, basic studio | pending | Depends on C2-1 and C1-4 hook |
+| C2-2 | Milo persona, proactivity, memory, basic studio | integration pending | Implementation and local checks pass; requires C1-4 hook plus live DB/Valkey acceptance |
 | C2-3 | Voice transcription and live captions | pending | Depends on C2-1 |
 | C2-4 | Concierge and plans | pending | Depends on C2-2 |
 | C2-5 | Shared memories and recaps | pending | Depends on C2-1, C1-2, and C1-5 stub |
@@ -106,6 +112,10 @@ _Rewritten after each step._
 ## Deviations from the plan
 
 _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so the plan stays true._
+
+- On October 24, 2026, the human explicitly authorized starting the next milestone while C2-1's paid
+  live smoke remained blocked on C2-0 credentials. C2-2 was implemented under section 6's explicit
+  human-change exception; the outstanding C2-1 live check remains required.
 
 ## Log
 
@@ -192,3 +202,19 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
   for the human to test. The API, worker, and MCP initially listen but exit after ioredis exhausts
   retries because Valkey is unavailable. Docker cannot be used by the current user due daemon-socket
   permissions. The web process remains running, and the separate AI mock smoke is fully green.
+- **2026-10-24 · C2-2 explicitly authorized** — The human instructed Computer 2 to start the next
+  milestone. Recorded this as the section 6 exception because the C2-1 paid live smoke is still
+  blocked on human-owned provider credentials. Fetched `origin/main` and confirmed it remains at
+  `73814e9`; no C1 branch or `main` was modified.
+- **2026-10-24 · C2-2 persona engine** — Implemented the C2-owned persona policy, repository, service,
+  routes, jobs, typing event, and shared request/response contracts. The engine applies disclosure,
+  consent redaction, conversation isolation, quiet/mute/spacing/typing/budget gates, deterministic
+  scoring, grounded news and references, guard checks, low/medium-sensitivity memory persistence,
+  tentative event persistence, rare-image limits, decision logging, and C1 chat/media integration
+  interfaces. Added a C1 handoff for the post-commit human-message hook.
+- **2026-10-24 · C2-2 studio and verification** — Implemented the basic persona studio, preview and
+  join controls, mute/remove UI, memory correction/deletion, explanation sheet, and AI-illustration
+  label. Added 23 focused persona tests. The full workspace passes typecheck, 51 tests (17 AI, 14
+  shared, 20 API), Biome over 404 files, production web/API build, and `git diff --check`. Integrated
+  acceptance remains open until C1-4 supplies the hook and PostgreSQL/Timescale plus Valkey are
+  reachable; C2-3 has not started.

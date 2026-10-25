@@ -31,6 +31,27 @@ export const zPersonaUpdateBody = zPersonaDTO
   });
 export type PersonaUpdateBody = z.infer<typeof zPersonaUpdateBody>;
 
+export const zPersonaTestBody = zPersonaUpdateBody.extend({
+  samplePrompt: z.string().min(1).max(500).optional(),
+});
+export type PersonaTestBody = z.infer<typeof zPersonaTestBody>;
+
+export const zPersonaTestResponse = z.object({
+  previews: z.array(
+    z.object({
+      message: z.string().max(280),
+      reason: z.string().max(140),
+    }),
+  ),
+  degraded: z.boolean(),
+});
+export type PersonaTestResponse = z.infer<typeof zPersonaTestResponse>;
+
+export const zPersonaMuteBody = z.object({
+  duration: z.enum(['one_hour', 'eight_hours', 'until_unmuted', 'unmute']),
+});
+export type PersonaMuteBody = z.infer<typeof zPersonaMuteBody>;
+
 export const zMemoryDTO = z.object({
   id: z.string(),
   kind: zMemoryKind,
@@ -42,6 +63,21 @@ export const zMemoryDTO = z.object({
   createdAt: z.string(),
 });
 export type MemoryDTO = z.infer<typeof zMemoryDTO>;
+
+export const zMemoryUpdateBody = z
+  .object({
+    summary: z.string().trim().min(1).max(280).optional(),
+    kind: zMemoryKind.optional(),
+    sensitivity: zSensitivity.optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, 'At least one memory field is required');
+export type MemoryUpdateBody = z.infer<typeof zMemoryUpdateBody>;
+
+export const zPersonaExplanationDTO = z.object({
+  reason: z.string(),
+  memories: z.array(z.object({ id: z.string(), summary: z.string() })),
+});
+export type PersonaExplanationDTO = z.infer<typeof zPersonaExplanationDTO>;
 
 export const zAiImageCardDTO = z.object({
   mediaId: z.string(),
