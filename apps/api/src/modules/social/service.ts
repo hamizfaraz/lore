@@ -430,16 +430,14 @@ export async function insertPost(
       topicTags: input.topicTags ?? [],
     })
     .returning();
-  await tx
-    .insert(postMedia)
-    .values(
-      input.mediaIds.map((m, i) => ({
-        postId: id,
-        mediaId: m,
-        sortOrder: i,
-        altText: input.altTexts?.[i] ?? (i === 0 ? (input.altText ?? null) : null),
-      })),
-    );
+  await tx.insert(postMedia).values(
+    input.mediaIds.map((m, i) => ({
+      postId: id,
+      mediaId: m,
+      sortOrder: i,
+      altText: input.altTexts?.[i] ?? (i === 0 ? (input.altText ?? null) : null),
+    })),
+  );
   return row;
 }
 

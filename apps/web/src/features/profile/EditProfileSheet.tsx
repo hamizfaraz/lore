@@ -47,10 +47,10 @@ export function EditProfileSheet({
     }
   };
   const row = (label: string, el: React.ReactNode) => (
-    <label className="flex items-start gap-4 border-b hairline px-5 py-3">
+    <div className="flex items-start gap-4 border-b hairline px-5 py-3">
       <span className="w-24 shrink-0 pt-1 text-[15px]">{label}</span>
       {el}
-    </label>
+    </div>
   );
   return (
     <Sheet open={open} onOpenChange={onOpenChange} snap="full" title="Edit profile">
