@@ -26,7 +26,11 @@
 
 _Rewritten after each step._
 
-- Phase: **C1-5 Group accounts done** on `c1/platform`. **P0 platform chain complete (C1-0…C1-5).** Next: **C1-6 Infra** (needs Vultr/DNS creds from C2-0) — code-side done next, then C1-7 games.
+- Phase: **C1-6 Infra code done** (provisioning + first deploy BLOCKED on accounts from C2-0). Next: **C1-7 Game engine + One-Word Story**.
+- C1-6: `infra/{api,web}.Dockerfile`, `docker-compose.yml` (caddy, web, api, mcp, worker, valkey), `Caddyfile`
+  (ourlore.tech + mcp.ourlore.tech), `deploy.sh`, `vm-bootstrap.sh`, `s3-setup.sh` + `s3-cors.json`, `infra/README.md`
+  (first-deploy checklist), root `.dockerignore`. Verified locally: api tsup bundle runs from `dist/` with /v1/ready ok,
+  bundled db-setup runs, Next standalone layout matches the web Dockerfile. NOT verified: docker builds (no Docker here).
 - C1-5: groups module — create group account (admin; handle, avatar, visibility, policy), GET/PUT policy (admin, audited,
   system message), drafts (createDraft cross-boundary DONE, submit freezes snapshot, human author auto-approves on submit,
   edits bump version + void approvals, approve/request changes, explicit publish for direct/courtesy, cancel),
@@ -104,7 +108,7 @@ _Rewritten after each step._
 | C1-3 | Social core | done | group posting via groups.service in C1-5 |
 | C1-4 | Chat | done | 8.2 acceptance verified via scratch socket script |
 | C1-5 | Group accounts | done | 8.4 acceptance verified (tests + HTTP flow) |
-| C1-6 | Infra | pending | |
+| C1-6 | Infra | code done; deploy blocked | needs Vultr VM, Object Storage keys, DNS, prod Tiger |
 | C1-7 | Game engine + One-Word Story | pending | |
 | C1-8 | Meme Battle | pending | |
 | C1-9 | Reels, Explore, notifications | pending | |
@@ -114,6 +118,11 @@ _Rewritten after each step._
 | C1-13 | Polish | pending | |
 
 ## Things that need a human (cannot be done by the agent)
+
+- **First deploy (C1-6)**: follow `infra/README.md` checklist — create Vultr VM + Object Storage, DNS A records
+  (`@`, `www`, `mcp`), prod Tiger service, `.env.prod` on the VM, then `VULTR_VM_IP=… ./infra/deploy.sh`.
+- Facebook app credentials + Tester accounts to verify Facebook login (C1-1) and Graph import (C1-10).
+- Generate VAPID keys for web push: `npx web-push generate-vapid-keys` → `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` (+ `NEXT_PUBLIC_VAPID_PUBLIC_KEY`).
 
 - Add the teammate (Computer 2) as a collaborator on `hamizfaraz/lore` — GitHub username not known to the agent.
 - Accounts/keys from plan section 14 (C2-0 provisions them): Meta API, Facebook app, Tiger Data, Vultr, domain, etc.
@@ -167,3 +176,4 @@ _Every deviation is also recorded in `docs/IMPLEMENTATION_PLAN.md` (section 18, 
   Added `post_drafts.target` (post|story). Decision: the human author's submit counts as their approval (matches the
   section 16 e2e "Ava proposes; Leo approves; a third approval injected"); edits void ALL approvals incl. the author's
   (matches "editing after 2 approvals resets the count to 0").
+- **2026-10-24 · C1-6 (code) done** — prod Docker/Caddy/compose/deploy/bootstrap/S3 scripts. Deploy itself awaits accounts.
