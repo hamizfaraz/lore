@@ -26,7 +26,16 @@
 
 _Rewritten after each step._
 
-- Phase: **C1-3 Social core done** on `c1/platform`. Next task: **C1-4 Chat**.
+- Phase: **C1-4 Chat done** on `c1/platform`. Next task: **C1-5 Group accounts** (then C1-6 infra).
+- C1-4: chat module — inbox (lateral last-message + unread), DM dedupe, group create, messages (cursor in SQL for µs
+  precision), idempotent send by clientId, postMessage/updateMessage (cross-boundary, done), refreshCard, card resolver
+  registry (`registerCardResolver`), reactions, unsend, read state, members add/remove/roles/mute (scope+duration), AI
+  history consent, pin, rename, shared media, invite link + guest join (2 h guests, `chat.expireGuests` every 10 min),
+  `transcriptForAi()` for C2 (hidden-consent members → "[message hidden from AI]"), persona.onMessage hook after human
+  messages, socket room guard + typing relay. Web: Inbox, New message sheet, Chat (virtualized, grouping, day/time
+  separators, Seen, typing, long-press reactions, swipe reply, double-tap ❤️, optimistic send + retry, media send,
+  hold-to-record voice + LiveCaption slot + VoicePlayer, ✦ sparkle menu, header Plans/Games from toolbar registry, card
+  registry slot, Why sheet), Details, Settings (roles/mutes/rename), Join page. Tests: `apps/api/src/modules/chat/service.test.ts` (DB).
 - C1-3: social module (profiles, follow incl. private→pending, feed, account posts, reels list, posts create/get/delete,
   likes, saves, share, comments with @mention notifications, stories rail/by-account/create/view, `/accounts/:id/owner`),
   notifications module (notify() + realtime + web push, list/read, push subscriptions). Web: Home (stories rail, feed,
@@ -86,7 +95,7 @@ _Rewritten after each step._
 | C1-1 | Auth | done (FB login unverified: no creds) | |
 | C1-2 | Media pipeline | done | local disk fallback when no S3 |
 | C1-3 | Social core | done | group posting via groups.service in C1-5 |
-| C1-4 | Chat | pending | |
+| C1-4 | Chat | done | 8.2 acceptance verified via scratch socket script |
 | C1-5 | Group accounts | pending | |
 | C1-6 | Infra | pending | |
 | C1-7 | Game engine + One-Word Story | pending | |
@@ -143,3 +152,7 @@ _Every deviation is also recorded in `docs/IMPLEMENTATION_PLAN.md` (section 18, 
 - **2026-10-24 · C1-3 done** — social core API + screens. API acceptance run: carousel visible on own feed in 17 ms,
   follower sees it, likes/comments/mention notifications, private account hidden (feed/profile/direct), story in
   follower rail. Socket.IO client now uses default transports (polling→upgrade) because Next dev rewrites don't proxy WS.
+- **2026-10-24 · C1-4 done** — chat API/realtime/screens. Socket acceptance: 5 ms delivery, idempotent clientId, reconnect
+  backfill without duplicates (fixed µs-vs-ms cursor bug), typing relay, removed member 403 + no events, guest join.
+  CI now runs a Timescale Postgres + Valkey service, `db:push` + `db:setup`, then DB-backed tests. Added `pgArray()` in
+  @lore/db for binding arrays as one parameter.

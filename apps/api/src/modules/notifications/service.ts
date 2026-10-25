@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, lt, sql } from '@lore/db';
+import { and, desc, eq, isNull, lt, pgArray, sql } from '@lore/db';
 import { notifications, pushSubscriptions } from '@lore/db';
 import type { NotificationDTO, NotificationKind } from '@lore/shared/dto/notifications';
 import { rooms } from '@lore/shared/events';
@@ -129,7 +129,7 @@ export async function list(userId: string, cursor?: string, limit = 30) {
 
 export async function markRead(userId: string, ids?: string[]) {
   const where = ids?.length
-    ? and(eq(notifications.userId, userId), sql`${notifications.id} = any(${ids}::uuid[])`)
+    ? and(eq(notifications.userId, userId), sql`${notifications.id} = any(${pgArray(ids)}::uuid[])`)
     : eq(notifications.userId, userId);
   await getDb()
     .update(notifications)
