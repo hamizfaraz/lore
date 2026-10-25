@@ -3,19 +3,19 @@ import { type VariantProps, cva } from 'class-variance-authority';
 import { forwardRef } from 'react';
 import { cn } from '@/lib/cn';
 
-/** Button: blue primary / gray secondary / text (section 9.5). Pressed = scale 0.97. */
+/** Button: modern tactile styling with rounded-xl and subtle elevation. */
 const buttonVariants = cva(
-  'press-btn chrome inline-flex select-none items-center justify-center gap-1.5 rounded-lg font-semibold disabled:opacity-40 disabled:pointer-events-none',
+  'press-btn chrome inline-flex select-none items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none active:scale-[0.98]',
   {
     variants: {
       variant: {
-        primary: 'bg-action text-white',
-        secondary: 'bg-surface-2 text-ink',
-        text: 'bg-transparent text-action',
-        ghost: 'bg-transparent text-ink',
-        danger: 'bg-transparent text-heart',
-        ai: 'bg-ai text-white',
-        outline: 'border border-line bg-transparent text-ink',
+        primary: 'bg-action text-white shadow-sm hover:opacity-95',
+        secondary: 'bg-surface-2 text-ink border border-line/50 hover:bg-surface-2/80',
+        text: 'bg-transparent text-action hover:underline',
+        ghost: 'bg-transparent text-ink hover:bg-surface-2',
+        danger: 'bg-rose-50 text-heart border border-rose-100 hover:bg-rose-100/70',
+        ai: 'bg-ai text-white shadow-sm hover:opacity-95',
+        outline: 'border border-line bg-transparent text-ink hover:bg-surface-2',
       },
       size: {
         sm: 'h-[44px] px-3 text-[14px]',

@@ -1,64 +1,70 @@
-/* LORE design tokens (plan section 9.1). Light by default, dark follows the system or [data-theme]. */
+/* LORE design tokens - Modern refreshed identity. Light by default, dark follows system or [data-theme]. */
 :root {
-  --bg: #ffffff;
-  --surface-2: #efefef;
-  --ink: #000000;
-  --ink-2: #737373;
-  --line: #dbdbdb;
-  --action: #1a8cff;
-  --heart: #ff3040;
-  --ring-a: #ff5a4e;
-  --ring-b: #f6b94a;
-  --ring-group: #2f8f5b;
-  --ai: #6c5ce7;
-  --ai-tint: #efebff;
-  --verified: #2f8f5b;
-  --overlay: rgba(0, 0, 0, 0.5);
+  --bg: #f8fafc;
+  --surface-2: #f1f5f9;
+  --ink: #0f172a;
+  --ink-2: #64748b;
+  --line: #e2e8f0;
+  --action: #4f46e5;
+  --heart: #f43f5e;
+  --ring-a: #6366f1;
+  --ring-b: #a855f7;
+  --ring-group: #10b981;
+  --ai: #7c3aed;
+  --ai-tint: #f5f3ff;
+  --verified: #10b981;
+  --overlay: rgba(15, 23, 42, 0.5);
   --elevated: #ffffff;
 
-  --font-sans: -apple-system, "SF Pro Text", BlinkMacSystemFont, Roboto, "Segoe UI", sans-serif;
-  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Newsreader", Georgia, serif;
 
-  --topbar-h: 44px;
-  --tabbar-h: 49px;
+  --topbar-h: 52px;
+  --tabbar-h: 54px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
 
   --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
-  --push-ms: 300ms;
+  --push-ms: 280ms;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #000000;
-    --surface-2: #262626;
-    --ink: #f5f5f5;
-    --ink-2: #a8a8a8;
-    --line: #262626;
-    --ring-group: #5cc48a;
-    --ai: #9c8cff;
-    --ai-tint: #221d3d;
-    --verified: #5cc48a;
-    --overlay: rgba(0, 0, 0, 0.65);
-    --elevated: #262626;
+    --bg: #090d16;
+    --surface-2: #141b2d;
+    --ink: #f8fafc;
+    --ink-2: #94a3b8;
+    --line: #1e293b;
+    --action: #6366f1;
+    --ring-group: #10b981;
+    --ring-a: #818cf8;
+    --ring-b: #c084fc;
+    --ai: #a855f7;
+    --ai-tint: #1e1738;
+    --verified: #34d399;
+    --overlay: rgba(0, 0, 0, 0.75);
+    --elevated: #111827;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #000000;
-  --surface-2: #262626;
-  --ink: #f5f5f5;
-  --ink-2: #a8a8a8;
-  --line: #262626;
-  --ring-group: #5cc48a;
-  --ai: #9c8cff;
-  --ai-tint: #221d3d;
-  --verified: #5cc48a;
-  --overlay: rgba(0, 0, 0, 0.65);
-  --elevated: #262626;
+  --bg: #090d16;
+  --surface-2: #141b2d;
+  --ink: #f8fafc;
+  --ink-2: #94a3b8;
+  --line: #1e293b;
+  --action: #6366f1;
+  --ring-group: #10b981;
+  --ring-a: #818cf8;
+  --ring-b: #c084fc;
+  --ai: #a855f7;
+  --ai-tint: #1e1738;
+  --verified: #34d399;
+  --overlay: rgba(0, 0, 0, 0.75);
+  --elevated: #111827;
   color-scheme: dark;
 }

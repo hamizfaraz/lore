@@ -20,31 +20,36 @@ export function DesktopAside() {
   const list = friends.data?.friendsOnLore ?? [];
   return (
     <aside className="sticky top-8 hidden w-[319px] shrink-0 self-start xl:block" aria-label="Suggestions">
-      {acct && (
-        <Link href={`/u/${acct.handle}`} className="press flex min-h-[44px] items-center gap-3 py-2">
-          <Avatar src={acct.avatarUrl} name={acct.displayName} size={56} />
-          <span className="min-w-0">
-            <span className="block truncate text-[14px] font-semibold">{acct.handle}</span>
-            <span className="block truncate text-[14px] text-ink-2">{acct.displayName}</span>
-          </span>
-        </Link>
-      )}
-      <div className="mb-1 mt-6 flex items-center justify-between">
-        <h2 className="text-[14px] font-semibold text-ink-2">Suggestions for you</h2>
-        <Link href="/explore" className="press text-[12px] font-semibold">
-          See all
-        </Link>
-      </div>
-      {list.length > 0 ? (
-        <FriendsOnLore friends={list} compact />
-      ) : (
-        <p className="py-3 text-[14px] text-ink-2">
-          People you follow and Facebook friends who join LORE show up here.{' '}
-          <Link href="/explore" className="font-semibold text-action">
-            Search
+      <div className="p-4 rounded-2xl bg-elevated border border-line/60 shadow-sm">
+        {acct && (
+          <Link
+            href={`/u/${acct.handle}`}
+            className="press flex min-h-[44px] items-center gap-3 pb-3 border-b border-line/50"
+          >
+            <Avatar src={acct.avatarUrl} name={acct.displayName} size={50} />
+            <span className="min-w-0">
+              <span className="block truncate text-[14px] font-bold text-ink">{acct.handle}</span>
+              <span className="block truncate text-[12px] text-ink-2">{acct.displayName}</span>
+            </span>
           </Link>
-        </p>
-      )}
+        )}
+        <div className="mb-2 mt-4 flex items-center justify-between">
+          <h2 className="text-[13px] font-bold text-ink">Suggested Circles & Friends</h2>
+          <Link href="/explore" className="press text-[12px] font-semibold text-action hover:underline">
+            See all
+          </Link>
+        </div>
+        {list.length > 0 ? (
+          <FriendsOnLore friends={list} compact />
+        ) : (
+          <p className="py-2 text-[13px] text-ink-2 leading-relaxed">
+            People you connect with and circles that join LORE show up here.{' '}
+            <Link href="/explore" className="font-semibold text-action hover:underline">
+              Find circles
+            </Link>
+          </p>
+        )}
+      </div>
     </aside>
   );
 }

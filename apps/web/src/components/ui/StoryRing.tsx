@@ -25,7 +25,11 @@ export function StoryRing({
     <button
       type="button"
       onClick={onClick}
-      className={cn('press inline-flex shrink-0 rounded-full p-[2px]', ring, className)}
+      className={cn(
+        'press inline-flex shrink-0 rounded-full p-[2.5px] transition-transform active:scale-95',
+        ring,
+        className,
+      )}
       aria-label={name ? `${name}'s story` : 'story'}
     >
       <span className="rounded-full bg-bg p-[2px]">
