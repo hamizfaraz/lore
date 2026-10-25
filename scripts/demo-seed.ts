@@ -7,6 +7,8 @@ import {
   createDb,
   eq,
   eventCandidates,
+  familyStories,
+  familyStoryContributions,
   groupPlans,
   groupPreferences,
   inArray,
@@ -115,9 +117,29 @@ function messageId(index: number, family = false) {
 type DemoDb = ReturnType<typeof createDb>['db'];
 
 export async function clearDemo(db: DemoDb): Promise<void> {
-  await db.delete(voiceContributions).where(inArray(voiceContributions.id, [...DEMO.podcast.contributions]));
+  const stationRows = await db
+    .select({ id: podcastStations.id })
+    .from(podcastStations)
+    .where(eq(podcastStations.showId, DEMO.podcast.show));
+  if (stationRows.length) {
+    await db.delete(voiceContributions).where(
+      inArray(
+        voiceContributions.stationId,
+        stationRows.map((row) => row.id),
+      ),
+    );
+  }
   await db.delete(podcastStations).where(eq(podcastStations.showId, DEMO.podcast.show));
   await db.delete(podcastShows).where(eq(podcastShows.id, DEMO.podcast.show));
+  const storyRows = await db
+    .select({ id: familyStories.id })
+    .from(familyStories)
+    .where(inArray(familyStories.conversationId, Object.values(DEMO.conversations)));
+  if (storyRows.length) {
+    const storyIds = storyRows.map((row) => row.id);
+    await db.delete(familyStoryContributions).where(inArray(familyStoryContributions.storyId, storyIds));
+    await db.delete(familyStories).where(inArray(familyStories.id, storyIds));
+  }
   await db.delete(planRsvps).where(eq(planRsvps.planId, DEMO.plan));
   await db.delete(planVotes).where(eq(planVotes.proposalId, DEMO.proposal));
   await db.delete(groupPlans).where(eq(groupPlans.id, DEMO.plan));

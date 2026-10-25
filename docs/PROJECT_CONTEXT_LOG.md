@@ -26,8 +26,9 @@
 
 _Rewritten after each step._
 
-- Phase: C2-10 through C2-12 are implementation-green on the C2 branch. Final whole-workspace
-  verification and the phone test run are in progress.
+- Phase: C2-10 through C2-12 are implementation-green on the C2 branch. Whole-workspace and local
+  end-to-end verification pass; the seeded phone test lobby is ready. C1 merge and live-provider
+  acceptance remain open.
   C1 merge and live-provider acceptance remain open for the complete C2 P0 chain.
   C2-1's paid live smoke remains blocked on human-owned C2-0 credentials.
 - Active Computer 2 branch: `c2/intelligence`, in a dedicated worktree. All implementation changes
@@ -88,8 +89,8 @@ _Rewritten after each step._
   exactly three preview-only scenarios with no join or memory write. Loading, empty, degraded,
   error, dark, mobile, accessibility, reduced-motion, and the three required AI labels are present.
   `/c2-lab` links Family, Podcast, and Advanced Persona into one seeded test lobby.
-- Full verification passes: six workspace typechecks and 110 tests across 28 files, whole-workspace
-  Biome over 444 files, mock smoke, production web/API builds, and a direct
+- Full verification passes: six workspace typechecks and 119 tests across 30 files, whole-workspace
+  Biome over 453 files, mock smoke, production web/API builds, and a direct
   browser-bundle provider-secret scan, and `git diff --check`.
   The mock smoke validates 11 JSON fixtures, 6 images, 2 voice fixtures, 5 choices, 3 prompts, guard,
   and budget paths without credentials or network calls.
@@ -373,3 +374,13 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
   states. Added `/c2-lab` as a single seeded launcher for milestones 10–12 and extended the local
   demo identity bridge to the persona routes. Focused shared/AI/API tests and affected typechecks
   pass; final whole-workspace verification and phone smoke are next.
+- **2026-10-24 · Final C2-10–12 verification and test lobby** — Moved only the three new feature
+  wrappers and `/c2-lab` outside the unfinished C1 signed-in shell so the seeded local test does not
+  stall on C1's unimplemented `/v1/me`. Strengthened demo reset to remove dynamically created family
+  stories, podcast branches, and contributions. Six typechecks, 119 tests across 30 files, Biome over
+  453 files, production API/web builds, mock AI smoke, and `git diff --check` pass. A real local API
+  smoke collected 10 family sources and one grounded chapter with one blocked flag; advanced the
+  podcast from one missing participant through four clips, wrap, and finish; ffprobe verified the
+  required MP3 at 81.9 seconds; and returned four distinct avatar images plus exactly three persona
+  previews. The isolated database was reset cleanly in 202 ms after the smoke. Both the hotspot and
+  Tailscale lobby URLs returned HTTP 200 with the expected test UI.
