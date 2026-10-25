@@ -54,3 +54,12 @@ Check at every checkpoint (section 10 working agreements).
   stable `demo/*` media storage keys to the generated/uploaded seed assets. C2 seeds the complete
   consent/governance/history state without writing C1-owned password/session behavior; the final
   three-minute browser smoke must wait for that integration.
+- [ ] C2->C1: On public post publish, call C2-8 `tagCaption(caption)` and persist at most three
+  returned `topicTags`; on public like/save/share/follow and approved Graph import, call
+  `recordSignal(userId, tags, kind)`. Never pass private-message text to either interface.
+- [ ] C2->C1: Feed C1's authoritative blocked-user relation into C2-8 candidate exclusion when the
+  social block schema lands. C2 currently excludes self and existing follows; it does not invent or
+  write C1-owned block state.
+- [ ] C2->C1: After a C2-8 introduction changes to `accepted`, create/open the C1 direct conversation
+  with the accepted editable starter. Never create a conversation on request or decline. Preserve
+  the C2 match, intro, and default-off profile UI during merge.

@@ -124,10 +124,11 @@ Status as last verified on October 24, 2026:
   one-time-reveal PATs, confirmation gates, identity-safe plan votes, sanitized audits, immediate
   revocation, and Connect Muse UI. A real SDK client listed all tools, executed `list_groups`, wrote
   an audit row, and received 401 immediately after token revocation. C1-owned group approval/game
-  interfaces and later C2 family/discovery services remain explicit fail-closed integrations.
+  interfaces and the later C2 family service remain explicit fail-closed integrations. C2-8 now
+  supplies the Common Ground proposal tool without sending an introduction.
 
-Before resuming implementation, fetch `origin/main` and compare its head with this baseline. C2-7
-is the next ordered milestone; do not begin it unless the human explicitly continues the plan.
+Before resuming implementation, fetch `origin/main` and compare its head with this baseline. C2-9
+is the next ordered milestone under the human's current three-milestone direction.
 
 ## 6. Dependencies and Execution Order
 
@@ -141,7 +142,7 @@ is the next ordered milestone; do not begin it unless the human explicitly conti
 | 5 | C2-5 memories/recaps | P0 | C2-1, C1-2, C1-5 stub | Implementation green; C1 integration pending |
 | 6 | C2-6 MCP connector | P0 | C2-4 | Implementation green; integrated C1 tools pending |
 | 7 | C2-7 demo seed/reset | P0 | C2-2, C2-4 | Implementation green; C1 demo login/media smoke pending |
-| 8 | C2-8 discovery | P1 | C2-1 | Pending |
+| 8 | C2-8 discovery | P1 | C2-1 | Implementation green; C1 signal/block/DM integration pending |
 | 9 | C2-9 impact | P1 | C2-4 | Pending |
 | 10 | C2-10 family story | P1 | C2-5 | Pending |
 | 11 | C2-11 podcast | P2 | C2-3 | Pending |
@@ -680,6 +681,18 @@ chat content, and open a DM only after mutual acceptance.
 
 Matches appear immediately after opt-in, explanations are based only on allowed signals, and an
 accepted introduction opens the first editable conversation.
+
+### Current implementation status
+
+- Added the optional eight-question quiz, default-off profile controls, safe public caption tagging,
+  all five signal weights, 14-day decay, removals, freeze, embeddings, top-30 reranking, 24-hour
+  grounded explanation cache, match UI, and editable consent-gated introduction flow.
+- Existing follows are excluded. C1 must provide its block relation and wire public engagement
+  signals/caption publishing; no private-chat input exists in the C2 interface or prompt path.
+- Accept/decline persists mutual-consent state without opening a conversation. The C1 DM service was
+  absent from the frozen interface, so accepted-DM creation remains an explicit merge handoff.
+- Seven focused tests and shared/API/web typechecks pass. Full workspace verification is deferred to
+  the checkpoint after documentation and integration checks.
 
 ## 16. C2-9 — Impact
 

@@ -43,6 +43,7 @@ function setup() {
     vote,
     createRecap,
     createDraft,
+    proposeIntroduction: vi.fn(async (_owner, targetUserId) => ({ targetUserId, sent: false })),
   } as unknown as McpDependencies);
   return { service, store, audits, vote, createRecap, createDraft };
 }

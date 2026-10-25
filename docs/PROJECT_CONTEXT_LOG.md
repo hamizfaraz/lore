@@ -26,7 +26,7 @@
 
 _Rewritten after each step._
 
-- Phase: C2-7 deterministic demo seed/reset is green on the C2 branch; C2-8 discovery is next.
+- Phase: C2-8 opt-in discovery is implementation-green on the C2 branch; C2-9 impact is next.
   C1 merge and live-provider acceptance remain open for the complete C2 P0 chain.
   C2-1's paid live smoke remains blocked on human-owned C2-0 credentials.
 - Active Computer 2 branch: `c2/intelligence`, in a dedicated worktree. All implementation changes
@@ -65,6 +65,10 @@ _Rewritten after each step._
   governed groups, Milo, 90 grounded messages, preferences/memories, consent-scoped media, social
   posts, a plan/event/private recap, Austin candidates, discovery matches, and family-story inputs.
   Paid seed-image and live Serp refresh commands require dedicated confirmation.
+- C2-8 supplies a skippable eight-question quiz, default-off discovery profile, safe public signal
+  inference with 14-day decay/removal/freeze, embeddings and top-30 reranking, permitted-tag-only
+  cached reasons, match cards, editable intro requests, recipient accept/decline, and a proposal-only
+  MCP action. It never accepts private chat content and does not open a DM before C1 integration.
 - Full verification passes: six workspace typechecks, 18 AI tests, 16 shared tests, 60 API tests,
   3 web tests (97 total), whole-workspace Biome over 428 files, mock smoke, production web/API builds, a direct
   browser-bundle provider-secret scan, and `git diff --check`.
@@ -80,7 +84,7 @@ _Rewritten after each step._
 - `docs/IMPLEMENTATION_PLAN.md` is now the single active plan and covers C2-0 through C2-12, exact
   ownership, dependencies, acceptance tests, merge rules, cut lines, and recovery. The previous
   broad plan and `docs/C2_NOW.md` workflow were removed from the working tree and remain only in git
-  history. C2-8 is the next ordered milestone under the human's current three-milestone direction.
+  history. C2-9 is the next ordered milestone under the human's current three-milestone direction.
 
 ## Computer 1 task tracker
 
@@ -114,7 +118,7 @@ _Rewritten after each step._
 | C2-5 | Shared memories and recaps | integration pending | Service, grounding, consent, Sharp layouts, editor/cards, and ten focused tests pass; C1 media/chat/group/story integration remains |
 | C2-6 | Muse MCP connector | integration pending | PATs, UI, 11 tools, confirmation/scopes/audits, SDK smoke, and immediate revocation pass; C1 game/approval plus later C2 services remain |
 | C2-7 | Seed and demo reset | integration pending | Seed 382 ms, reset 201 ms, consent/secret audits pass; C1 demo auth/media and browser chain remain |
-| C2-8 | Find Friends and Common Ground | pending | Depends on C2-1 |
+| C2-8 | Find Friends and Common Ground | integration pending | Seven focused tests and typechecks pass; C1 public-signal/block/DM hooks remain |
 | C2-9 | Snowflake impact | pending | Depends on C2-4 |
 | C2-10 | Family story | pending | Depends on C2-5 |
 | C2-11 | Podcast stations and render | pending | Depends on C2-3 |
@@ -301,3 +305,12 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
   audit totals were 90 messages, seven opted-in memberships, two included recap media, and five
   explicitly scoped assets; the seed-source secret scan and `git diff --check` pass. C1 demo login,
   physical media materialization, and the three-minute browser chain remain an integration handoff.
+- **2026-10-24 · C2-8 Common Ground** — Implemented the optional interest quiz, default-off
+  discoverability, safe caption tags, five public signal kinds, 14-day decay, explicit removal and
+  freeze, profile embeddings, existing-follow exclusion, top-30 Jaccard/cosine/serendipity ranking,
+  24-hour pair reasons restricted to shared tags, match UI, and editable consent-gated introductions.
+  Declines have no side effect and accepted state does not create a DM until C1 supplies that hook.
+- **2026-10-24 · C2-8 verification** — Seven focused policy/service tests and shared/API/web
+  typechecks pass. The MCP Common Ground tool now prepares an unsent editable proposal after explicit
+  confirmation. C1 public-action signals, block exclusion, and post-accept DM creation are recorded
+  as merge handoffs; C2-9 is next.

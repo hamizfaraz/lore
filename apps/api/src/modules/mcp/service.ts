@@ -4,6 +4,7 @@ import { z } from 'zod';
 import type { Actor } from '../../lib/actor';
 import { AppError, NotImplemented, notFound, unauthorized } from '../../lib/errors';
 import { createDraft } from '../groups/service';
+import { proposeIntroduction } from '../discovery/service';
 import { memoriesService } from '../memories/service';
 import { plansService } from '../plans/service';
 import {
@@ -150,6 +151,7 @@ export type McpDependencies = {
   vote: typeof plansService.vote;
   createRecap: typeof memoriesService.create;
   createDraft: typeof createDraft;
+  proposeIntroduction: typeof proposeIntroduction;
 };
 
 const defaults: McpDependencies = {
@@ -158,6 +160,7 @@ const defaults: McpDependencies = {
   vote: plansService.vote.bind(plansService),
   createRecap: memoriesService.create.bind(memoriesService),
   createDraft,
+  proposeIntroduction,
 };
 
 function tokenDto(row: {
@@ -294,7 +297,7 @@ export class McpService {
       case 'propose_family_story':
         throw new NotImplemented('family.service.proposeStory');
       case 'propose_common_ground_introduction':
-        throw new NotImplemented('discovery.service.proposeIntroduction');
+        return this.deps.proposeIntroduction(principal.userId, input.targetUserId as string);
       default:
         throw new AppError('NOT_FOUND', 'Unknown MCP tool');
     }
