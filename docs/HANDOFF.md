@@ -50,3 +50,7 @@ Check at every checkpoint (section 10 working agreements).
   interfaces so the advertised approval-request and game-lobby MCP tools can route through C1's
   authorization/policy logic. Until then those tools intentionally fail closed; C2 does not write
   C1-owned draft or game tables directly.
+- [ ] C2->C1: Wire C2-7's deterministic demo users into C1's demo authentication path and map the
+  stable `demo/*` media storage keys to the generated/uploaded seed assets. C2 seeds the complete
+  consent/governance/history state without writing C1-owned password/session behavior; the final
+  three-minute browser smoke must wait for that integration.

@@ -140,7 +140,7 @@ is the next ordered milestone; do not begin it unless the human explicitly conti
 | 4 | C2-4 Concierge/plans | P0 | C2-2 | Implementation green; C1 integration pending |
 | 5 | C2-5 memories/recaps | P0 | C2-1, C1-2, C1-5 stub | Implementation green; C1 integration pending |
 | 6 | C2-6 MCP connector | P0 | C2-4 | Implementation green; integrated C1 tools pending |
-| 7 | C2-7 demo seed/reset | P0 | C2-2, C2-4 | Pending |
+| 7 | C2-7 demo seed/reset | P0 | C2-2, C2-4 | Implementation green; C1 demo login/media smoke pending |
 | 8 | C2-8 discovery | P1 | C2-1 | Pending |
 | 9 | C2-9 impact | P1 | C2-4 | Pending |
 | 10 | C2-10 family story | P1 | C2-5 | Pending |
@@ -631,6 +631,23 @@ on any database in under two minutes.
 
 `pnpm seed` creates the complete demo world on any intended database in under two minutes and
 `pnpm demo:reset` reliably restores it.
+
+### Implemented state
+
+- Added an explicitly targeted, deterministic seed/reset workflow. It refuses `DATABASE_URL`,
+  unnamed/default databases, missing `--confirm=lore-demo`, and remote targets without both a CLI
+  production flag and a host/database-specific environment acknowledgement.
+- The dataset contains six demo users, two governed groups (`@weekendcrew` and `The Iqbals`), Milo,
+  90 grounded messages, group preferences and memories, five consent-scoped media records, three
+  social posts with safe topic tags, a past event/plan/private recap, a live voting proposal, four
+  Austin candidates, and six discovery profiles including an intentional climbing match.
+- Added explicit paid-image and live-candidate refresh commands; both fail closed unless their
+  dedicated confirmation flag and credential/mode requirements are present. Seed media is labeled
+  as user-owned or AI-generated and uses stable storage keys for C1's media integration.
+- Local seed completed in 382 ms and `pnpm demo:reset` reproduced it in 201 ms. A consent audit found
+  90 scoped messages, seven consenting memberships, two included recap assets, and five media rows
+  with explicit consent scope. A seed-source secret scan passed. The complete three-minute browser
+  chain remains gated on C1's demo auth/media/chat implementations and is recorded in the handoff.
 
 ## 15. C2-8 — Discovery
 

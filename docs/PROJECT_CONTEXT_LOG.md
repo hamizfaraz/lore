@@ -26,8 +26,8 @@
 
 _Rewritten after each step._
 
-- Phase: C2-4 plans, C2-5 private memories, and C2-6 MCP are green on the C2 branch; C2-7 demo
-  seed/reset is next. C1 merge and live-provider acceptance remain open for the C2 P0 chain.
+- Phase: C2-7 deterministic demo seed/reset is green on the C2 branch; C2-8 discovery is next.
+  C1 merge and live-provider acceptance remain open for the complete C2 P0 chain.
   C2-1's paid live smoke remains blocked on human-owned C2-0 credentials.
 - Active Computer 2 branch: `c2/intelligence`, in a dedicated worktree. All implementation changes
   in this run are confined to this branch; the original checkout remains clean on `main`.
@@ -61,6 +61,10 @@ _Rewritten after each step._
   a stateless Streamable HTTP MCP server; all 11 required model-readable tools; explicit write
   confirmation; actor-safe plan votes; membership-scoped reads; and sanitized success/denial/error
   audits. Unavailable C1/later-C2 tool integrations fail closed.
+- C2-7 supplies explicitly targeted, deterministic seed/reset tooling with six demo users, two
+  governed groups, Milo, 90 grounded messages, preferences/memories, consent-scoped media, social
+  posts, a plan/event/private recap, Austin candidates, discovery matches, and family-story inputs.
+  Paid seed-image and live Serp refresh commands require dedicated confirmation.
 - Full verification passes: six workspace typechecks, 18 AI tests, 16 shared tests, 60 API tests,
   3 web tests (97 total), whole-workspace Biome over 428 files, mock smoke, production web/API builds, a direct
   browser-bundle provider-secret scan, and `git diff --check`.
@@ -76,7 +80,7 @@ _Rewritten after each step._
 - `docs/IMPLEMENTATION_PLAN.md` is now the single active plan and covers C2-0 through C2-12, exact
   ownership, dependencies, acceptance tests, merge rules, cut lines, and recovery. The previous
   broad plan and `docs/C2_NOW.md` workflow were removed from the working tree and remain only in git
-  history. C2-7 is next and should begin only when the human explicitly continues the plan.
+  history. C2-8 is the next ordered milestone under the human's current three-milestone direction.
 
 ## Computer 1 task tracker
 
@@ -109,7 +113,7 @@ _Rewritten after each step._
 | C2-4 | Concierge and plans | integration pending | Core service, routes, UI, realtime, calendar, and seven focused tests pass; C1 chat/auth merge and live providers remain |
 | C2-5 | Shared memories and recaps | integration pending | Service, grounding, consent, Sharp layouts, editor/cards, and ten focused tests pass; C1 media/chat/group/story integration remains |
 | C2-6 | Muse MCP connector | integration pending | PATs, UI, 11 tools, confirmation/scopes/audits, SDK smoke, and immediate revocation pass; C1 game/approval plus later C2 services remain |
-| C2-7 | Seed and demo reset | pending | Depends on C2-2 and C2-4 |
+| C2-7 | Seed and demo reset | integration pending | Seed 382 ms, reset 201 ms, consent/secret audits pass; C1 demo auth/media and browser chain remain |
 | C2-8 | Find Friends and Common Ground | pending | Depends on C2-1 |
 | C2-9 | Snowflake impact | pending | Depends on C2-4 |
 | C2-10 | Family story | pending | Depends on C2-5 |
@@ -286,3 +290,14 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
   11 tools, executed `list_groups`, and produced a credential-free audit row. Revoking the
   disposable PAT caused the next request to return HTTP 401 immediately. A live plan-vote UI smoke
   remains gated on C1 auth/chat implementation and C2-7 demo seed data.
+- **2026-10-24 · C2-7 deterministic demo world** — Added target-safe seed/reset tooling, explicit
+  live candidate refresh, and paid seed-art generation. The dataset creates six demo users,
+  `@weekendcrew`, `The Iqbals`, governance, Milo, 90 grounded messages, stated constraints, memories,
+  consent-scoped image/voice rows, labeled AI art, posts, candidates, a voting proposal, a completed
+  plan/event/private recap, discovery profiles, and family-story inputs. Ambiguous/default database
+  selection and unconfirmed live/paid commands are rejected.
+- **2026-10-24 · C2-7 verification** — Against only the explicitly selected `127.0.0.1/lore`
+  container, seed completed in 382 ms and the documented reset reproduced it in 201 ms. Consent
+  audit totals were 90 messages, seven opted-in memberships, two included recap media, and five
+  explicitly scoped assets; the seed-source secret scan and `git diff --check` pass. C1 demo login,
+  physical media materialization, and the three-minute browser chain remain an integration handoff.
