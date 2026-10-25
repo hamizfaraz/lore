@@ -1,3 +1,6 @@
 # features/voice [C2]
 
-Owned by Computer 2 (plan section 10). Created by the C1-0b scaffold; C2 fills the stubs.
+`LiveCaption` converts the authenticated recorder's `MediaStream` to 24 kHz mono PCM16, sends exact
+80 ms binary frames to the same-origin `/v1/voice/live` proxy, and renders cumulative partials. No
+provider credential or provider URL is shipped to the browser. Batch transcription remains
+authoritative for the saved voice note.

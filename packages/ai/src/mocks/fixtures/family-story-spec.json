@@ -1,0 +1,19 @@
+{
+  "title": "the iqbals, lately",
+  "periodLabel": "October 2026",
+  "chapters": [
+    {
+      "heading": "small wins",
+      "summary": "the family traded a few everyday victories.",
+      "items": [
+        {
+          "sourceMessageId": "00000000-0000-7000-8000-000000000501",
+          "contributorUserId": "00000000-0000-7000-8000-000000000001",
+          "text": "Ava shared her finished poster."
+        }
+      ]
+    }
+  ],
+  "flags": [],
+  "coverPrompt": "an editorial family scrapbook with warm paper textures, no faces"
+}

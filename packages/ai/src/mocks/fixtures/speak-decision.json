@@ -1,0 +1,14 @@
+{
+  "speak": true,
+  "intent": "plan",
+  "score": 0.86,
+  "reason": "the group is actively looking for an affordable saturday plan",
+  "message": "i have 3 ideas that keep this under $20 and close to campus — want them?",
+  "memoryIdsUsed": [],
+  "planRequest": {
+    "categories": ["event", "at_home"],
+    "whenText": "Saturday"
+  },
+  "newMemories": [],
+  "events": []
+}

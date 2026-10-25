@@ -53,12 +53,42 @@ export const zPlanConfirmedCardDTO = z.object({
 export type PlanConfirmedCardDTO = z.infer<typeof zPlanConfirmedCardDTO>;
 
 export const zSuggestBody = z.object({ request: z.string().max(280).optional() });
+export type SuggestBody = z.infer<typeof zSuggestBody>;
 export const zVoteBody = z.object({ candidateId: z.string(), response: zVoteResponse });
+export type VoteBody = z.infer<typeof zVoteBody>;
 export const zRefineBody = z.object({ instruction: z.string().min(1).max(200) });
+export type RefineBody = z.infer<typeof zRefineBody>;
 export const zConfirmBody = z.object({ candidateId: z.string(), startsAt: z.string(), tz: z.string() });
+export type ConfirmBody = z.infer<typeof zConfirmBody>;
 export const zPreferenceBody = z.object({
   proposalId: z.string().optional(),
   key: zPrefKey,
   value: z.unknown(),
   visibility: zPrefVisibility,
 });
+export type PreferenceBody = z.infer<typeof zPreferenceBody>;
+
+export const zPreferenceDTO = zPreferenceBody.extend({
+  id: z.string(),
+  conversationId: z.string(),
+  userId: z.string(),
+  createdAt: z.string(),
+});
+export type PreferenceDTO = z.infer<typeof zPreferenceDTO>;
+
+export const zPlansOverviewDTO = z.object({
+  proposals: z.array(zPlanCardDTO),
+  confirmed: z.array(zPlanConfirmedCardDTO),
+  preferences: z.array(zPreferenceDTO),
+});
+export type PlansOverviewDTO = z.infer<typeof zPlansOverviewDTO>;
+
+export const zRsvpBody = z.object({ status: zRsvpStatus });
+
+export const zSuggestResult = z.object({
+  plan: zPlanCardDTO,
+  question: z
+    .object({ key: zPrefKey, prompt: z.string(), replies: z.array(z.string()).min(2).max(4) })
+    .nullable(),
+});
+export type SuggestResult = z.infer<typeof zSuggestResult>;

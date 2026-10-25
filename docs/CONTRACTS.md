@@ -15,3 +15,19 @@ Format: `- YYYY-MM-DD · file · change · reason`
 - 2026-10-24 · apps/api keepsakes routes (not shared pkg) · `POST /v1/keepsakes`, `GET /v1/keepsakes/:id`, `GET /v1/keepsakes/by-recap/:id`, public `GET /v1/keepsakes/:id/metadata` · section 8.15 mint + explorer metadata
 
 ## Computer 2
+
+- 2026-10-24 · `packages/shared/src/dto/persona.ts` · added schemas for persona preview, mute,
+  memory correction, and AI-message explanations · C2-2 routes and UI share one validated contract
+- 2026-10-24 · `packages/shared/src/dto/voice.ts` · added explicit degraded batch state, exact
+  3,840-byte live-frame constant, end-of-stream client message, and ready/transcript/error server
+  messages with authenticated uploader attribution · C2-3 browser and API share one validated,
+  credential-free live-caption contract
+- 2026-10-24 · `packages/shared/src/dto/plans.ts` · added preference, overview, RSVP, and suggestion
+  response contracts without changing the frozen plan card shapes · C2-4 REST and UI now share
+  validated plan-list, clarifier, preference, and confirmation state
+- 2026-10-24 · `packages/shared/src/dto/memories.ts` · added typed recap list and chat/story share
+  contracts plus request type exports · C2-5 list/editor/card and REST mutations use the same
+  private-by-default recap shapes
+- 2026-10-24 · `packages/shared/src/dto/mcp.ts` · added typed token-create and token-list results,
+  explicit create input type, and a non-empty default `read` scope · C2-6 REST and Connect Muse UI
+  share the one-time credential response without ever persisting the raw token client-side

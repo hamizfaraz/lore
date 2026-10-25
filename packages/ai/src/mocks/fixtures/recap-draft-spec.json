@@ -1,0 +1,15 @@
+{
+  "title": "noor's cozy birthday night",
+  "caption": "cake, board games, and one heroic attempt to keep Gerald the cactus out of the photos.",
+  "orderedMediaIds": ["00000000-0000-7000-8000-000000000201"],
+  "coverMediaId": "00000000-0000-7000-8000-000000000201",
+  "layout": "collage",
+  "coverPrompt": "a warm editorial birthday table with a small cactus, no faces, LORE house style",
+  "musicVibe": "cozy lo-fi",
+  "factsUsed": [
+    {
+      "claim": "Gerald the cactus joined the birthday photos",
+      "sourceMessageId": "00000000-0000-7000-8000-000000000301"
+    }
+  ]
+}

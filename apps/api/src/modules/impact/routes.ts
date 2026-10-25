@@ -1,8 +1,12 @@
+import { zImpactSummaryDTO } from '@lore/shared/dto/impact';
 import type { FastifyPluginAsync } from 'fastify';
+import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { getImpactSummary } from './service';
 
-/** impact REST routes [C2]. Mounted under /v1 by modules/index.ts. */
-const routes: FastifyPluginAsync = async (_app) => {
-  // TODO(C2): routes for the impact module (plan section 6 REST surface)
+/** Public aggregate-only route: no account, group, or message fields are returned. */
+const routes: FastifyPluginAsync = async (app) => {
+  const api = app.withTypeProvider<ZodTypeProvider>();
+  api.get('/impact/summary', { schema: { response: { 200: zImpactSummaryDTO } } }, getImpactSummary);
 };
 
 export default routes;

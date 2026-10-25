@@ -61,8 +61,7 @@ export async function getPrompts(
       notice: usedLore ? null : contextSource === 'random' ? null : LORE_NOTICE,
     };
   } catch (err) {
-    if (!(err instanceof ai.AiNotImplemented))
-      logger.warn({ err: (err as Error).message }, 'ai.games.getPrompts failed; using random prompts');
+    logger.warn({ err: (err as Error).message }, 'ai.games.getPrompts failed; using random prompts');
     const bank = RANDOM_PROMPTS[mode];
     const prompts: GamePrompt[] = Array.from({ length: count }, () => ({
       prompt: pick(bank),
@@ -89,8 +88,7 @@ export async function fiveWords(
     if (words.length === 5 && distinct.size === 5 && !distinct.has(last ?? '\u0000')) return words;
     logger.warn('fiveWordChoices invalid; local fallback');
   } catch (err) {
-    if (!(err instanceof ai.AiNotImplemented))
-      logger.warn({ err: (err as Error).message }, 'fiveWordChoices failed');
+    logger.warn({ err: (err as Error).message }, 'fiveWordChoices failed');
   }
   return localFiveWords(story);
 }
@@ -115,8 +113,7 @@ export async function storyImage(
     const r = await ai.games.storyImage({ story, title });
     return { image: r.image, mime: r.mime, ai: true };
   } catch (err) {
-    if (!(err instanceof ai.AiNotImplemented))
-      logger.warn({ err: (err as Error).message }, 'storyImage failed');
+    logger.warn({ err: (err as Error).message }, 'storyImage failed');
     return null;
   }
 }
