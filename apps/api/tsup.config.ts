@@ -4,6 +4,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: {
     server: 'src/server.ts',
+    render: 'src/render.ts',
     mcp: 'src/mcp.ts',
     worker: 'src/worker.ts',
     'scripts/db-setup': 'src/scripts/db-setup.ts',
