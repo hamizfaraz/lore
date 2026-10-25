@@ -544,3 +544,13 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
   finishes below the three-minute limit. The regenerated 1280×720 H.264 recording passed the full
   Playwright flow at 2:05; a contact-sheet review confirmed continuous product frames with no
   interstitial title/loading screens.
+- **2026-10-25 · group-first demo narrative** — Reframed the recording around the implementation
+  plan's primary causal chain: a group-authored feed post and profile, posting as `@weekendcrew` under
+  an approval policy, the group chat and Details hub, collective planning and games, a consent-aware
+  recap becoming a group post, group-controlled AI, podcast, governance, Muse access, and impact.
+  Explore, Reels, personal-profile discovery, Common Ground, and the family-story detour were removed
+  from the recording so the shared group identity remains the main selling point throughout. Repointed
+  the three core Weekend Crew seed posts and recap inputs to bundled local photography, removing gray
+  media placeholders while keeping the demo deterministic and honestly labeled. The final 1280×720
+  H.264 cut passed end-to-end at 1:46; opening-frame and full contact-sheet reviews confirmed the group
+  post media, group composer, and remaining feature sequence render cleanly.

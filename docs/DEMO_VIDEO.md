@@ -43,19 +43,22 @@ artifacts/demo-video/lore-product-demo.mp4
 
 The recording is deterministic and can be regenerated at any time. The tour itself lives in
 `e2e/demo-video.spec.ts`; its server and video settings live in `e2e/demo-video.config.ts`.
-The verified reference recording is 2:05, leaving 55 seconds of headroom under a three-minute limit.
+The verified group-first reference recording is 1:46, leaving more than a minute of headroom under a
+three-minute limit.
 
 ## What the tour shows
 
-- Login, feed, stories, reactions, Explore, search, Reels, and the post/story/reel composer
-- Personal profiles, shared group profiles, inbox, group chat, voice notes, media, and AI help
+- Login and a group-first feed where shared posts are visibly authored by `@weekendcrew`
+- The Weekend Crew profile and a real **Post as group → Submit for approval** composer flow
+- Group inbox, chat, voice notes, media, and the central Details hub for group features
 - In-chat games, fair plan suggestions, voting preferences, confirmed events, and private constraints
-- Consent-aware memory recaps, editing, sharing, and optional Solana devnet keepsakes
+- Consent-aware memory recaps that can become governed group posts, plus optional Solana devnet keepsakes
 - AI member personality, initiative, quiet hours, permissions, boundaries, memory controls, and preview
-- Opt-in Common Ground matching and editable introductions
-- Source-reviewed Family Stories with contributor control
 - Asynchronous podcast stations with cast completion gates
 - Group roles, publishing policy, approvals, and shared-account governance
 - Scoped Muse/MCP connection keys and the aggregate privacy-safe impact dashboard
+
+Explore, Reels, personal-profile discovery, and other individual-first surfaces are intentionally left out
+of this cut so the demo stays focused on LORE's main differentiator: groups acting together.
 
 No paid AI key is needed. The recording runs against the local mock provider and seeded local media.

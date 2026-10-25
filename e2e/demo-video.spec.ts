@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from '@playwright/test';
+import { join } from 'node:path';
 
 const WEEKEND = '00000000-0000-7000-8000-000000000201';
 const RECAP = '00000000-0000-7000-8000-000000000505';
@@ -64,7 +65,7 @@ class Director {
     await sleep(80);
   }
 
-  async visit(path: string, _title: string, _subtitle: string, ready: Locator) {
+  async visit(path: string, ready: Locator) {
     await expect
       .poll(() =>
         this.page.evaluate(
@@ -173,7 +174,7 @@ class Director {
   }
 }
 
-test('cinematic full-product walkthrough', async ({ page }) => {
+test('group-first product walkthrough', async ({ page }) => {
   test.slow();
   const d = new Director(page);
 
@@ -188,102 +189,61 @@ test('cinematic full-product walkthrough', async ({ page }) => {
   ]);
   await expect(page.getByRole('link', { name: 'Home' })).toBeVisible();
   await d.mount();
-  await expect(page.locator('article[aria-label^="Post by"]').first()).toBeVisible();
+  const groupPost = page.locator('article[aria-label="Post by weekendcrew"]');
+  await expect(groupPost).toBeVisible();
+  const groupMedia = groupPost.getByRole('img', { name: 'A green view from a Weekend Crew day outside' });
+  await expect(groupMedia).toBeVisible();
+  await expect
+    .poll(() => groupMedia.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0))
+    .toBe(true);
+  await sleep(400);
+  await d.focus(groupPost);
   await d.caption(
-    'FEED + STORIES',
-    'A calmer social feed',
-    'Catch up with people, respond to stories, and interact with familiar posts.',
+    'GROUP-FIRST FEED',
+    'The group is the account',
+    '@weekendcrew publishes shared posts and stories under one identity—not through a single member’s profile.',
   );
-  const firstLike = page.getByRole('button', { name: 'Like' }).first();
-  if (await firstLike.isVisible().catch(() => false)) await d.click(firstLike);
-  await d.scrollPage(470, 1050);
-  await d.scrollPage(0, 850);
+  const groupLike = groupPost.getByRole('button', { name: 'Like' });
+  if (await groupLike.isVisible().catch(() => false)) await d.click(groupLike);
+  await d.clearFocus();
   await d.hideCaption();
 
-  await d.visit(
-    '/explore',
-    'Discover what matters',
-    'Search across people, group accounts, and shared posts—or find friends already on LORE.',
-    page.getByPlaceholder('Search'),
-  );
-  await d.caption(
-    'EXPLORE',
-    'Search with context',
-    'A visual discovery grid and people search, with privacy-respecting paths into new connections.',
-  );
-  await d.type(page.getByPlaceholder('Search'), 'weekend', 55);
-  await sleep(1000);
-  await d.hideCaption();
-
-  await d.visit(
-    '/reels',
-    'Reels, kept social',
-    'Short video lives beside the rest of your relationships instead of becoming the whole experience.',
-    page.getByText('Reels', { exact: true }).first(),
-  );
-  await d.caption(
-    'REELS',
-    'Full-screen, familiar, fast',
-    'Vertical playback, reactions, comments, sharing, and saving are all here.',
-  );
-  const reelScroller = page.locator('[data-scroll]').first();
-  if (await reelScroller.isVisible().catch(() => false)) await d.scrollElement(reelScroller, 720, 1150);
-  await d.hideCaption();
-
-  await d.visit(
-    '/create',
-    'Create once, share your way',
-    'Publish a post, add to your story, or make a reel from one consistent composer.',
-    page.getByRole('heading', { name: 'New post' }),
-  );
-  await d.caption(
-    'CREATE',
-    'Posts, stories, and reels',
-    'The same flow also supports group identities and approval-aware publishing.',
-  );
-  await page.getByRole('button', { name: 'STORY' }).evaluate((button: HTMLElement) => button.click());
-  await sleep(700);
-  await page.getByRole('button', { name: 'REEL' }).evaluate((button: HTMLElement) => button.click());
-  await sleep(700);
-  await d.hideCaption();
-
-  await d.visit(
-    '/u/avachen',
-    'Profiles feel like people',
-    'Posts, reels, tagged media, shared groups, and direct messaging live on a familiar profile.',
-    page.getByRole('button', { name: 'avachen' }),
-  );
-  await d.caption(
-    'PERSONAL PROFILE',
-    'Identity with useful context',
-    'A profile shows who someone is and which shared spaces connect you.',
-  );
-  await d.scrollPage(270, 900);
-  await d.hideCaption();
-
-  await d.visit(
-    '/g/weekendcrew',
-    'Groups can have a voice',
-    'A shared profile lets a group publish together while preserving clear authorship and approval rules.',
-    page.getByRole('button', { name: 'Members' }),
-  );
+  await d.visit('/g/weekendcrew', page.getByRole('button', { name: 'Members' }));
   await d.caption(
     'GROUP PROFILE',
-    'Shared identity, shared control',
-    'Group posts remain visibly collective—and members keep control over what represents them.',
+    'One profile for the whole group',
+    'Members, shared posts, and group history live together while every contribution keeps clear authorship.',
   );
+  await d.scrollPage(250, 650);
   await d.hideCaption();
 
-  await d.visit(
-    '/inbox',
-    'Conversation is the center',
-    'Direct messages and group chats connect the social surface to actual relationships.',
-    page.getByText('Requests', { exact: true }),
-  );
+  await d.visit('/create', page.getByRole('heading', { name: 'New post' }));
+  await page
+    .locator('input[type="file"]')
+    .setInputFiles(join(process.cwd(), '.data/media/demo/rich/photo-24.jpg'));
+  await d.click(page.getByRole('button', { name: 'Next' }));
+  await expect(page.getByRole('heading', { name: 'Edit' })).toBeVisible();
+  await d.click(page.getByRole('button', { name: 'Next' }));
+  await expect(page.getByText('Post as', { exact: true })).toBeVisible();
+  await d.click(page.getByText('Post as', { exact: true }));
+  await d.click(page.getByRole('button', { name: /weekendcrew Group account/ }));
+  await expect(page.getByText(/Needs 2 approvals/)).toBeVisible();
   await d.caption(
-    'INBOX',
-    'People and groups, together',
-    'Search active threads, see unread conversations, and start a new message.',
+    'POST AS A GROUP',
+    'Shared voice, shared approval',
+    'A member creates the post as @weekendcrew, and the group’s policy decides when it can publish.',
+  );
+  const submitForApproval = page.getByRole('button', { name: 'Submit for approval' });
+  await d.focus(submitForApproval);
+  await sleep(700);
+  await d.clearFocus();
+  await d.hideCaption();
+
+  await d.visit('/inbox', page.getByText('Requests', { exact: true }));
+  await d.caption(
+    'GROUP INBOX',
+    'The group chat is home base',
+    'Plans, memories, games, publishing, and the AI member all start from the same conversation.',
   );
   const firstThread = page.locator('a[href^="/c/"]').first();
   if (await firstThread.isVisible().catch(() => false)) await d.focus(firstThread);
@@ -291,12 +251,7 @@ test('cinematic full-product walkthrough', async ({ page }) => {
   await d.clearFocus();
   await d.hideCaption();
 
-  await d.visit(
-    `/c/${WEEKEND}`,
-    'A chat that can do more',
-    'Messages, photos, voice notes, AI help, plans, memories, and games all stay inside the group.',
-    page.getByRole('textbox', { name: 'Message' }),
-  );
+  await d.visit(`/c/${WEEKEND}`, page.getByRole('textbox', { name: 'Message' }));
   await d.caption(
     'GROUP CHAT',
     'Conversation becomes action',
@@ -319,12 +274,16 @@ test('cinematic full-product walkthrough', async ({ page }) => {
   await sleep(850);
   await d.hideCaption();
 
-  await d.visit(
-    `/c/${WEEKEND}/plans`,
-    'Make plans that fit everyone',
-    'LORE compares sourced options, honors private constraints, and lets every member vote independently.',
-    page.getByRole('heading', { name: 'What should we do?' }),
+  await d.visit(`/c/${WEEKEND}/details`, page.getByText('Group account', { exact: true }));
+  await d.caption(
+    'GROUP HUB',
+    'Everything the group can do',
+    'Plans, memories, games, the shared page, AI controls, member roles, publishing, and podcast live here.',
   );
+  await d.scrollPage(330, 650);
+  await d.hideCaption();
+
+  await d.visit(`/c/${WEEKEND}/plans`, page.getByRole('heading', { name: 'What should we do?' }));
   await d.caption(
     'FAIR PLANNING',
     'From “we should” to a real plan',
@@ -336,12 +295,7 @@ test('cinematic full-product walkthrough', async ({ page }) => {
   await page.keyboard.press('Escape');
   await d.hideCaption();
 
-  await d.visit(
-    `/c/${WEEKEND}/memories`,
-    'Shared moments become memories',
-    'Private recaps use only consented group media and remain unpublished until the group is ready.',
-    page.getByRole('heading', { name: /Turn shared moments/ }),
-  );
+  await d.visit(`/c/${WEEKEND}/memories`, page.getByRole('heading', { name: /Turn shared moments/ }));
   await d.caption(
     'MEMORIES',
     'Private by default',
@@ -350,16 +304,11 @@ test('cinematic full-product walkthrough', async ({ page }) => {
   await d.scrollPage(520, 1000);
   await d.hideCaption();
 
-  await d.visit(
-    `/recap/${RECAP}`,
-    'Edit before you share',
-    'Every recap keeps its source media visible, removable, and under the group’s normal approval workflow.',
-    page.getByText('Recap editor', { exact: true }),
-  );
+  await d.visit(`/recap/${RECAP}`, page.getByText('Recap editor', { exact: true }));
   await d.caption(
     'RECAP EDITOR',
-    'Consent stays attached',
-    'Choose a layout, edit the story, save privately, share to chat, or make a Solana devnet keepsake.',
+    'A group memory becomes a group post',
+    'Members control their media, edit the recap together, then send it through the same group approval flow.',
   );
   await d.scrollPage(560, 1050);
   const keepsake = page.getByRole('button', { name: 'Make it a keepsake' });
@@ -368,12 +317,7 @@ test('cinematic full-product walkthrough', async ({ page }) => {
   await d.clearFocus();
   await d.hideCaption();
 
-  await d.visit(
-    `/c/${WEEKEND}/ai`,
-    'An AI member the group controls',
-    'Name it, shape its tone, set quiet hours, limit permissions, inspect memories, or remove it entirely.',
-    page.getByRole('heading', { name: 'Milo' }),
-  );
+  await d.visit(`/c/${WEEKEND}/ai`, page.getByRole('heading', { name: 'Milo' }));
   await d.caption(
     'AI MEMBER',
     'Useful, labeled, and bounded',
@@ -394,43 +338,7 @@ test('cinematic full-product walkthrough', async ({ page }) => {
     await d.hideCaption();
   }
 
-  await d.visit(
-    '/find-friends?tab=together',
-    'Meet through Common Ground',
-    'Opt-in matching uses interests and public activity—not private chats—to explain why people may click.',
-    page.locator('a:visible').filter({ hasText: 'Discover Together' }).first(),
-  );
-  await d.caption(
-    'COMMON GROUND',
-    'Discovery with an explanation',
-    'Shared interests create a reason and an editable introduction; nothing is sent without your action.',
-  );
-  await d.scrollPage(250, 1000);
-  await d.hideCaption();
-
-  await d.visit(
-    `/family/${WEEKEND}`,
-    'Turn consented history into a story',
-    'Pick a date range, review every source, and generate a grounded private narrative.',
-    page.getByRole('heading', { name: 'Turn consented history into a story' }),
-  );
-  await d.caption(
-    'FAMILY STORY',
-    'Sources first, generation second',
-    'Contributors keep control of their own messages, and unresolved corrections block sharing.',
-  );
-  await d.click(page.getByRole('button', { name: 'Review source material' }));
-  await expect(page.getByText('Source review', { exact: true })).toBeVisible();
-  await sleep(1300);
-  await d.scrollPage(470, 950);
-  await d.hideCaption();
-
-  await d.visit(
-    `/podcast/${PODCAST}`,
-    'A podcast made in pieces',
-    'Each cast member records one twenty-second voice clip; LORE assembles the episode only when everyone is in.',
-    page.getByText('Voice-only group show', { exact: true }),
-  );
+  await d.visit(`/podcast/${PODCAST}`, page.getByText('Voice-only group show', { exact: true }));
   await d.caption(
     'PODCAST STATIONS',
     'Asynchronous, but still together',
@@ -439,12 +347,7 @@ test('cinematic full-product walkthrough', async ({ page }) => {
   await d.scrollPage(450, 1100);
   await d.hideCaption();
 
-  await d.visit(
-    `/c/${WEEKEND}/settings#group-account`,
-    'Publishing without losing trust',
-    'Roles and approval policies decide how a shared group account speaks in public.',
-    page.getByText('Publishing policy', { exact: true }),
-  );
+  await d.visit(`/c/${WEEKEND}/settings#group-account`, page.getByText('Publishing policy', { exact: true }));
   await d.caption(
     'GROUP GOVERNANCE',
     'No mystery admin behavior',
@@ -456,12 +359,7 @@ test('cinematic full-product walkthrough', async ({ page }) => {
   await d.clearFocus();
   await d.hideCaption();
 
-  await d.visit(
-    '/settings/muse',
-    'Bring LORE into Muse',
-    'Create a scoped connection key so Muse can read context or prepare actions with explicit confirmation.',
-    page.getByRole('heading', { name: 'Use LORE from Muse' }),
-  );
+  await d.visit('/settings/muse', page.getByRole('heading', { name: 'Use LORE from Muse' }));
   await d.caption(
     'CONNECT MUSE',
     'Capabilities stay scoped',
@@ -473,12 +371,7 @@ test('cinematic full-product walkthrough', async ({ page }) => {
   await d.clearFocus();
   await d.hideCaption();
 
-  await d.visit(
-    '/impact',
-    'Measure connection, not conversations',
-    'LORE tracks coarse outcomes—never message text, names, handles, or real IDs.',
-    page.getByRole('heading', { name: /More time together/ }),
-  );
+  await d.visit('/impact', page.getByRole('heading', { name: /More time together/ }));
   await d.caption(
     'PRIVACY-SAFE IMPACT',
     'Know whether the product helps',
