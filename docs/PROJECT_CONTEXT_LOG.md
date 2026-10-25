@@ -26,7 +26,7 @@
 
 _Rewritten after each step._
 
-- Phase: C2-10 Family Story is implementation-green on the C2 branch; C2-11 Podcast is in progress.
+- Phase: C2-11 Podcast Stations is implementation-green on the C2 branch; C2-12 Advanced Persona is next.
   C1 merge and live-provider acceptance remain open for the complete C2 P0 chain.
   C2-1's paid live smoke remains blocked on human-owned C2-0 credentials.
 - Active Computer 2 branch: `c2/intelligence`, in a dedicated worktree. All implementation changes
@@ -77,6 +77,11 @@ _Rewritten after each step._
   unresolved-flag blocking; private sharing; and a governed C1 draft handoff with no direct public
   publish path. A production-disabled demo identity bridge lets the seeded local UI work before C1
   auth lands.
+- C2-11 supplies a frozen current-member cast, root and child stations, exactly-20-second owned
+  voice submissions, one clip per person/station/day, transcript/uploader attribution, engagement
+  and missing-member state, host wrap/finish gates, and MP3 composition in station order with
+  300 ms gaps and intro/outro tones. The optional MP4 render was deliberately cut. Seeded exact
+  clips and a mobile recorder make the flow testable before C1's upload/storage implementation.
 - Full verification passes: six workspace typechecks and 110 tests across 28 files, whole-workspace
   Biome over 444 files, mock smoke, production web/API builds, and a direct
   browser-bundle provider-secret scan, and `git diff --check`.
@@ -129,7 +134,7 @@ _Rewritten after each step._
 | C2-8 | Find Friends and Common Ground | integration pending | Seven focused tests and typechecks pass; C1 public-signal/block/DM hooks remain |
 | C2-9 | Snowflake impact | live verification pending | Service, sync, six views, route/UI, six tests, and local smoke pass; live Snowflake/Cortex awaits C2-0 |
 | C2-10 | Family story | implementation complete | C1 draft/media integration remains |
-| C2-11 | Podcast stations and render | pending | Depends on C2-3 |
+| C2-11 | Podcast stations and render | implementation complete | Audio retained; MP4 cut; C1 media integration remains |
 | C2-12 | Advanced persona studio and AI polish | pending | Depends on C2-2 |
 
 ## Things that need a human (cannot be done by the agent)
@@ -346,3 +351,11 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
   UI plus a non-production seeded-demo identity bridge because C1 authentication is still a stub.
   Shared/API/web typechecks and three grounding tests pass. C1 media URLs/covers and the group draft
   service remain merge-time integrations; C2-11 is next.
+- **2026-10-24 · C2-11 Podcast Stations** — Implemented show/cast freeze, root and branch stations,
+  exact 20-second owned voice validation, database daily uniqueness, voice-only APIs, visible
+  uploader attribution, host wrap and missing-participant finish gates, ordered ffmpeg MP3 output,
+  300 ms gaps, and intro/outro tones. Added the mobile 20-second recorder and a deterministic seeded
+  show with three submitted clips plus Noor's missing clip for the end-to-end gate demo. Reset the
+  isolated local database in 237 ms; it now contains nine consent-scoped media rows. Focused policy
+  tests and affected typechecks pass. Optional MP4 is cut; C1 signed-media/storage remains the final
+  production integration. C2-12 is next.

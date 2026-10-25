@@ -15,3 +15,10 @@ export function c2DemoUserId(): string {
 export function c2DemoHeaders(): Record<string, string> {
   return { 'x-lore-demo-user': c2DemoUserId() };
 }
+
+export const C2_DEMO_AUDIO: Partial<Record<string, string>> = {
+  [C2_DEMO_USERS.ava]: '00000000-0000-7000-8000-000000000706',
+  [C2_DEMO_USERS.leo]: '00000000-0000-7000-8000-000000000707',
+  [C2_DEMO_USERS.mia]: '00000000-0000-7000-8000-000000000708',
+  [C2_DEMO_USERS.noor]: '00000000-0000-7000-8000-000000000709',
+};

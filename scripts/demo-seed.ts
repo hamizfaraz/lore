@@ -17,6 +17,8 @@ import {
   planRsvps,
   planVotes,
   postMedia,
+  podcastShows,
+  podcastStations,
   posts,
   publishingPolicies,
   recapMediaConsents,
@@ -24,6 +26,7 @@ import {
   recommendationTriggers,
   socialAccounts,
   user,
+  voiceContributions,
 } from '../packages/db/src/index';
 
 export const DEMO = {
@@ -55,6 +58,15 @@ export const DEMO = {
   proposal: '00000000-0000-7000-8000-000000000503',
   plan: '00000000-0000-7000-8000-000000000504',
   recap: '00000000-0000-7000-8000-000000000505',
+  podcast: {
+    show: '00000000-0000-7000-8000-000000000901',
+    rootStation: '00000000-0000-7000-8000-000000000902',
+    contributions: [
+      '00000000-0000-7000-8000-000000000911',
+      '00000000-0000-7000-8000-000000000912',
+      '00000000-0000-7000-8000-000000000913',
+    ],
+  },
   candidates: [
     '00000000-0000-7000-8000-000000000601',
     '00000000-0000-7000-8000-000000000602',
@@ -67,6 +79,10 @@ export const DEMO = {
     '00000000-0000-7000-8000-000000000703',
     '00000000-0000-7000-8000-000000000704',
     '00000000-0000-7000-8000-000000000705',
+    '00000000-0000-7000-8000-000000000706',
+    '00000000-0000-7000-8000-000000000707',
+    '00000000-0000-7000-8000-000000000708',
+    '00000000-0000-7000-8000-000000000709',
   ],
   posts: [
     '00000000-0000-7000-8000-000000000801',
@@ -99,6 +115,9 @@ function messageId(index: number, family = false) {
 type DemoDb = ReturnType<typeof createDb>['db'];
 
 export async function clearDemo(db: DemoDb): Promise<void> {
+  await db.delete(voiceContributions).where(inArray(voiceContributions.id, [...DEMO.podcast.contributions]));
+  await db.delete(podcastStations).where(eq(podcastStations.showId, DEMO.podcast.show));
+  await db.delete(podcastShows).where(eq(podcastShows.id, DEMO.podcast.show));
   await db.delete(planRsvps).where(eq(planRsvps.planId, DEMO.plan));
   await db.delete(planVotes).where(eq(planVotes.proposalId, DEMO.proposal));
   await db.delete(groupPlans).where(eq(groupPlans.id, DEMO.plan));
@@ -433,7 +452,48 @@ export async function seedDemo(db: DemoDb): Promise<Record<string, number>> {
       consentScope: { conversations: [DEMO.conversations.family], demo: true },
       completedAt: now,
     },
+    ...[
+      [DEMO.media[5], DEMO.users.ava, 'ava'],
+      [DEMO.media[6], DEMO.users.leo, 'leo'],
+      [DEMO.media[7], DEMO.users.mia, 'mia'],
+      [DEMO.media[8], DEMO.users.noor, 'noor'],
+    ].map(([id, ownerUserId, speaker]) => ({
+      id: id!,
+      ownerUserId: ownerUserId!,
+      kind: 'audio' as const,
+      storageKey: `demo/podcast-${speaker}.wav`,
+      mime: 'audio/wav',
+      durationMs: 20_000,
+      transcript: `${speaker} shares one twenty-second moment for the weekend show.`,
+      transcriptStatus: 'done' as const,
+      consentScope: { conversations: [DEMO.conversations.weekend], podcast: true, demo: true },
+      completedAt: now,
+    })),
   ]);
+  await db.insert(podcastShows).values({
+    id: DEMO.podcast.show,
+    conversationId: DEMO.conversations.weekend,
+    title: 'Weekend Crew Radio',
+    requiredParticipantIds: memberUsers,
+    hostUserId: DEMO.users.ava,
+  });
+  await db.insert(podcastStations).values({
+    id: DEMO.podcast.rootStation,
+    showId: DEMO.podcast.show,
+    topic: 'One small win from this week',
+    participantIds: memberUsers,
+  });
+  await db.insert(voiceContributions).values(
+    [DEMO.users.ava, DEMO.users.leo, DEMO.users.mia].map((userId, index) => ({
+      id: DEMO.podcast.contributions[index]!,
+      stationId: DEMO.podcast.rootStation,
+      userId,
+      mediaId: DEMO.media[index + 5]!,
+      durationMs: 20_000,
+      day: '2026-10-24',
+      transcript: `${['Ava', 'Leo', 'Mia'][index]} shares one twenty-second moment for the weekend show.`,
+    })),
+  );
   await db.insert(posts).values([
     {
       id: DEMO.posts[0],

@@ -74,3 +74,8 @@ Check at every checkpoint (section 10 working agreements).
 - [ ] C2->C1: Replace C2's production-disabled `x-lore-demo-user` local test bridge with the real
   C1 demo session after authentication lands. The bridge is active only when not production and
   `DEMO_FAST_PROACTIVE=1`; remove it after the stable seeded users can sign in normally.
+- [ ] C2->C1: C2-11 validates and orders podcast voice clips, then consumes
+  `media.service.signedUrl` for source bytes and `media.service.createFromBuffer` for the required
+  MP3. Preserve duration/transcript/uploader metadata on media completion. The local mock build uses
+  synthesized, clearly demo-only tones when physical seeded assets are absent; production fails
+  closed until C1 storage is available. Optional MP4 rendering is deliberately cut.
