@@ -538,3 +538,9 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
   real unconnected matches instead of an empty state. The final 3:45 recording passed end-to-end and
   was visually checked at its feature chapters and closing card. `docs/DEMO_VIDEO.md` documents the
   flow and artifact paths; main remains untouched.
+- **2026-10-25 · demo pacing revision** — Removed the full-screen chapter/title overlays and their
+  fades, replaced full document reloads with a demo-only in-app navigation bridge, and tightened
+  caption, cursor, and scroll timing so the complete feature walkthrough remains continuous and
+  finishes below the three-minute limit. The regenerated 1280×720 H.264 recording passed the full
+  Playwright flow at 2:05; a contact-sheet review confirmed continuous product frames with no
+  interstitial title/loading screens.

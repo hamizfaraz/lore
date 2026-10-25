@@ -22,15 +22,8 @@ class Director {
         #lore-demo-cursor { position: fixed; left: 0; top: 0; width: 22px; height: 22px; transform: translate3d(88px,650px,0); transition: transform 28ms linear; filter: drop-shadow(0 3px 6px rgba(0,0,0,.32)); }
         #lore-demo-cursor::before { content: ''; position: absolute; inset: 0; border-radius: 999px; background: rgba(255,255,255,.94); border: 2px solid rgba(17,24,39,.92); }
         #lore-demo-cursor::after { content: ''; position: absolute; left: 7px; top: 7px; width: 8px; height: 8px; border-radius: 999px; background: #7c3aed; }
-        #lore-demo-chapter { position: fixed; inset: 0; display: grid; place-items: center; padding: 80px; color: white; background: radial-gradient(circle at 72% 18%, rgba(124,58,237,.34), transparent 34%), linear-gradient(135deg, #111014, #1c1625 55%, #0b0a0d); opacity: 0; transform: scale(1.018); transition: opacity .42s ease, transform .7s cubic-bezier(.22,1,.36,1); }
-        #lore-demo-chapter.show { opacity: 1; transform: scale(1); }
-        #lore-demo-chapter .inner { max-width: 880px; text-align: center; }
-        #lore-demo-chapter .mark { display: inline-flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: #c4b5fd; }
-        #lore-demo-chapter .mark::before { content: ''; width: 28px; height: 2px; background: #8b5cf6; border-radius: 2px; }
-        #lore-demo-chapter h2 { margin: 20px 0 10px; font-family: Georgia, ui-serif, serif; font-size: clamp(44px, 6vw, 76px); line-height: .98; letter-spacing: -.045em; }
-        #lore-demo-chapter p { margin: 0 auto; max-width: 720px; color: rgba(255,255,255,.76); font-size: 20px; line-height: 1.48; }
-        #lore-demo-caption { position: fixed; right: 34px; bottom: 30px; width: 390px; padding: 18px 20px; border-radius: 18px; color: #18131f; background: rgba(255,255,255,.94); border: 1px solid rgba(124,58,237,.14); box-shadow: 0 22px 70px rgba(18,13,28,.24); backdrop-filter: blur(18px); opacity: 0; transform: translateY(18px); transition: opacity .32s ease, transform .46s cubic-bezier(.22,1,.36,1); }
-        #lore-demo-caption.show { opacity: 1; transform: translateY(0); }
+        #lore-demo-caption { position: fixed; right: 34px; bottom: 30px; display: none; width: 390px; padding: 18px 20px; border-radius: 18px; color: #18131f; background: rgba(255,255,255,.94); border: 1px solid rgba(124,58,237,.14); box-shadow: 0 22px 70px rgba(18,13,28,.24); backdrop-filter: blur(18px); }
+        #lore-demo-caption.show { display: block; }
         #lore-demo-caption .kicker { color: #7c3aed; font-size: 11px; font-weight: 850; letter-spacing: .15em; text-transform: uppercase; }
         #lore-demo-caption h3 { margin: 7px 0 5px; font-size: 20px; line-height: 1.15; letter-spacing: -.02em; }
         #lore-demo-caption p { margin: 0; color: #625a6d; font-size: 13px; line-height: 1.4; }
@@ -42,7 +35,6 @@ class Director {
       const stage = document.createElement('div');
       stage.id = 'lore-demo-stage';
       stage.innerHTML = `
-        <div id="lore-demo-chapter"><div class="inner"><div class="mark">LORE</div><h2></h2><p></p></div></div>
         <div id="lore-demo-caption"><div class="kicker"></div><h3></h3><p></p></div>
         <div id="lore-demo-focus"></div>
         <div id="lore-demo-cursor"></div>
@@ -52,23 +44,7 @@ class Director {
     this.cursor = { x: 88, y: 650 };
   }
 
-  async chapter(title: string, subtitle: string, hold = 1450) {
-    await this.mount();
-    await this.page.evaluate(
-      ({ title, subtitle }) => {
-        const card = document.querySelector('#lore-demo-chapter')!;
-        card.querySelector('h2')!.textContent = title;
-        card.querySelector('p')!.textContent = subtitle;
-        card.classList.add('show');
-      },
-      { title, subtitle },
-    );
-    await sleep(hold);
-    await this.page.evaluate(() => document.querySelector('#lore-demo-chapter')?.classList.remove('show'));
-    await sleep(520);
-  }
-
-  async caption(kicker: string, title: string, body: string, hold = 1500) {
+  async caption(kicker: string, title: string, body: string, hold = 900) {
     await this.mount();
     await this.page.evaluate(
       ({ kicker, title, body }) => {
@@ -85,15 +61,32 @@ class Director {
 
   async hideCaption() {
     await this.page.evaluate(() => document.querySelector('#lore-demo-caption')?.classList.remove('show'));
-    await sleep(360);
+    await sleep(80);
   }
 
-  async visit(path: string, title: string, subtitle: string, ready: Locator) {
-    await this.page.goto(path, { waitUntil: 'domcontentloaded' });
+  async visit(path: string, _title: string, _subtitle: string, ready: Locator) {
+    await expect
+      .poll(() =>
+        this.page.evaluate(
+          () =>
+            typeof (window as Window & { __loreDemoNavigate?: (path: string) => void }).__loreDemoNavigate ===
+            'function',
+        ),
+      )
+      .toBe(true);
+    await this.page.evaluate((nextPath) => {
+      const navigate = (window as Window & { __loreDemoNavigate?: (path: string) => void })
+        .__loreDemoNavigate;
+      if (!navigate) throw new Error('Demo navigation bridge is unavailable.');
+      navigate(nextPath);
+    }, path);
+    const expectedUrl = new URL(path, this.page.url());
+    await this.page.waitForURL(
+      (url) => `${url.pathname}${url.search}` === `${expectedUrl.pathname}${expectedUrl.search}`,
+    );
     await expect(ready).toBeVisible();
     await this.mount();
-    await sleep(500);
-    await this.chapter(title, subtitle);
+    await sleep(180);
   }
 
   async moveTo(locator: Locator, padding = 0) {
@@ -120,7 +113,7 @@ class Director {
         },
         { x, y },
       );
-      await sleep(14);
+      await sleep(10);
     }
     this.cursor = target;
   }
@@ -158,7 +151,7 @@ class Director {
       setTimeout(() => ripple.remove(), 700);
     }, this.cursor);
     await locator.click();
-    await sleep(420);
+    await sleep(280);
   }
 
   async type(locator: Locator, value: string, delay = 32) {
@@ -171,12 +164,12 @@ class Director {
 
   async scrollPage(y: number, hold = 900) {
     await this.page.evaluate((top) => window.scrollTo({ top, behavior: 'smooth' }), y);
-    await sleep(hold);
+    await sleep(Math.min(hold, 650));
   }
 
   async scrollElement(locator: Locator, y: number, hold = 900) {
     await locator.evaluate((element, top) => element.scrollTo({ top, behavior: 'smooth' }), y);
-    await sleep(hold);
+    await sleep(Math.min(hold, 650));
   }
 }
 
@@ -187,11 +180,6 @@ test('cinematic full-product walkthrough', async ({ page }) => {
   await page.goto('/login', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: 'lore' })).toBeVisible();
   await d.mount();
-  await d.chapter(
-    'Meet LORE',
-    'A private social space that helps real groups stay close and do more together.',
-    2100,
-  );
   await d.type(page.getByPlaceholder('Email'), 'ava.demo@ourlore.test', 24);
   await d.type(page.getByPlaceholder('Password'), 'password123', 35);
   await Promise.all([
@@ -200,10 +188,6 @@ test('cinematic full-product walkthrough', async ({ page }) => {
   ]);
   await expect(page.getByRole('link', { name: 'Home' })).toBeVisible();
   await d.mount();
-  await d.chapter(
-    'Your people, in one place',
-    'Stories and posts from friends and groups—without an algorithm pulling you away from them.',
-  );
   await expect(page.locator('article[aria-label^="Post by"]').first()).toBeVisible();
   await d.caption(
     'FEED + STORIES',
@@ -324,12 +308,8 @@ test('cinematic full-product walkthrough', async ({ page }) => {
   await sleep(700);
   await d.hideCaption();
 
-  await d.visit(
-    `/c/${WEEKEND}?games=1`,
-    'Play without leaving the chat',
-    'Start a shared story, meme battle, or Pictionary lobby using group lore or fresh prompts.',
-    page.getByText('Play a game', { exact: true }),
-  );
+  await d.click(page.getByRole('button', { name: 'Games' }));
+  await expect(page.getByText('Play a game', { exact: true })).toBeVisible();
   await d.caption(
     'GROUP GAMES',
     'Built for the people already here',
@@ -507,9 +487,5 @@ test('cinematic full-product walkthrough', async ({ page }) => {
   await d.scrollPage(360, 1150);
   await d.hideCaption();
 
-  await d.chapter(
-    'LORE',
-    'Less performing. More remembering, planning, playing, and showing up for the people in your life.',
-    2600,
-  );
+  await sleep(700);
 });

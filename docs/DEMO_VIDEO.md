@@ -1,8 +1,9 @@
 # LORE product demo video
 
 The repository includes a directed Playwright walkthrough that records the whole product story at
-1280×720. It uses the deterministic rich demo world, local media, mock AI, animated chapter cards,
-feature captions, click ripples, smooth scrolling, and a visible eased cursor.
+1280×720 in under three minutes. It uses the deterministic rich demo world, local media, mock AI,
+compact feature captions, click ripples, smooth scrolling, and a visible eased cursor. Navigation
+stays inside the running app, so the recording has no loading-screen pauses or full-screen title cards.
 
 ## Record it
 
@@ -42,6 +43,7 @@ artifacts/demo-video/lore-product-demo.mp4
 
 The recording is deterministic and can be regenerated at any time. The tour itself lives in
 `e2e/demo-video.spec.ts`; its server and video settings live in `e2e/demo-video.config.ts`.
+The verified reference recording is 2:05, leaving 55 seconds of headroom under a three-minute limit.
 
 ## What the tour shows
 

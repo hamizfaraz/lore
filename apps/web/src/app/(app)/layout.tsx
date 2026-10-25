@@ -27,6 +27,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     } else if (me.data && !me.data.onboarded) router.replace('/onboarding');
   }, [me.error, me.data, router]);
 
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_DEMO_VIDEO !== '1') return;
+    const demoWindow = window as Window & { __loreDemoNavigate?: (path: string) => void };
+    demoWindow.__loreDemoNavigate = (path) => router.push(path);
+    return () => {
+      demoWindow.__loreDemoNavigate = undefined;
+    };
+  }, [router]);
+
   if (!me.data) {
     return (
       <div className="flex min-h-dvh items-center justify-center">

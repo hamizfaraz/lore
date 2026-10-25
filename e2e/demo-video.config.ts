@@ -39,6 +39,7 @@ const commonEnv = {
   NEXT_PUBLIC_FEATURE_PODCAST: '1',
   NEXT_PUBLIC_FEATURE_IMPACT: '1',
   NEXT_PUBLIC_FEATURE_KEEPSAKES: '1',
+  NEXT_PUBLIC_DEMO_VIDEO: '1',
 };
 
 export default defineConfig({
