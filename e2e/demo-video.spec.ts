@@ -270,8 +270,73 @@ test('group-first product walkthrough', async ({ page }) => {
     'Built for the people already here',
     'Choose a format, tune the pace, and invite friends without auto-enrolling anyone.',
   );
-  await d.click(page.getByRole('button', { name: /Meme Battle/ }));
-  await sleep(850);
+  const oneWordStory = page.getByRole('button', { name: /One-Word Story/ });
+  const memeBattle = page.getByRole('button', { name: /Meme Battle/ });
+  const pictionary = page.getByRole('button', { name: /Pictionary/ });
+  await d.click(memeBattle);
+  await sleep(550);
+
+  if (process.env.LORE_DEMO_GAMES_FOCUS === '1') {
+    await d.focus(page.getByText('AI competitor', { exact: true }));
+    await sleep(650);
+    await d.clearFocus();
+    await d.click(pictionary);
+    await d.focus(page.getByText('Teams', { exact: true }).first());
+    await sleep(650);
+    await d.clearFocus();
+    await d.click(oneWordStory);
+    await d.click(page.getByRole('button', { name: 'Group lore' }));
+    await d.caption(
+      'THREE WAYS TO PLAY',
+      'Stories, memes, or drawing',
+      'Each format has its own rounds, timer, and team controls—and prompts can come from memories the group already shares.',
+      1100,
+    );
+    await d.click(page.getByRole('button', { name: 'Open lobby' }));
+    await expect(page.getByText('1 player in the lobby', { exact: true })).toBeVisible();
+    await d.mount();
+    await d.caption(
+      'OPT-IN LOBBY',
+      'Nobody gets pulled in automatically',
+      'The host opens the room, friends choose to join, and this round is grounded in Weekend Crew lore.',
+      1000,
+    );
+    const startGame = page.getByRole('button', { name: 'Start', exact: true });
+    await d.focus(startGame);
+    await sleep(550);
+    await d.clearFocus();
+    await d.click(startGame);
+    await expect(page.getByText('Your turn — pick one word', { exact: true })).toBeVisible();
+    const wordChoices = page.locator('div.grid.grid-cols-2.gap-2 button');
+    await expect(wordChoices).toHaveCount(5);
+    await d.caption(
+      'ONE-WORD STORY',
+      'Five choices keep every turn moving',
+      'Players build one shared story a word at a time. LORE supplies exactly five choices, then illustrates the ending.',
+      1000,
+    );
+    await d.click(wordChoices.first());
+    await expect(page.getByText('1 / 24 words', { exact: true })).toBeVisible();
+    await expect(wordChoices).toHaveCount(5);
+    await d.click(wordChoices.nth(2));
+    await expect(page.getByText('2 / 24 words', { exact: true })).toBeVisible();
+    await expect(wordChoices).toHaveCount(5);
+    await d.click(wordChoices.last());
+    await expect(page.getByText('3 / 24 words', { exact: true })).toBeVisible();
+    await d.caption(
+      'CHAT STAYS ATTACHED',
+      'The game never leaves the group behind',
+      'Players can reopen the group conversation without losing the round or moving to a separate game network.',
+      1000,
+    );
+    await d.click(page.getByRole('button', { name: 'Chat', exact: true }));
+    await expect(page.getByPlaceholder('Message the group')).toBeVisible();
+    await d.focus(page.getByPlaceholder('Message the group'));
+    await sleep(650);
+    await d.clearFocus();
+  } else {
+    await sleep(850);
+  }
   await d.hideCaption();
 
   await d.visit(`/c/${WEEKEND}/details`, page.getByText('Group account', { exact: true }));

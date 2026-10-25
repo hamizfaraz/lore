@@ -422,6 +422,16 @@ export async function seedDemo(db: DemoDb): Promise<Record<string, number>> {
       sensitivity: 'medium',
       confidence: 0.9,
     },
+    {
+      id: '00000000-0000-7000-8300-000000000004',
+      conversationId: DEMO.conversations.weekend,
+      kind: 'place',
+      summary: 'The group remembers the shady picnic spot by the water as an easy place to meet.',
+      sourceMessageIds: [messageId(8)],
+      subjectUserIds: memberUsers,
+      sensitivity: 'low',
+      confidence: 0.94,
+    },
   ]);
 
   await db.insert(mediaAssets).values([

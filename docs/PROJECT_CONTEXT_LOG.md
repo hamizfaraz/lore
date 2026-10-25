@@ -554,3 +554,14 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
   media placeholders while keeping the demo deterministic and honestly labeled. The final 1280×720
   H.264 cut passed end-to-end at 1:46; opening-frame and full contact-sheet reviews confirmed the group
   post media, group composer, and remaining feature sequence render cleanly.
+- **2026-10-25 · games-focused demo variant** — Added a second reproducible group-first recording
+  path that keeps the original cut intact while expanding the games chapter. The alternate flow now
+  compares One-Word Story, Meme Battle, and Pictionary controls; selects consented group-lore prompts;
+  opens an opt-in lobby; plays three actual One-Word Story turns with the five-choice constraint; and
+  shows the existing group chat attached to the active round. `pnpm demo:record:games` writes distinct
+  `lore-games-demo` artifacts, while `pnpm demo:record` retains the standard group-first behavior. A
+  third eligible low-sensitivity Weekend Crew memory was added to the deterministic seed so the
+  selected group-lore mode is exercised honestly instead of visibly falling back to random prompts.
+  The final 1280×720 H.264 cut passed end-to-end at 2:15. A focused contact-sheet review confirmed the
+  three format controls, group-lore selection, lobby, live word choices, story progress, and attached
+  chat all render cleanly with no fallback notice.

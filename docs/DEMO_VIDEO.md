@@ -46,12 +46,33 @@ The recording is deterministic and can be regenerated at any time. The tour itse
 The verified group-first reference recording is 1:46, leaving more than a minute of headroom under a
 three-minute limit.
 
+## Record the games-focused cut
+
+To keep the same group-first story while spending more time on the games, run:
+
+```bash
+pnpm demo:record:games
+```
+
+This alternate cut compares One-Word Story, Meme Battle, and Pictionary; selects group-lore prompts;
+opens an opt-in lobby; plays three real One-Word Story turns; and reopens the attached group chat. It
+writes separate files so the standard group-first recording is not replaced:
+
+```text
+artifacts/demo-video/lore-games-demo.webm
+artifacts/demo-video/lore-games-demo.mp4
+```
+
+The verified games-focused recording is 2:15 at 1280×720, leaving 45 seconds of headroom under the
+three-minute limit.
+
 ## What the tour shows
 
 - Login and a group-first feed where shared posts are visibly authored by `@weekendcrew`
 - The Weekend Crew profile and a real **Post as group → Submit for approval** composer flow
 - Group inbox, chat, voice notes, media, and the central Details hub for group features
-- In-chat games, fair plan suggestions, voting preferences, confirmed events, and private constraints
+- In-chat games (with a deeper playable sequence in the games-focused cut), fair plan suggestions,
+  voting preferences, confirmed events, and private constraints
 - Consent-aware memory recaps that can become governed group posts, plus optional Solana devnet keepsakes
 - AI member personality, initiative, quiet hours, permissions, boundaries, memory controls, and preview
 - Asynchronous podcast stations with cast completion gates

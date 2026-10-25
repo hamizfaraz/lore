@@ -7,6 +7,11 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const artifactRoot = join(root, 'artifacts/demo-video');
 const playwrightOutput = join(artifactRoot, 'playwright');
 const databaseUrl = process.env.LORE_DEMO_DATABASE_URL ?? 'postgres://postgres:postgres@127.0.0.1:5432/lore';
+const outputBasename = process.env.LORE_DEMO_OUTPUT ?? 'lore-product-demo';
+
+if (!/^[a-z0-9][a-z0-9-]*$/.test(outputBasename)) {
+  throw new Error('LORE_DEMO_OUTPUT must contain only lowercase letters, numbers, and hyphens.');
+}
 
 function assertLocalDatabase(url: string) {
   const target = new URL(url);
@@ -73,8 +78,8 @@ async function main() {
   const newest = (
     await Promise.all(recordings.map(async (path) => ({ path, at: (await stat(path)).mtimeMs })))
   ).sort((a, b) => b.at - a.at)[0].path;
-  const webm = join(artifactRoot, 'lore-product-demo.webm');
-  const mp4 = join(artifactRoot, 'lore-product-demo.mp4');
+  const webm = join(artifactRoot, `${outputBasename}.webm`);
+  const mp4 = join(artifactRoot, `${outputBasename}.mp4`);
   await copyFile(newest, webm);
 
   const encoder = chooseEncoder();
