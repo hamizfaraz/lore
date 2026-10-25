@@ -3,7 +3,6 @@ import type { MediaDTO } from '@lore/shared/dto/media';
 import type { PodcastShowDetailDTO } from '@lore/shared/dto/podcast';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Check, Circle, GitBranch, Mic2, Radio, Square, Users } from 'lucide-react';
-import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { StackScreen } from '@/components/ui/StackScreen';
@@ -194,13 +193,13 @@ export function PodcastPage({ showId }: { showId: string }) {
             ['Ava (host)', C2_DEMO_USERS.ava],
             ['Noor (missing)', C2_DEMO_USERS.noor],
           ].map(([label, id]) => (
-            <Link
+            <a
               key={id}
               href={`?demoUser=${id}`}
               className={`whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold ${viewer === id ? 'bg-action text-white' : 'bg-surface-2'}`}
             >
               {label}
-            </Link>
+            </a>
           ))}
         </nav>
 
