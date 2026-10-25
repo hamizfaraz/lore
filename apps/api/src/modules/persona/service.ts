@@ -24,8 +24,9 @@ import type {
   PersonaAvatarOptionDTO,
   PersonaAvatarSelectionDTO,
 } from '@lore/shared/dto/persona';
+import type { AiImageCardDTO } from '@lore/shared/dto/persona';
 import { postMessage } from '../chat/service';
-import { createFromBuffer } from '../media/service';
+import { createFromBuffer, getRow, signedUrl } from '../media/service';
 import { recordImpactEvent } from '../impact/service';
 import { forbidden } from '../../lib/errors';
 import { env } from '../../lib/env';
@@ -160,7 +161,7 @@ const defaultDependencies: PersonaDependencies = {
     enqueue('persona.consider', input, {
       debounceKey: input.conversationId,
       delayMs,
-      jobId: input.requestId ?? input.sourceMessageId,
+      jobId: (input.requestId ?? input.sourceMessageId)?.replaceAll(':', '-'),
     }),
   consumeTextBudget: async (conversationId) =>
     (await defaultTextBudget().consumeText(conversationId)).allowed,
@@ -636,18 +637,31 @@ export class PersonaService {
       }
       await this.deps.post(
         input.conversationId,
-        {
-          kind: mediaIds ? 'media' : 'text',
-          body: message,
-          ...(mediaIds ? { mediaIds } : {}),
-          clientId: input.requestId ?? `persona:${input.sourceMessageId ?? startedAt}`,
-          personaId: context.persona.id,
-          meta: {
-            reason: decision.reason,
-            memoryIdsUsed: decision.memoryIdsUsed,
-            degraded: result.degraded,
-          },
-        },
+        mediaIds
+          ? {
+              kind: 'card',
+              cardKind: 'ai_image',
+              cardRefId: mediaIds[0],
+              body: message,
+              clientId: input.requestId ?? `persona:${input.sourceMessageId ?? startedAt}`,
+              personaId: context.persona.id,
+              meta: {
+                reason: decision.reason,
+                memoryIdsUsed: decision.memoryIdsUsed,
+                degraded: result.degraded,
+              },
+            }
+          : {
+              kind: 'text',
+              body: message,
+              clientId: input.requestId ?? `persona:${input.sourceMessageId ?? startedAt}`,
+              personaId: context.persona.id,
+              meta: {
+                reason: decision.reason,
+                memoryIdsUsed: decision.memoryIdsUsed,
+                degraded: result.degraded,
+              },
+            },
         { type: 'ai', personaId: context.persona.id, conversationId: input.conversationId },
       );
     } finally {
@@ -673,6 +687,18 @@ export const selectAvatar = service.selectAvatar.bind(service);
 export const onMessage = service.onMessage.bind(service);
 export const tick = service.tick.bind(service);
 export const consider = service.consider.bind(service);
+
+export async function resolveAiImageCard(mediaId: string): Promise<AiImageCardDTO | undefined> {
+  const row = await getRow(mediaId);
+  if (!row) return undefined;
+  const imageUrl = (await signedUrl(mediaId).catch(() => null)) ?? `/v1/media/${mediaId}`;
+  return {
+    mediaId,
+    imageUrl,
+    caption: row.captionAi,
+    generator: row.generator ?? 'muse',
+  };
+}
 
 /** Test helper for isolated policy/service suites; never used by production wiring. */
 export function createPersonaServiceForTest(deps: Partial<PersonaDependencies>): PersonaService {

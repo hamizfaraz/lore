@@ -367,6 +367,8 @@ export async function createConversation(
   if (found.length !== others.length) throw badRequest('Unknown user');
   if (input.kind === 'dm') {
     if (others.length !== 1) throw badRequest('A DM has exactly two people');
+    const { assertNotBlocked } = await import('../social/blocks');
+    await assertNotBlocked(userId, others[0]!);
     const existing = await db.execute<{ id: string }>(sql`
       select c.id from conversations c
       join conversation_members a on a.conversation_id = c.id and a.user_id = ${userId} and a.removed_at is null
@@ -580,13 +582,15 @@ export async function postMessage(
 async function fanOut(convId: string, row: MessageRow, dto: MessageDTO) {
   try {
     const ms = await activeMembers(convId);
-    for (const m of ms) void emitInboxRow(convId, m.userId);
+    await Promise.allSettled(ms.map((m) => emitInboxRow(convId, m.userId)));
     if (row.senderType === 'system') return;
     const name = dto.sender?.displayName ?? dto.persona?.name ?? 'LORE';
     for (const m of ms) {
       if (m.userId === row.senderUserId) continue;
       if (m.muteUntil && m.muteUntil > new Date() && m.muteScope === null) continue;
-      void notifications.sendPush(m.userId, { title: name, body: preview(row), href: `/c/${convId}` });
+      await notifications
+        .sendPush(m.userId, { title: name, body: preview(row), href: `/c/${convId}` })
+        .catch((error) => logger.warn({ error, userId: m.userId }, 'push notification failed'));
     }
   } catch (err) {
     logger.warn({ err }, 'fanOut failed');

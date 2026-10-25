@@ -405,7 +405,13 @@ export class MemoriesService {
   async share(recapId: string, userId: string, body: ShareRecapBody): Promise<RecapCardDTO> {
     const recap = await this.memberRecap(recapId, userId);
     if (body.target === 'story') {
-      throw badRequest('Story creation requires the C1 story service integration');
+      const mediaId = recap.collageMediaId ?? recap.coverMediaId ?? recap.mediaIds.find((id) => id) ?? null;
+      if (!mediaId) throw badRequest('A still image is required to share this recap to your story');
+      const users = await import('../users/service');
+      const social = await import('../social/service');
+      const account = await users.requirePersonalAccount(userId);
+      await social.insertStory(account.id, userId, mediaId, recap.caption || recap.title);
+      return this.card(recap);
     }
     await this.deps.post(
       recap.conversationId,

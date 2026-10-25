@@ -7,9 +7,6 @@ import { Button } from '@/components/ui/Button';
 import { StackScreen } from '@/components/ui/StackScreen';
 import { TopBar } from '@/components/ui/TopBar';
 import { ApiError, api } from '@/lib/api';
-import { c2DemoHeaders, c2DemoUserId } from '../persona/demo-user';
-
-const headers = () => ({ headers: c2DemoHeaders() });
 const stateLabel = (state: FamilyStoryDetailDTO['state']) => state.replaceAll('_', ' ');
 
 export function FamilyStoryPage({ id }: { id: string }) {
@@ -20,48 +17,47 @@ export function FamilyStoryPage({ id }: { id: string }) {
   const [message, setMessage] = useState('');
   const story = useQuery({
     queryKey: ['family-story', storyId],
-    queryFn: () => api.get<FamilyStoryDetailDTO>(`/v1/family-stories/${storyId}`, headers()),
+    queryFn: () => api.get<FamilyStoryDetailDTO>(`/v1/family-stories/${storyId}`),
     retry: false,
   });
+  const me = useQuery({
+    queryKey: ['me'],
+    queryFn: () => api.get<{ user: { id: string } }>('/v1/me'),
+  });
   const isMissing = story.error instanceof ApiError && story.error.status === 404;
-  const viewer = typeof window === 'undefined' ? '' : c2DemoUserId();
+  const viewer = me.data?.user.id ?? '';
 
   const create = useMutation({
     mutationFn: () =>
-      api.post<FamilyStoryDetailDTO>(
-        `/v1/conversations/${id}/family-stories`,
-        { from: `${from}T00:00:00.000Z`, to: `${to}T23:59:59.999Z` },
-        headers(),
-      ),
+      api.post<FamilyStoryDetailDTO>(`/v1/conversations/${id}/family-stories`, {
+        from: `${from}T00:00:00.000Z`,
+        to: `${to}T23:59:59.999Z`,
+      }),
     onSuccess: (created) => {
       setStoryId(created.id);
       story.refetch();
     },
   });
   const generate = useMutation({
-    mutationFn: () => api.post<FamilyStoryDetailDTO>(`/v1/family-stories/${storyId}/generate`, {}, headers()),
+    mutationFn: () => api.post<FamilyStoryDetailDTO>(`/v1/family-stories/${storyId}/generate`),
     onSuccess: () => story.refetch(),
   });
   const updateSource = useMutation({
     mutationFn: (input: { sourceMessageId: string; include: boolean }) =>
-      api.patch<FamilyStoryDetailDTO>(
-        `/v1/family-stories/${storyId}/sources/${input.sourceMessageId}`,
-        { include: input.include },
-        headers(),
-      ),
+      api.patch<FamilyStoryDetailDTO>(`/v1/family-stories/${storyId}/sources/${input.sourceMessageId}`, {
+        include: input.include,
+      }),
     onSuccess: () => story.refetch(),
   });
   const resolve = useMutation({
     mutationFn: (input: { sourceMessageId: string; correction: string }) =>
-      api.patch<FamilyStoryDetailDTO>(
-        `/v1/family-stories/${storyId}/sources/${input.sourceMessageId}`,
-        { correction: input.correction },
-        headers(),
-      ),
+      api.patch<FamilyStoryDetailDTO>(`/v1/family-stories/${storyId}/sources/${input.sourceMessageId}`, {
+        correction: input.correction,
+      }),
     onSuccess: () => story.refetch(),
   });
   const share = useMutation({
-    mutationFn: () => api.post(`/v1/family-stories/${storyId}/share`, { target: 'private' }, headers()),
+    mutationFn: () => api.post(`/v1/family-stories/${storyId}/share`, { target: 'private' }),
     onSuccess: () => {
       setMessage('Shared privately with the family.');
       story.refetch();

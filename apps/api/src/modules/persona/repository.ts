@@ -67,12 +67,12 @@ const PRESETS = {
   },
 } as const;
 
-function personaDto(row: PersonaRecord): PersonaDTO {
+function personaDto(row: PersonaRecord, avatarUrl: string | null = null): PersonaDTO {
   return {
     id: row.id,
     conversationId: row.conversationId,
     name: row.name,
-    avatarUrl: null,
+    avatarUrl,
     tone: row.tone,
     interests: row.interests,
     boundaries: row.boundaries,
@@ -87,6 +87,16 @@ function personaDto(row: PersonaRecord): PersonaDTO {
     enabled: row.enabled,
     mutedUntil: row.mutedUntil?.toISOString() ?? null,
   };
+}
+
+async function signedPersona(row: PersonaRecord): Promise<PersonaDTO> {
+  if (!row.avatarMediaId) return personaDto(row);
+  try {
+    const media = await import('../media/service');
+    return personaDto(row, await media.signedUrl(row.avatarMediaId));
+  } catch {
+    return personaDto(row);
+  }
 }
 
 function memoryDto(row: MemoryRecord): MemoryDTO {
@@ -155,7 +165,7 @@ export class PersonaRepository {
 
   async getPersona(conversationId: string): Promise<PersonaDTO | null> {
     const row = await this.getPersonaRecord(conversationId);
-    return row ? personaDto(row) : null;
+    return row ? signedPersona(row) : null;
   }
 
   async upsertPersona(
@@ -193,7 +203,7 @@ export class PersonaRepository {
       })
       .returning();
     if (!row) throw new Error('Persona upsert returned no row');
-    return { persona: personaDto(row as PersonaRecord), created: !existing };
+    return { persona: await signedPersona(row as PersonaRecord), created: !existing };
   }
 
   async mutePersona(conversationId: string, mutedUntil: Date | null): Promise<PersonaDTO> {
@@ -203,7 +213,7 @@ export class PersonaRepository {
       .where(eq(aiPersonas.conversationId, conversationId))
       .returning();
     if (!row) throw notFound('AI member not found');
-    return personaDto(row as PersonaRecord);
+    return signedPersona(row as PersonaRecord);
   }
 
   async removePersona(conversationId: string): Promise<void> {

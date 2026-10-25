@@ -9,9 +9,7 @@ import { StackScreen } from '@/components/ui/StackScreen';
 import { TopBar } from '@/components/ui/TopBar';
 import { api } from '@/lib/api';
 import { uploadFile } from '@/lib/upload';
-import { C2_DEMO_AUDIO, C2_DEMO_USERS, c2DemoHeaders, c2DemoUserId } from '../persona/demo-user';
-
-const options = () => ({ headers: c2DemoHeaders() });
+import { C2_DEMO_AUDIO } from '../persona/demo-user';
 
 function TwentySecondRecorder({ onReady }: { onReady: (media: MediaDTO) => void }) {
   const recorder = useRef<MediaRecorder | null>(null);
@@ -89,42 +87,40 @@ function TwentySecondRecorder({ onReady }: { onReady: (media: MediaDTO) => void 
 }
 
 export function PodcastPage({ showId }: { showId: string }) {
-  const viewer = typeof window === 'undefined' ? '' : c2DemoUserId();
+  const me = useQuery({ queryKey: ['me'], queryFn: () => api.get<{ user: { id: string } }>('/v1/me') });
+  const viewer = me.data?.user.id ?? '';
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const show = useQuery({
     queryKey: ['podcast', showId, viewer],
-    queryFn: () => api.get<PodcastShowDetailDTO>(`/v1/podcasts/${showId}`, options()),
+    queryFn: () => api.get<PodcastShowDetailDTO>(`/v1/podcasts/${showId}`),
     retry: false,
   });
   const refresh = () => show.refetch();
   const contribute = useMutation({
     mutationFn: (input: { stationId: string; mediaId: string; replyToId?: string }) =>
-      api.post<PodcastShowDetailDTO>(
-        `/v1/podcasts/${showId}/stations/${input.stationId}/contributions`,
-        { mediaId: input.mediaId, replyToId: input.replyToId },
-        options(),
-      ),
+      api.post<PodcastShowDetailDTO>(`/v1/podcasts/${showId}/stations/${input.stationId}/contributions`, {
+        mediaId: input.mediaId,
+        replyToId: input.replyToId,
+      }),
     onSuccess: refresh,
   });
   const branch = useMutation({
     mutationFn: (stationId: string) =>
-      api.post<PodcastShowDetailDTO>(
-        `/v1/podcasts/${showId}/stations/${stationId}/branches`,
-        { topic: window.prompt('What should this station explore?') || 'A side story' },
-        options(),
-      ),
+      api.post<PodcastShowDetailDTO>(`/v1/podcasts/${showId}/stations/${stationId}/branches`, {
+        topic: window.prompt('What should this station explore?') || 'A side story',
+      }),
     onSuccess: refresh,
   });
   const wrap = useMutation({
-    mutationFn: () => api.post<PodcastShowDetailDTO>(`/v1/podcasts/${showId}/wrap`, {}, options()),
+    mutationFn: () => api.post<PodcastShowDetailDTO>(`/v1/podcasts/${showId}/wrap`),
     onSuccess: refresh,
   });
   const finish = useMutation({
-    mutationFn: () => api.post<PodcastShowDetailDTO>(`/v1/podcasts/${showId}/finish`, {}, options()),
+    mutationFn: () => api.post<PodcastShowDetailDTO>(`/v1/podcasts/${showId}/finish`),
     onSuccess: refresh,
   });
   const loadAudio = async () => {
-    const response = await fetch(`/v1/podcasts/${showId}/audio`, { headers: c2DemoHeaders() });
+    const response = await fetch(`/v1/podcasts/${showId}/audio`);
     if (!response.ok) throw new Error('Audio preview is not ready');
     if (audioUrl) URL.revokeObjectURL(audioUrl);
     setAudioUrl(URL.createObjectURL(await response.blob()));
@@ -187,21 +183,6 @@ export function PodcastPage({ showId }: { showId: string }) {
             </p>
           )}
         </section>
-
-        <nav className="flex gap-2 overflow-x-auto" aria-label="Demo member switcher">
-          {[
-            ['Ava (host)', C2_DEMO_USERS.ava],
-            ['Noor (missing)', C2_DEMO_USERS.noor],
-          ].map(([label, id]) => (
-            <a
-              key={id}
-              href={`?demoUser=${id}`}
-              className={`whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold ${viewer === id ? 'bg-action text-white' : 'bg-surface-2'}`}
-            >
-              {label}
-            </a>
-          ))}
-        </nav>
 
         {data.stations.map((station) => (
           <section key={station.id} className="overflow-hidden rounded-2xl bg-surface-2">

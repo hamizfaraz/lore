@@ -590,6 +590,34 @@ export class PlansService {
       .catch(() => undefined);
     const row = await this.deps.store.plan(plan.id);
     if (!row) throw notFound('Confirmed plan not found');
+    const card = await this.confirmedCard(row as Awaited<ReturnType<PlanStore['confirmedPlans']>>[number]);
+    await this.deps
+      .post(
+        proposal.conversationId,
+        {
+          kind: 'card',
+          cardKind: 'plan_confirmed',
+          cardRefId: card.planId,
+          clientId: `plan-confirmed:${card.planId}`,
+          body: card.title,
+        },
+        userActor(userId),
+      )
+      .catch(() => null);
+    return card;
+  }
+
+  async resolveCard(proposalId: string, userId: string): Promise<PlanCardDTO | undefined> {
+    const proposal = await this.deps.store.proposal(proposalId);
+    if (!proposal) return undefined;
+    await this.requireMember(proposal.conversationId, userId);
+    return this.card(proposal, userId);
+  }
+
+  async resolveConfirmed(planId: string, userId: string): Promise<PlanConfirmedCardDTO | undefined> {
+    const row = await this.deps.store.plan(planId);
+    if (!row) return undefined;
+    await this.requireMember(row.plan.conversationId, userId);
     return this.confirmedCard(row as Awaited<ReturnType<PlanStore['confirmedPlans']>>[number]);
   }
 
@@ -638,3 +666,7 @@ export const dismissPlan = plansService.dismiss.bind(plansService);
 export const confirmPlan = plansService.confirm.bind(plansService);
 export const rsvpPlan = plansService.rsvp.bind(plansService);
 export const planCalendar = plansService.calendar.bind(plansService);
+export const resolvePlanCard = (proposalId: string, userId: string) =>
+  plansService.resolveCard(proposalId, userId);
+export const resolveConfirmedPlanCard = (planId: string, userId: string) =>
+  plansService.resolveConfirmed(planId, userId);

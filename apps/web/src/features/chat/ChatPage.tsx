@@ -470,6 +470,7 @@ function Chat({ id }: { id: string }) {
                             media={r.msg.media[0]}
                             waveform={r.msg.meta.waveform}
                             own={r.msg.sender?.userId === meId}
+                            degraded={r.msg.meta.transcriptDegraded === true}
                           />
                         ) : null
                       }

@@ -17,7 +17,6 @@ import { TopBar } from '@/components/ui/TopBar';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { MuteMiloSheet } from './MuteMiloSheet';
-import { c2DemoHeaders } from './demo-user';
 
 const PRESETS = [
   { id: 'milo', name: 'Milo', note: 'Warm, witty, and brief' },
@@ -99,17 +98,11 @@ export function AiStudioPage({ conversationId }: { conversationId: string }) {
   const memoryKey = ['persona', conversationId, 'memories'] as const;
   const personaQuery = useQuery({
     queryKey: personaKey,
-    queryFn: () =>
-      api.get<PersonaDTO | null>(`/v1/conversations/${conversationId}/persona`, {
-        headers: c2DemoHeaders(),
-      }),
+    queryFn: () => api.get<PersonaDTO | null>(`/v1/conversations/${conversationId}/persona`),
   });
   const memoryQuery = useQuery({
     queryKey: memoryKey,
-    queryFn: () =>
-      api.get<MemoryDTO[]>(`/v1/conversations/${conversationId}/persona/memories`, {
-        headers: c2DemoHeaders(),
-      }),
+    queryFn: () => api.get<MemoryDTO[]>(`/v1/conversations/${conversationId}/persona/memories`),
   });
   const [draft, setDraft] = useState<Draft>(DEFAULT_DRAFT);
   const [muteOpen, setMuteOpen] = useState(false);
@@ -124,10 +117,7 @@ export function AiStudioPage({ conversationId }: { conversationId: string }) {
   }, [personaQuery.data]);
 
   const save = useMutation({
-    mutationFn: () =>
-      api.put<PersonaDTO>(`/v1/conversations/${conversationId}/persona`, draft, {
-        headers: c2DemoHeaders(),
-      }),
+    mutationFn: () => api.put<PersonaDTO>(`/v1/conversations/${conversationId}/persona`, draft),
     onSuccess: (persona) => {
       client.setQueryData(personaKey, persona);
       setDraft(fromPersona(persona));
@@ -135,19 +125,14 @@ export function AiStudioPage({ conversationId }: { conversationId: string }) {
   });
   const test = useMutation({
     mutationFn: () =>
-      api.post<PersonaTestResponse>(
-        `/v1/conversations/${conversationId}/persona/test`,
-        {
-          ...draft,
-          samplePrompt: 'any ideas for something fun this weekend?',
-        },
-        { headers: c2DemoHeaders() },
-      ),
+      api.post<PersonaTestResponse>(`/v1/conversations/${conversationId}/persona/test`, {
+        ...draft,
+        samplePrompt: 'any ideas for something fun this weekend?',
+      }),
     onSuccess: setPreview,
   });
   const remove = useMutation({
-    mutationFn: () =>
-      api.del<void>(`/v1/conversations/${conversationId}/persona`, { headers: c2DemoHeaders() }),
+    mutationFn: () => api.del<void>(`/v1/conversations/${conversationId}/persona`),
     onSuccess: () => {
       client.setQueryData(personaKey, null);
       client.setQueryData(memoryKey, []);
@@ -156,23 +141,16 @@ export function AiStudioPage({ conversationId }: { conversationId: string }) {
   });
   const patchMemory = useMutation({
     mutationFn: () =>
-      api.patch<MemoryDTO>(
-        `/v1/conversations/${conversationId}/persona/memories/${memory?.id}`,
-        {
-          summary: memorySummary,
-        },
-        { headers: c2DemoHeaders() },
-      ),
+      api.patch<MemoryDTO>(`/v1/conversations/${conversationId}/persona/memories/${memory?.id}`, {
+        summary: memorySummary,
+      }),
     onSuccess: async () => {
       setMemory(null);
       await client.invalidateQueries({ queryKey: memoryKey });
     },
   });
   const deleteMemory = useMutation({
-    mutationFn: (id: string) =>
-      api.del<void>(`/v1/conversations/${conversationId}/persona/memories/${id}`, {
-        headers: c2DemoHeaders(),
-      }),
+    mutationFn: (id: string) => api.del<void>(`/v1/conversations/${conversationId}/persona/memories/${id}`),
     onSuccess: async () => {
       setMemory(null);
       await client.invalidateQueries({ queryKey: memoryKey });
@@ -183,17 +161,12 @@ export function AiStudioPage({ conversationId }: { conversationId: string }) {
       api.post<{ options: PersonaAvatarOptionDTO[] }>(
         `/v1/conversations/${conversationId}/persona/avatars`,
         {},
-        { headers: c2DemoHeaders() },
       ),
     onSuccess: (result) => setAvatarOptions(result.options),
   });
   const chooseAvatar = useMutation({
     mutationFn: (style: PersonaAvatarOptionDTO['style']) =>
-      api.post<PersonaAvatarSelectionDTO>(
-        `/v1/conversations/${conversationId}/persona/avatar`,
-        { style },
-        { headers: c2DemoHeaders() },
-      ),
+      api.post<PersonaAvatarSelectionDTO>(`/v1/conversations/${conversationId}/persona/avatar`, { style }),
     onSuccess: (result) => {
       setSelectedAvatar(result);
       if (result.mediaId) setDraft((current) => ({ ...current, avatarMediaId: result.mediaId }));

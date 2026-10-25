@@ -2,8 +2,10 @@ import type { CreateTokenBody, CreateTokenResult, TokenDTO, TokenListDTO } from 
 import type { TokenScope } from '@lore/shared/enums';
 import { z } from 'zod';
 import type { Actor } from '../../lib/actor';
-import { AppError, NotImplemented, notFound, unauthorized } from '../../lib/errors';
-import { createDraft } from '../groups/service';
+import { AppError, notFound, unauthorized } from '../../lib/errors';
+import { createFamilyStory, generateFamilyStory } from '../family/service';
+import { create as createGame } from '../games/service';
+import { createDraft, submit as submitDraft } from '../groups/service';
 import { proposeIntroduction } from '../discovery/service';
 import { memoriesService } from '../memories/service';
 import { plansService } from '../plans/service';
@@ -151,6 +153,10 @@ export type McpDependencies = {
   vote: typeof plansService.vote;
   createRecap: typeof memoriesService.create;
   createDraft: typeof createDraft;
+  submitDraft: typeof submitDraft;
+  createGame: typeof createGame;
+  createFamilyStory: typeof createFamilyStory;
+  generateFamilyStory: typeof generateFamilyStory;
   proposeIntroduction: typeof proposeIntroduction;
 };
 
@@ -160,6 +166,10 @@ const defaults: McpDependencies = {
   vote: plansService.vote.bind(plansService),
   createRecap: memoriesService.create.bind(memoriesService),
   createDraft,
+  submitDraft,
+  createGame,
+  createFamilyStory,
+  generateFamilyStory,
   proposeIntroduction,
 };
 
@@ -291,11 +301,26 @@ export class McpService {
           shows: await this.deps.store.podcastStatus(principal.userId, input.conversationId as string),
         };
       case 'request_group_approval':
-        throw new NotImplemented('groups.service.submitDraft');
+        return this.deps.submitDraft(input.draftId as string, agent);
       case 'create_game_lobby':
-        throw new NotImplemented('games.service.createLobby');
-      case 'propose_family_story':
-        throw new NotImplemented('family.service.proposeStory');
+        return this.deps.createGame(principal.userId, {
+          conversationId: input.conversationId as string,
+          mode: input.game as 'one_word_story' | 'meme_battle' | 'pictionary',
+          config: {},
+        });
+      case 'propose_family_story': {
+        const to = new Date();
+        const from = new Date(to.getTime() - 30 * 86_400_000);
+        const story = await this.deps.createFamilyStory(input.conversationId as string, principal.userId, {
+          from: from.toISOString(),
+          to: to.toISOString(),
+        });
+        try {
+          return await this.deps.generateFamilyStory(story.id, principal.userId);
+        } catch (error) {
+          return { story, generateError: error instanceof Error ? error.message : 'generation failed' };
+        }
+      }
       case 'propose_common_ground_introduction':
         return this.deps.proposeIntroduction(principal.userId, input.targetUserId as string);
       default:

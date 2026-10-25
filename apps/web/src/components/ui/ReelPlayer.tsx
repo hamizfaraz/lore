@@ -66,7 +66,16 @@ export function ReelPlayer({
           playsInline
           aria-label={media.altText || post.altText || post.caption || 'Reel'}
           onClick={onToggleMute}
-        />
+        >
+          {media.transcript && (
+            <track
+              kind="captions"
+              srcLang="en"
+              default
+              src={`data:text/vtt;charset=utf-8,${encodeURIComponent(`WEBVTT\n\n00:00:00.000 --> 00:01:00.000\n${media.transcript}`)}`}
+            />
+          )}
+        </video>
       ) : (
         media?.thumbUrl && (
           <img

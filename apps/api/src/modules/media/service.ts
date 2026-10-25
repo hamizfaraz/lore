@@ -104,14 +104,14 @@ export async function complete(userId: string, mediaId: string): Promise<MediaDT
           patch.blurhash = d.blurhash;
         }
       }
-      if (row.kind === 'audio') patch.transcriptStatus = 'pending';
+      if (row.kind === 'audio' || row.kind === 'video') patch.transcriptStatus = 'pending';
     }
   } catch (err) {
     if ((err as { code?: string }).code === 'BAD_REQUEST') throw err;
     logger.warn({ err, mediaId }, 'media derivative generation failed');
   }
   const [updated] = await db.update(mediaAssets).set(patch).where(eq(mediaAssets.id, mediaId)).returning();
-  if (row.kind === 'audio') queueTranscription(mediaId);
+  if (row.kind === 'audio' || row.kind === 'video') queueTranscription(mediaId);
   return toDTO(updated);
 }
 
@@ -231,6 +231,28 @@ export async function assertUsable(ids: string[], userId: string, opts: { allowA
     if (!r.completedAt) throw badRequest('Media upload not completed');
   }
   return rows;
+}
+
+export async function suggestAltText(caption: string) {
+  try {
+    const ai = await import('@lore/ai');
+    const { z } = await import('zod');
+    const result = await ai.callStructured(
+      z.object({ alt: z.string().max(180) }),
+      [
+        {
+          role: 'system',
+          content:
+            'Write one short alt-text sentence for a photo. Do not guess health, race, religion, or politics.',
+        },
+        { role: 'user', content: caption.trim().slice(0, 500) || 'a photo shared on LORE' },
+      ],
+      { name: 'photoNotes', mockValue: { alt: '' }, maxOutputTokens: 80 },
+    );
+    return { alt: result.data.alt };
+  } catch {
+    return { alt: '' };
+  }
 }
 
 export async function setTranscript(mediaId: string, transcript: string | null, status: 'done' | 'failed') {

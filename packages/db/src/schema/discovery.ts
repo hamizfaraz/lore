@@ -9,6 +9,10 @@ export const interestProfiles = pgTable('interest_profiles', {
   userId: uuid('user_id').primaryKey(),
   explicitTags: text('explicit_tags').array().notNull().default(sql`'{}'::text[]`),
   inferred: jsonb('inferred').$type<Record<string, number>>().notNull().default({}),
+  /** ISO time each inferred tag was last scored, so one new signal does not reset every tag. */
+  inferredTouched: jsonb('inferred_touched').$type<Record<string, string>>().notNull().default({}),
+  /** Exact current Facebook-derived suggestion set; Graph imports replace this set atomically. */
+  graphTags: text('graph_tags').array().notNull().default(sql`'{}'::text[]`),
   frozen: boolean('frozen').notNull().default(false),
   discoverable: boolean('discoverable').notNull().default(false),
   bioSnippet: text('bio_snippet'),
@@ -33,5 +37,6 @@ export const introductions = pgTable('introductions', {
   basis: jsonb('basis').$type<{ sharedTags: string[]; reason: string }>().notNull(),
   firstMessage: text('first_message'),
   state: text('state', { enum: INTRO_STATES }).notNull().default('requested'),
+  conversationId: uuid('conversation_id'),
   createdAt: createdAt(),
 });

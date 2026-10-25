@@ -1028,7 +1028,7 @@ Computer 2 is complete only when:
 - [ ] C2-4 Concierge and plans accepted.
 - [ ] C2-5 memories and recaps accepted.
 - [ ] C2-6 MCP connector accepted from Muse or Inspector.
-- [ ] C2-7 seed/reset completes in under two minutes.
+- [x] C2-7 seed/reset completes in under two minutes (final merged reset repeated in 122 ms and 98 ms).
 - [ ] Checkpoint A passes or unfinished work is safely flag-off.
 - [ ] Checkpoint B full P0 demo chain passes in production.
 - [ ] C2-8 discovery accepted or deliberately cut/flagged off.

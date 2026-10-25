@@ -8,6 +8,7 @@ import {
   or,
   quizAnswers,
   socialAccounts,
+  userBlocks,
 } from '@lore/db';
 import type { AccountSummaryDTO } from '@lore/shared/dto/users';
 import { uuidv7 } from '@lore/shared/ids';
@@ -45,6 +46,8 @@ export class DiscoveryRepository {
         set: {
           explicitTags: input.explicitTags,
           inferred: input.inferred,
+          inferredTouched: input.inferredTouched,
+          graphTags: input.graphTags,
           frozen: input.frozen,
           discoverable: input.discoverable,
           bioSnippet: input.bioSnippet,
@@ -66,6 +69,14 @@ export class DiscoveryRepository {
           set: { answer: answer.answer },
         });
     }
+  }
+
+  async blockedUserIds(userId: string): Promise<Set<string>> {
+    const rows = await getDb()
+      .select()
+      .from(userBlocks)
+      .where(or(eq(userBlocks.blockerUserId, userId), eq(userBlocks.blockedUserId, userId)));
+    return new Set(rows.map((row) => (row.blockerUserId === userId ? row.blockedUserId : row.blockerUserId)));
   }
 
   async connectedUserIds(userId: string): Promise<Set<string>> {
@@ -123,10 +134,10 @@ export class DiscoveryRepository {
     return row ? summary(row) : null;
   }
 
-  async createIntroduction(input: Omit<StoredIntroduction, 'id' | 'createdAt' | 'state'>) {
+  async createIntroduction(input: Omit<StoredIntroduction, 'id' | 'createdAt' | 'state' | 'conversationId'>) {
     const [row] = await getDb()
       .insert(introductions)
-      .values({ id: uuidv7(), ...input, state: 'requested' })
+      .values({ id: uuidv7(), ...input, state: 'requested', conversationId: null })
       .returning();
     return row as StoredIntroduction;
   }
@@ -145,10 +156,13 @@ export class DiscoveryRepository {
       )) as StoredIntroduction[];
   }
 
-  async setIntroductionState(id: string, state: StoredIntroduction['state']) {
+  async setIntroductionState(id: string, state: StoredIntroduction['state'], conversationId?: string | null) {
     const [row] = await getDb()
       .update(introductions)
-      .set({ state })
+      .set({
+        state,
+        ...(conversationId !== undefined ? { conversationId } : {}),
+      })
       .where(eq(introductions.id, id))
       .returning();
     return row as StoredIntroduction;

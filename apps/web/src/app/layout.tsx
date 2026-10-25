@@ -1,15 +1,7 @@
 import type { Metadata, Viewport } from 'next';
-import { Fraunces } from 'next/font/google';
 import { THEME_BOOT } from '@/lib/theme';
 import { Providers } from './providers';
 import './globals.css';
-
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  style: ['italic', 'normal'],
-  weight: ['600'],
-  variable: '--font-fraunces',
-});
 
 export const metadata: Metadata = {
   title: 'LORE',
@@ -57,7 +49,7 @@ function splashLinks() {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={fraunces.variable} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static theme boot script avoids a theme flash */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />

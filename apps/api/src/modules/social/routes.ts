@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { me, requireUser } from '../../lib/auth';
 import { notFound } from '../../lib/errors';
 import { idempotent } from '../../lib/idempotency';
+import * as blocks from './blocks';
 import * as svc from './service';
 
 const zId = z.object({ id: z.string().uuid() });
@@ -23,7 +24,7 @@ const routes: FastifyPluginAsync = async (base) => {
     {
       schema: {
         params: zId,
-        querystring: zCursor.extend({ tab: z.enum(['posts', 'reels']).default('posts') }),
+        querystring: zCursor.extend({ tab: z.enum(['posts', 'reels', 'tagged']).default('posts') }),
       },
     },
     async (req) => svc.accountPosts(req.params.id, req.query.tab, me(req).id, req.query.cursor),
@@ -88,6 +89,16 @@ const routes: FastifyPluginAsync = async (base) => {
     idempotent(req, `comment:${req.params.id}`, () =>
       svc.addComment(me(req).id, req.params.id, req.body.body),
     ),
+  );
+
+  app.get('/blocks', async (req) => blocks.listBlocks(me(req).id));
+  app.post('/blocks', { schema: { body: z.object({ userId: z.string().uuid() }) } }, async (req) =>
+    blocks.blockUser(me(req).id, req.body.userId),
+  );
+  app.delete(
+    '/blocks/:userId',
+    { schema: { params: z.object({ userId: z.string().uuid() }) } },
+    async (req) => blocks.unblockUser(me(req).id, req.params.userId),
   );
 
   app.get('/stories/rail', async (req) => svc.storyRail(me(req).id));

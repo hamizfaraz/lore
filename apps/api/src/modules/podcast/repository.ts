@@ -151,6 +151,10 @@ export class PodcastRepository {
       .set({ state: 'finished', renderMediaId })
       .where(eq(podcastShows.id, showId));
   }
+
+  async setVideo(showId: string, videoMediaId: string) {
+    await getDb().update(podcastShows).set({ videoMediaId }).where(eq(podcastShows.id, showId));
+  }
 }
 
 export const podcastRepository = new PodcastRepository();

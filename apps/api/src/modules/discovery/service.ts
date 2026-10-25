@@ -12,7 +12,7 @@ import { z } from 'zod';
 import { badRequest, forbidden, notFound } from '../../lib/errors';
 import { getRedis } from '../../lib/redis';
 import { recordImpactEvent } from '../impact/service';
-import { decayScores, matchScore, safeTags, visibleInferred } from './policy';
+import { decayTouched, matchScore, safeTags, visibleInferred } from './policy';
 import { discoveryRepository, type DiscoveryRepository } from './repository';
 import type { DiscoveryCandidate, StoredInterestProfile, StoredIntroduction } from './types';
 
@@ -28,6 +28,8 @@ const EMPTY_PROFILE = (userId: string): StoredInterestProfile => ({
   userId,
   explicitTags: [],
   inferred: {},
+  inferredTouched: {},
+  graphTags: [],
   frozen: false,
   discoverable: false,
   bioSnippet: null,
@@ -45,6 +47,7 @@ export type DiscoveryDependencies = {
   cache: () => Cache;
   now: () => Date;
   impact?: typeof recordImpactEvent;
+  openDirect?: (fromUserId: string, toUserId: string, firstMessage: string | null) => Promise<string>;
 };
 
 function profileTags(profile: StoredInterestProfile) {
@@ -105,12 +108,17 @@ export class DiscoveryService {
       (tag) => !removed.includes(tag),
     );
     const inferred = { ...current.inferred };
-    for (const tag of removed) inferred[tag] = -1;
+    const inferredTouched = { ...current.inferredTouched };
+    for (const tag of removed) {
+      inferred[tag] = -1;
+      delete inferredTouched[tag];
+    }
     for (const tag of explicitTags) if (inferred[tag]! < 0) delete inferred[tag];
     const next = {
       ...current,
       explicitTags,
       inferred,
+      inferredTouched,
       frozen: body.frozen ?? current.frozen,
       discoverable: body.discoverable ?? current.discoverable,
       bioSnippet: body.bioSnippet === undefined ? current.bioSnippet : body.bioSnippet,
@@ -134,13 +142,59 @@ export class DiscoveryService {
 
   async recordSignal(userId: string, tags: string[], kind: SignalKind) {
     const current = await this.stored(userId);
-    if (current.frozen) return profileDTO(current, userId);
-    const inferred = decayScores(current.inferred, this.deps.now().getTime() - current.updatedAt.getTime());
-    for (const tag of safeTags(tags, 3)) {
+    // Freeze blocks passive inference changes, but an explicit Facebook disconnect must revoke
+    // previously imported Graph suggestions immediately.
+    if (current.frozen && !(kind === 'graph' && tags.length === 0)) return profileDTO(current, userId);
+    const decayed = decayTouched(
+      current.inferred,
+      current.inferredTouched ?? {},
+      current.updatedAt,
+      this.deps.now(),
+    );
+    const inferred = decayed.inferred;
+    const inferredTouched = decayed.touched;
+    const nextTags = safeTags(tags, 3);
+    let explicitTags = current.explicitTags;
+    if (kind === 'graph') {
+      for (const tag of current.graphTags ?? []) {
+        delete inferred[tag];
+        delete inferredTouched[tag];
+      }
+      explicitTags = explicitTags.filter((tag) => !(current.graphTags ?? []).includes(tag));
+    }
+    for (const tag of nextTags) {
       if (inferred[tag]! < 0 || current.explicitTags.includes(tag)) continue;
       inferred[tag] = Math.min(1, (inferred[tag] ?? 0) + SIGNAL_WEIGHT[kind]);
+      inferredTouched[tag] = this.deps.now().toISOString();
     }
-    const next = { ...current, inferred };
+    const next = {
+      ...current,
+      inferred,
+      inferredTouched,
+      explicitTags,
+      graphTags: kind === 'graph' ? nextTags : current.graphTags,
+    };
+    const saved = await this.deps.store.saveProfile({ ...next, embedding: await this.embed(next) });
+    return profileDTO(saved, userId);
+  }
+
+  /** Explicit revocation path; legacyTags cleans profiles created before graphTags was tracked. */
+  async clearGraphSignals(userId: string, legacyTags: string[] = []) {
+    const current = await this.stored(userId);
+    const drop = new Set(safeTags([...(current.graphTags ?? []), ...legacyTags]));
+    const inferred = { ...current.inferred };
+    const inferredTouched = { ...current.inferredTouched };
+    for (const tag of drop) {
+      delete inferred[tag];
+      delete inferredTouched[tag];
+    }
+    const next = {
+      ...current,
+      explicitTags: current.explicitTags.filter((tag) => !drop.has(tag)),
+      inferred,
+      inferredTouched,
+      graphTags: [],
+    };
     const saved = await this.deps.store.saveProfile({ ...next, embedding: await this.embed(next) });
     return profileDTO(saved, userId);
   }
@@ -177,13 +231,14 @@ export class DiscoveryService {
   async matches(userId: string): Promise<CommonGroundCardDTO[]> {
     const current = await this.stored(userId);
     if (!current.discoverable) return [];
-    const [candidates, connected] = await Promise.all([
+    const [candidates, connected, blocked] = await Promise.all([
       this.deps.store.candidates(userId),
       this.deps.store.connectedUserIds(userId),
+      this.deps.store.blockedUserIds(userId),
     ]);
     const ownTags = profileTags(current);
     const ranked = candidates
-      .filter((candidate) => !connected.has(candidate.userId))
+      .filter((candidate) => !connected.has(candidate.userId) && !blocked.has(candidate.userId))
       .map((candidate) => ({
         candidate,
         ...matchScore(ownTags, profileTags(candidate), [current.embedding, candidate.embedding]),
@@ -214,7 +269,13 @@ export class DiscoveryService {
       this.deps.store.account(intro.toUserId),
     ]);
     if (!from || !to) throw notFound('Introduction account not found');
-    return { ...intro, from, to, createdAt: intro.createdAt.toISOString(), conversationId: null };
+    return {
+      ...intro,
+      from,
+      to,
+      createdAt: intro.createdAt.toISOString(),
+      conversationId: intro.conversationId,
+    };
   }
 
   async introductions(userId: string) {
@@ -264,12 +325,34 @@ export class DiscoveryService {
     if (!intro) throw notFound('Introduction not found');
     if (intro.toUserId !== userId) throw forbidden('Only the recipient can respond');
     if (intro.state !== 'requested') throw badRequest('Introduction was already answered');
-    // C1 opens the direct conversation only after the accepted state is returned.
+    let conversationId: string | null = null;
+    if (action === 'accept') {
+      const blocked = await this.deps.store.blockedUserIds(userId);
+      if (blocked.has(intro.fromUserId)) throw forbidden('This introduction can no longer be accepted');
+      conversationId = this.deps.openDirect
+        ? await this.deps.openDirect(intro.fromUserId, userId, intro.firstMessage)
+        : null;
+    }
     const updated = await this.deps.store.setIntroductionState(
       id,
       action === 'accept' ? 'accepted' : 'declined',
+      conversationId,
     );
-    if (action === 'accept') {
+    if (action === 'accept' && conversationId) {
+      const chat = await import('../chat/service');
+      await chat
+        .postMessage(
+          conversationId,
+          {
+            kind: 'card',
+            cardKind: 'intro_card',
+            cardRefId: intro.id,
+            clientId: `intro-card:${intro.id}`,
+            body: intro.basis.reason,
+          },
+          { type: 'system' },
+        )
+        .catch(() => null);
       await this.deps
         .impact?.({ kind: 'intro_accepted', actorId: userId, objectId: intro.id })
         .catch(() => undefined);
@@ -297,17 +380,38 @@ export class DiscoveryService {
   async refreshDiscoverableProfiles() {
     const profiles = await this.deps.store.discoverableProfiles();
     for (const profile of profiles) {
-      const inferred = profile.frozen
-        ? profile.inferred
-        : decayScores(profile.inferred, this.deps.now().getTime() - profile.updatedAt.getTime());
+      const decayed = profile.frozen
+        ? { inferred: profile.inferred, touched: profile.inferredTouched ?? {} }
+        : decayTouched(profile.inferred, profile.inferredTouched ?? {}, profile.updatedAt, this.deps.now());
       await this.deps.store.saveProfile({
         ...profile,
-        inferred,
-        embedding: await this.embed({ ...profile, inferred }),
+        inferred: decayed.inferred,
+        inferredTouched: decayed.touched,
+        embedding: await this.embed({ ...profile, inferred: decayed.inferred }),
       });
     }
     return { refreshed: profiles.length };
   }
+}
+
+async function openIntroductionDirect(fromUserId: string, toUserId: string, firstMessage: string | null) {
+  const chat = await import('../chat/service');
+  const conversation = await chat.createConversation(toUserId, {
+    kind: 'dm',
+    memberUserIds: [fromUserId],
+  });
+  if (firstMessage?.trim()) {
+    await chat.postMessage(
+      conversation.id,
+      {
+        kind: 'text',
+        body: firstMessage.trim(),
+        clientId: `intro-starter:${fromUserId}:${toUserId}`,
+      },
+      { type: 'user', userId: fromUserId },
+    );
+  }
+  return conversation.id;
 }
 
 const service = new DiscoveryService({
@@ -316,6 +420,7 @@ const service = new DiscoveryService({
   cache: getRedis,
   now: () => new Date(),
   impact: recordImpactEvent,
+  openDirect: openIntroductionDirect,
 });
 export const getDiscoveryOverview = (userId: string) => service.overview(userId);
 export const getDiscoveryProfile = (userId: string) => service.profile(userId);
@@ -334,7 +439,14 @@ export const editIntroductionStarter = (id: string, userId: string, firstMessage
   service.editStarter(id, userId, firstMessage);
 export const recordSignal = (userId: string, tags: string[], kind: SignalKind) =>
   service.recordSignal(userId, tags, kind).then(() => undefined);
+export const clearGraphSignals = (userId: string, legacyTags?: string[]) =>
+  service.clearGraphSignals(userId, legacyTags).then(() => undefined);
 export const refreshDiscoverableProfiles = () => service.refreshDiscoverableProfiles();
+export async function resolveIntroductionCard(id: string, userId: string) {
+  const intro = await discoveryRepository.introduction(id);
+  if (!intro || (intro.fromUserId !== userId && intro.toUserId !== userId)) return undefined;
+  return service.introductions(userId).then((rows) => rows.find((row) => row.id === id));
+}
 
 const CaptionTags = z.array(z.string()).max(3);
 export async function tagCaption(caption: string): Promise<string[]> {

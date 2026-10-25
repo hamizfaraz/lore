@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { CardShell } from '@/components/ui/CardShell';
 import type { CardProps } from '@/features/chat/cards/types';
+import { KeepsakeButton } from '@/features/keepsakes/KeepsakeButton';
 
 export function RecapCardView({ data }: { data: RecapCardDTO }) {
   const hero = data.collageUrl ?? data.coverUrl ?? data.media[0]?.url ?? null;
@@ -35,9 +36,11 @@ export function RecapCardView({ data }: { data: RecapCardDTO }) {
         </div>
       )}
       <p className="text-[13px]">{data.caption}</p>
+      {data.musicLabel && <p className="mt-1 text-[12px] text-ink-2">vibe: {data.musicLabel}</p>}
       <p className="mt-2 text-[11px] text-ink-2">
         {data.media.length} consented items · {data.layout}
       </p>
+      <KeepsakeButton recapId={data.id} />
       <Button asChild variant="secondary" size="sm" className="mt-3">
         <Link href={`/recap/${data.id}`}>Open editor</Link>
       </Button>

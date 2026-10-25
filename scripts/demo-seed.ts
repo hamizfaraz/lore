@@ -26,10 +26,13 @@ import {
   recapMediaConsents,
   recaps,
   recommendationTriggers,
+  account,
   socialAccounts,
   user,
   voiceContributions,
 } from '../packages/db/src/index';
+import { hashPassword } from '../apps/api/node_modules/better-auth/dist/crypto/index.mjs';
+import { uuidv7 } from '../packages/shared/src/ids';
 
 export const DEMO = {
   users: {
@@ -180,6 +183,16 @@ export async function seedDemo(db: DemoDb): Promise<Record<string, number>> {
     [DEMO.users.laila, 'Laila Iqbal', 'laila.demo@ourlore.test'],
   ].map(([id, name, email]) => ({ id: id!, name: name!, email: email!, emailVerified: true }));
   await db.insert(user).values(userRows);
+  const password = await hashPassword('password123');
+  await db.insert(account).values(
+    userRows.map((row) => ({
+      id: uuidv7(),
+      accountId: row.id,
+      providerId: 'credential',
+      userId: row.id,
+      password,
+    })),
+  );
 
   const personal = [
     [DEMO.accounts.ava, DEMO.users.ava, 'avachen', 'Ava Chen', 'Climber, film-camera optimist, tea person.'],

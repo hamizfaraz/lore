@@ -7,7 +7,7 @@ import {
 import type { FastifyPluginAsync } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { c2UserId, optionalC2DemoUser } from '../persona/demo-user';
+import { me, requireUser } from '../../lib/auth';
 import * as service from './service';
 
 /** podcast REST routes [C2]. Mounted under /v1 by modules/index.ts. */
@@ -19,23 +19,23 @@ const routes: FastifyPluginAsync = async (app) => {
   api.post(
     '/podcasts',
     {
-      preHandler: optionalC2DemoUser,
+      preHandler: requireUser,
       schema: { body: zCreateShowBody, response: { 200: zPodcastShowDetailDTO } },
     },
-    (request) => service.createPodcast(request.body.conversationId, request.body.title, c2UserId(request)),
+    (request) => service.createPodcast(request.body.conversationId, request.body.title, me(request).id),
   );
   api.get(
     '/podcasts/:showId',
     {
-      preHandler: optionalC2DemoUser,
+      preHandler: requireUser,
       schema: { params: showParams, response: { 200: zPodcastShowDetailDTO } },
     },
-    (request) => service.getPodcast(request.params.showId, c2UserId(request)),
+    (request) => service.getPodcast(request.params.showId, me(request).id),
   );
   api.post(
     '/podcasts/:showId/stations/:stationId/contributions',
     {
-      preHandler: optionalC2DemoUser,
+      preHandler: requireUser,
       schema: {
         params: stationParams,
         body: zVoiceContributionBody,
@@ -46,45 +46,45 @@ const routes: FastifyPluginAsync = async (app) => {
       service.contributePodcast(
         request.params.showId,
         request.params.stationId,
-        c2UserId(request),
+        me(request).id,
         request.body,
       ),
   );
   api.post(
     '/podcasts/:showId/stations/:stationId/branches',
     {
-      preHandler: optionalC2DemoUser,
+      preHandler: requireUser,
       schema: { params: stationParams, body: zBranchBody, response: { 200: zPodcastShowDetailDTO } },
     },
     (request) =>
       service.branchPodcast(
         request.params.showId,
         request.params.stationId,
-        c2UserId(request),
+        me(request).id,
         request.body.topic,
       ),
   );
   api.post(
     '/podcasts/:showId/wrap',
     {
-      preHandler: optionalC2DemoUser,
+      preHandler: requireUser,
       schema: { params: showParams, response: { 200: zPodcastShowDetailDTO } },
     },
-    (request) => service.wrapPodcast(request.params.showId, c2UserId(request)),
+    (request) => service.wrapPodcast(request.params.showId, me(request).id),
   );
   api.post(
     '/podcasts/:showId/finish',
     {
-      preHandler: optionalC2DemoUser,
+      preHandler: requireUser,
       schema: { params: showParams, response: { 200: zPodcastShowDetailDTO } },
     },
-    (request) => service.finishPodcast(request.params.showId, c2UserId(request)),
+    (request) => service.finishPodcast(request.params.showId, me(request).id),
   );
   api.get(
     '/podcasts/:showId/audio',
-    { preHandler: optionalC2DemoUser, schema: { params: showParams } },
+    { preHandler: requireUser, schema: { params: showParams } },
     async (request, reply) => {
-      const audio = await service.podcastAudio(request.params.showId, c2UserId(request));
+      const audio = await service.podcastAudio(request.params.showId, me(request).id);
       return reply
         .type('audio/mpeg')
         .header('content-disposition', `inline; filename="lore-${request.params.showId}.mp3"`)

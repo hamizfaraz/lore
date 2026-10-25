@@ -29,6 +29,7 @@ export const zCreatePostBody = z.object({
   altText: z.string().max(500).optional(),
   locationLabel: z.string().max(80).optional(),
   mediaIds: z.array(z.string()).min(1).max(10),
+  taggedHandles: z.array(z.string().min(1).max(30)).max(10).optional(),
   visibility: zVisibility.optional(),
   /** courtesy mode: author chooses to send for review */
   requestReview: z.boolean().optional(),

@@ -56,5 +56,6 @@ export const zPodcastShowDetailDTO = zPodcastUpdateDTO.extend({
   ),
   stations: z.array(zPodcastStationDTO),
   audioUrl: z.string().nullable(),
+  videoUrl: z.string().nullable().optional(),
 });
 export type PodcastShowDetailDTO = z.infer<typeof zPodcastShowDetailDTO>;

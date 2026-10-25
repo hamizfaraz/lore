@@ -314,6 +314,35 @@ export const keepsakes = pgTable(
   (t) => [uniqueIndex('keepsakes_recap_uq').on(t.recapId)],
 );
 
+/** Either direction hides the two people from discovery, the feed, and new DMs. */
+export const userBlocks = pgTable(
+  'user_blocks',
+  {
+    blockerUserId: uuid('blocker_user_id').notNull(),
+    blockedUserId: uuid('blocked_user_id').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.blockerUserId, t.blockedUserId] }),
+    index('user_blocks_blocked_idx').on(t.blockedUserId),
+  ],
+);
+
+/** People tagged in a post. The tagged profile tab reads this. */
+export const postTags = pgTable(
+  'post_tags',
+  {
+    postId: uuid('post_id').notNull(),
+    taggedUserId: uuid('tagged_user_id').notNull(),
+    taggedByUserId: uuid('tagged_by_user_id').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.postId, t.taggedUserId] }),
+    index('post_tags_user_idx').on(t.taggedUserId),
+  ],
+);
+
 /** per-user devnet keypair generated at signup (keepsake member list). */
 export const userWallets = pgTable('user_wallets', {
   userId: uuid('user_id').primaryKey(),

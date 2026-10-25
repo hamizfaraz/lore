@@ -54,6 +54,7 @@ export const zProfile = zAccountSummary.extend({
     pending: z.boolean(),
     canSeePosts: z.boolean(),
     isMember: z.boolean(),
+    blocked: z.boolean().optional(),
   }),
   members: z.array(zAccountSummary).optional(),
   publicGroups: z.array(zAccountSummary).optional(),

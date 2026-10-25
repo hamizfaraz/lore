@@ -14,6 +14,7 @@ export const podcastShows = pgTable('podcast_shows', {
   hostUserId: uuid('host_user_id').notNull(),
   wrappedAt: ts('wrapped_at'),
   renderMediaId: uuid('render_media_id'),
+  videoMediaId: uuid('video_media_id'),
   createdAt: createdAt(),
 });
 

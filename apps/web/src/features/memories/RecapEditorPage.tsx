@@ -29,9 +29,10 @@ export function RecapEditorPage({ id }: { id: string }) {
     onSuccess: update,
   });
   const action = useMutation({
-    mutationFn: async (kind: 'save' | 'share' | 'cover' | 'propose') => {
+    mutationFn: async (kind: 'save' | 'share' | 'story' | 'cover' | 'propose') => {
       if (kind === 'save') return api.post<RecapCardDTO>(`/v1/recaps/${id}/save`);
       if (kind === 'share') return api.post<RecapCardDTO>(`/v1/recaps/${id}/share`, { target: 'chat' });
+      if (kind === 'story') return api.post<RecapCardDTO>(`/v1/recaps/${id}/share`, { target: 'story' });
       if (kind === 'cover') return api.patch<RecapCardDTO>(`/v1/recaps/${id}`, { regenerateCover: true });
       if (!accountId.trim()) throw new Error('Enter the group account id first.');
       await api.post(`/v1/recaps/${id}/propose-post`, { accountId, caption });
@@ -132,8 +133,12 @@ export function RecapEditorPage({ id }: { id: string }) {
             Save privately
           </Button>
           <KeepsakeButton recapId={id} />
+          {recap.data.musicLabel && <p className="text-[12px] text-ink-2">vibe: {recap.data.musicLabel}</p>}
           <Button variant="secondary" block onClick={() => action.mutate('share')}>
             Share recap card to chat
+          </Button>
+          <Button variant="secondary" block onClick={() => action.mutate('story')}>
+            Share to your story
           </Button>
           <Button variant="ai" block onClick={() => action.mutate('cover')}>
             <Sparkles size={15} /> Regenerate AI illustration

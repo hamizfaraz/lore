@@ -51,6 +51,13 @@ export const IMPACT_VIEW_SQL = [
    ) WHERE suggested_at IS NOT NULL AND confirmed_at IS NOT NULL`,
 ] as const;
 
+function asRequestUuid(value: string): string {
+  const hex = /^[0-9a-f]{32}$/i.test(value)
+    ? value.toLowerCase()
+    : createHash('sha256').update(value).digest('hex').slice(0, 32);
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 const METRICS_SQL = `
 SELECT 'confirmed_per_active_group', 'Confirmed plans / active group', value, 'plans' FROM V_CONFIRMED_PLANS_PER_ACTIVE_GROUP
 UNION ALL SELECT 'suggestions_two_votes', 'Suggestions with 2+ votes', value, NULL FROM V_SUGGESTIONS_TWO_PLUS_VOTES
@@ -93,7 +100,7 @@ export class SnowflakeClient {
   }
 
   private async statement(sqlText: string, bindings: Record<string, unknown> = {}, requestId?: string) {
-    const id = requestId ?? createHash('sha256').update(sqlText).digest('hex').slice(0, 32);
+    const id = asRequestUuid(requestId ?? createHash('sha256').update(sqlText).digest('hex').slice(0, 32));
     const body = {
       statement: sqlText,
       timeout: 45,
@@ -204,11 +211,20 @@ export class SnowflakeClient {
   async pulse(metrics: ImpactSummaryDTO['metrics']): Promise<string | null> {
     if (!this.config.cortexModel) return null;
     const prompt = `Write exactly three short sentences about these aggregate community metrics. No people, groups, identifiers, or unsupported causes: ${JSON.stringify(metrics.map(({ key, value, unit }) => ({ key, value, unit })))}`;
-    const result = await this.statement('SELECT SNOWFLAKE.CORTEX.COMPLETE(?, ?)', {
+    const result = await this.statement('SELECT AI_COMPLETE(?, ?)', {
       1: { type: 'TEXT', value: this.config.cortexModel },
       2: { type: 'TEXT', value: prompt },
     });
-    const text = String(result.data?.[0]?.[0] ?? '').trim();
+    const raw = String(result.data?.[0]?.[0] ?? '').trim();
+    let text = raw;
+    if (raw.startsWith('"') && raw.endsWith('"')) {
+      try {
+        const parsed = JSON.parse(raw) as unknown;
+        if (typeof parsed === 'string') text = parsed;
+      } catch {
+        text = raw;
+      }
+    }
     return text ? text.slice(0, 700) : null;
   }
 }

@@ -2,6 +2,8 @@
 import type { DiscoveryOverviewDTO } from '@lore/shared/dto/discovery';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Compass, LockKeyhole, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
@@ -14,6 +16,8 @@ import { useMe } from '@/lib/hooks';
 export function FindFriendsPage() {
   const client = useQueryClient();
   const me = useMe();
+  const params = useSearchParams();
+  const tab = params.get('tab') === 'together' ? 'together' : 'friends';
   const key = ['discovery'] as const;
   const discovery = useQuery({
     queryKey: key,
@@ -27,15 +31,25 @@ export function FindFriendsPage() {
     setBio(discovery.data.profile.bioSnippet ?? '');
   }, [discovery.data]);
   const refresh = () => client.invalidateQueries({ queryKey: key });
+  const parsedTags = tags
+    .split(',')
+    .map((tag) => tag.trim())
+    .filter(Boolean);
   const profile = useMutation({
-    mutationFn: (discoverable: boolean) =>
+    mutationFn: (
+      patch: {
+        discoverable?: boolean;
+        explicitTags?: string[];
+        removedTags?: string[];
+        frozen?: boolean;
+      } = {},
+    ) =>
       api.put('/v1/discovery/profile', {
-        explicitTags: tags
-          .split(',')
-          .map((tag) => tag.trim())
-          .filter(Boolean),
+        explicitTags: patch.explicitTags ?? parsedTags,
         bioSnippet: bio || null,
-        discoverable,
+        discoverable: patch.discoverable ?? data?.profile.discoverable ?? false,
+        removedTags: patch.removedTags,
+        frozen: patch.frozen,
       }),
     onSuccess: refresh,
   });
@@ -50,87 +64,147 @@ export function FindFriendsPage() {
     onSuccess: refresh,
   });
   const data = discovery.data;
+  const showFriends = tab === 'friends';
 
   return (
     <StackScreen>
-      <TopBar title="Find Friends" back />
+      <TopBar title={showFriends ? 'Find Friends' : 'Discover Together'} back />
       <main className="mx-auto w-full max-w-[640px] flex-1 space-y-5 px-4 pb-24 pt-4">
-        <section className="rounded-2xl bg-surface-2 p-4">
-          <div className="flex items-center gap-2">
-            <Sparkles size={18} className="text-ai" />
-            <h1 className="font-display text-[21px] font-semibold">Common Ground</h1>
-          </div>
-          <p className="mt-1 text-[12px] text-ink-2">
-            Only interests you choose and signals from public activity are used. Private chats are never read.
-          </p>
-          <label htmlFor="discovery-tags" className="mt-4 block text-[13px] font-semibold">
-            Your interests
-          </label>
-          <input
-            id="discovery-tags"
-            value={tags}
-            onChange={(event) => setTags(event.target.value)}
-            placeholder="climbing, live music, coffee"
-            className="mt-1 w-full rounded-xl border bg-bg px-3 py-2 hairline"
-          />
-          <label htmlFor="discovery-bio" className="mt-3 block text-[13px] font-semibold">
-            Short public intro
-          </label>
-          <textarea
-            id="discovery-bio"
-            value={bio}
-            onChange={(event) => setBio(event.target.value)}
-            maxLength={180}
-            placeholder="What are you hoping to find?"
-            className="mt-1 min-h-16 w-full rounded-xl border bg-bg p-3 hairline"
-          />
-          <div className="mt-3 flex gap-2">
-            <Button
-              loading={profile.isPending}
-              onClick={() => profile.mutate(data?.profile.discoverable ?? false)}
-            >
-              Save
-            </Button>
-            <Button
-              variant={data?.profile.discoverable ? 'outline' : 'primary'}
-              loading={profile.isPending}
-              onClick={() => profile.mutate(!data?.profile.discoverable)}
-            >
-              {data?.profile.discoverable ? 'Pause discovery' : 'Opt in to discovery'}
-            </Button>
-          </div>
-          {data?.profile.frozen && (
-            <p className="mt-2 flex items-center gap-1 text-[12px] text-ink-2">
-              <LockKeyhole size={13} /> Inferred interests are frozen.
+        <div className="flex gap-2">
+          <Link
+            href="/find-friends"
+            className={`rounded-full px-3 py-1.5 text-sm font-semibold ${showFriends ? 'bg-action text-white' : 'bg-surface-2'}`}
+          >
+            Find Friends
+          </Link>
+          <Link
+            href="/find-friends?tab=together"
+            className={`rounded-full px-3 py-1.5 text-sm font-semibold ${showFriends ? 'bg-surface-2' : 'bg-action text-white'}`}
+          >
+            Discover Together
+          </Link>
+        </div>
+        {showFriends && (
+          <section className="rounded-2xl bg-surface-2 p-4">
+            <div className="flex items-center gap-2">
+              <Sparkles size={18} className="text-ai" />
+              <h1 className="font-display text-[21px] font-semibold">Common Ground</h1>
+            </div>
+            <p className="mt-1 text-[12px] text-ink-2">
+              Only interests you choose and signals from public activity are used. Private chats are never
+              read.
             </p>
-          )}
-        </section>
+            <label htmlFor="discovery-tags" className="mt-4 block text-[13px] font-semibold">
+              Your interests
+            </label>
+            <input
+              id="discovery-tags"
+              value={tags}
+              onChange={(event) => setTags(event.target.value)}
+              placeholder="climbing, live music, coffee"
+              className="mt-1 w-full rounded-xl border bg-bg px-3 py-2 hairline"
+            />
+            <label htmlFor="discovery-bio" className="mt-3 block text-[13px] font-semibold">
+              Short public intro
+            </label>
+            <textarea
+              id="discovery-bio"
+              value={bio}
+              onChange={(event) => setBio(event.target.value)}
+              maxLength={180}
+              placeholder="What are you hoping to find?"
+              className="mt-1 min-h-16 w-full rounded-xl border bg-bg p-3 hairline"
+            />
+            <div className="mt-3 flex gap-2">
+              <Button
+                loading={profile.isPending}
+                onClick={() => profile.mutate({ discoverable: data?.profile.discoverable ?? false })}
+              >
+                Save
+              </Button>
+              <Button
+                variant={data?.profile.discoverable ? 'outline' : 'primary'}
+                loading={profile.isPending}
+                onClick={() => profile.mutate({ discoverable: !data?.profile.discoverable })}
+              >
+                {data?.profile.discoverable ? 'Pause discovery' : 'Opt in to discovery'}
+              </Button>
+            </div>
+            {!!data?.profile.inferredTags.length && (
+              <div className="mt-4">
+                <p className="text-[13px] font-semibold">Learned from public activity</p>
+                <ul className="mt-2 space-y-2">
+                  {data.profile.inferredTags.map((item) => (
+                    <li key={item.tag} className="flex items-center justify-between gap-2">
+                      <span className="text-sm">
+                        {item.tag} <span className="text-ink-2">{Math.round(item.score * 100)}%</span>
+                      </span>
+                      <span className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="text"
+                          onClick={() =>
+                            profile.mutate({ explicitTags: [...new Set([...parsedTags, item.tag])] })
+                          }
+                        >
+                          Keep
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="text"
+                          onClick={() => profile.mutate({ removedTags: [item.tag] })}
+                        >
+                          Remove
+                        </Button>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <Button
+              variant="text"
+              className="mt-3"
+              onClick={() => profile.mutate({ frozen: !data?.profile.frozen })}
+            >
+              {data?.profile.frozen ? 'Unfreeze inferred interests' : 'Freeze inferred interests'}
+            </Button>
+            {data?.profile.frozen && (
+              <p className="mt-2 flex items-center gap-1 text-[12px] text-ink-2">
+                <LockKeyhole size={13} /> Inferred interests are frozen.
+              </p>
+            )}
+          </section>
+        )}
 
-        {discovery.isLoading && <p className="py-10 text-center text-ink-2">Finding common ground…</p>}
-        {data && !data.profile.discoverable && (
+        {!showFriends && discovery.isLoading && (
+          <p className="py-10 text-center text-ink-2">Finding common ground…</p>
+        )}
+        {!showFriends && data && !data.profile.discoverable && (
           <EmptyState
             icon={LockKeyhole}
             title="Discovery is off"
             body="Opt in when you want to be shown to people with shared interests."
           />
         )}
-        {data?.profile.discoverable && !data.matches.length && (
+        {!showFriends && data?.profile.discoverable && !data.matches.length && (
           <EmptyState
             icon={Compass}
             title="No matches yet"
             body="Add a few interests and check back as the community grows."
           />
         )}
-        {data?.matches.map((card) => (
-          <MatchCard
-            key={card.userId}
-            card={card}
-            busy={intro.isPending}
-            onIntro={(firstMessage) => intro.mutate({ userId: card.userId, firstMessage })}
-          />
-        ))}
+        {!showFriends &&
+          data?.matches.map((card) => (
+            <MatchCard
+              key={card.userId}
+              card={card}
+              busy={intro.isPending}
+              onIntro={(firstMessage) => intro.mutate({ userId: card.userId, firstMessage })}
+            />
+          ))}
 
-        {!!data?.introductions.length && (
+        {!showFriends && !!data?.introductions.length && (
           <section className="space-y-3">
             <h2 className="font-display text-[19px] font-semibold">Introductions</h2>
             {data.introductions.map((item) => {
@@ -160,10 +234,13 @@ export function FindFriendsPage() {
                       </Button>
                     </div>
                   )}
-                  {item.state === 'accepted' && (
-                    <p className="mt-3 text-[12px] text-action">
-                      Accepted — messaging opens only after both people agree.
-                    </p>
+                  {item.state === 'accepted' && item.conversationId && (
+                    <Link
+                      href={`/c/${item.conversationId}`}
+                      className="mt-3 block text-[13px] font-semibold text-action"
+                    >
+                      Open chat
+                    </Link>
                   )}
                 </article>
               );

@@ -19,7 +19,7 @@
   --color-verified: var(--verified);
   --color-elevated: var(--elevated);
   --font-sans: var(--font-sans);
-  --font-display: var(--font-fraunces), var(--font-display);
+  --font-display: Georgia, "Times New Roman", serif;
 }
 
 /* Touch polish (section 9.3) */
@@ -89,7 +89,7 @@ img {
   background: var(--line);
 }
 .wordmark {
-  font-family: var(--font-fraunces), var(--font-display);
+  font-family: var(--font-display);
   font-style: italic;
   font-weight: 600;
   font-size: 26px;

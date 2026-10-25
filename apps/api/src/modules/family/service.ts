@@ -3,6 +3,7 @@ import { FamilyStorySpec } from '@lore/shared/ai';
 import type { FamilyStoryDetailDTO, FamilyContributionBody, FamilyShareBody } from '@lore/shared/dto/family';
 import type { Actor } from '../../lib/actor';
 import { badRequest, forbidden, notFound } from '../../lib/errors';
+import { postMessage } from '../chat/service';
 import { createDraft } from '../groups/service';
 import { assertGroundedFamilyStory } from './policy';
 import { FamilyRepository, familyRepository } from './repository';
@@ -141,7 +142,19 @@ export class FamilyService {
     if (story.flags?.length) throw badRequest('Resolve every source flag before sharing');
     if (body.target === 'private') {
       await this.deps.store.setState(storyId, 'shared_private');
-      return { story: await this.detail(storyId, userId), draft: null };
+      const shared = await this.detail(storyId, userId);
+      await postMessage(
+        story.conversationId,
+        {
+          kind: 'card',
+          cardKind: 'family_story_card',
+          cardRefId: story.id,
+          clientId: `family-story:${story.id}`,
+          body: shared.title,
+        },
+        { type: 'user', userId },
+      ).catch(() => null);
+      return { story: shared, draft: null };
     }
     if (!body.accountId) throw badRequest('A group account is required for public review');
     const draft = await this.deps.draft(
@@ -167,3 +180,21 @@ export const getFamilyStory = service.detail.bind(service);
 export const updateFamilySource = service.updateSource.bind(service);
 export const generateFamilyStory = service.generate.bind(service);
 export const shareFamilyStory = service.share.bind(service);
+export async function resolveFamilyStoryCard(storyId: string, userId: string) {
+  try {
+    const story = await service.detail(storyId, userId);
+    return {
+      id: story.id,
+      conversationId: story.conversationId,
+      title: story.title,
+      periodLabel: story.periodLabel,
+      state: story.state,
+      coverUrl: story.coverUrl,
+      chapterCount: story.chapterCount,
+      flagsOpen: story.flagsOpen,
+      contributors: story.contributors,
+    };
+  } catch {
+    return undefined;
+  }
+}

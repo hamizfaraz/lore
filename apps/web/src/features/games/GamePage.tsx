@@ -1,5 +1,6 @@
 'use client';
 import type { GameStateDTO } from '@lore/shared/dto/games';
+import { useQuery } from '@tanstack/react-query';
 import { Check, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { AiPill, Chip } from '@/components/ui/Labels';
 import { ListRow } from '@/components/ui/ListRow';
 import { Sheet } from '@/components/ui/Sheet';
+import { api } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { tap } from '@/lib/haptics';
 import { useMe } from '@/lib/hooks';
@@ -202,7 +204,64 @@ export function GamePage({ conversationId, gameId }: { conversationId: string; g
             ))}
         </div>
       </Sheet>
+      <ChatTray conversationId={conversationId} />
     </motion.div>
+  );
+}
+
+function ChatTray({ conversationId }: { conversationId: string }) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState('');
+  const messages = useQuery({
+    queryKey: ['game-chat', conversationId],
+    queryFn: () =>
+      api.get<{ items: { id: string; body: string | null }[] }>(
+        `/v1/conversations/${conversationId}/messages`,
+      ),
+    enabled: open,
+  });
+  const send = async () => {
+    const body = text.trim();
+    if (!body) return;
+    setText('');
+    await api.post(`/v1/conversations/${conversationId}/messages`, { kind: 'text', body });
+    void messages.refetch();
+  };
+  const recent = (messages.data?.items ?? []).slice(-4);
+  return (
+    <div className="border-t bg-bg">
+      <button
+        type="button"
+        className="flex min-h-[44px] w-full items-center px-4 text-left text-[13px] font-semibold"
+        onClick={() => setOpen((v) => !v)}
+      >
+        {open ? 'Hide chat' : 'Chat'}
+      </button>
+      {open && (
+        <div className="space-y-2 px-4 pb-3">
+          {recent.map((message) => (
+            <p key={message.id} className="truncate text-[13px] text-ink-2">
+              {message.body ?? 'Attachment'}
+            </p>
+          ))}
+          <form
+            className="flex gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void send();
+            }}
+          >
+            <input
+              value={text}
+              onChange={(event) => setText(event.target.value)}
+              placeholder="Message the group"
+              className="h-[44px] flex-1 rounded-full bg-surface-2 px-4 text-[16px] outline-none"
+            />
+            <Button type="submit">Send</Button>
+          </form>
+        </div>
+      )}
+    </div>
   );
 }
 

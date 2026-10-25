@@ -4,6 +4,8 @@ export type StoredInterestProfile = {
   userId: string;
   explicitTags: string[];
   inferred: Record<string, number>;
+  inferredTouched: Record<string, string>;
+  graphTags: string[];
   frozen: boolean;
   discoverable: boolean;
   bioSnippet: string | null;
@@ -20,5 +22,6 @@ export type StoredIntroduction = {
   basis: { sharedTags: string[]; reason: string };
   firstMessage: string | null;
   state: 'requested' | 'accepted' | 'declined' | 'expired';
+  conversationId: string | null;
   createdAt: Date;
 };

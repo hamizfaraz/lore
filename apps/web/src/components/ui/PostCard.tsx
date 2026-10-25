@@ -53,7 +53,16 @@ export function PostCard({ post, handlers }: { post: PostDTO; handlers: PostHand
           loop
           autoPlay
           aria-label={m.altText || post.altText || post.caption || 'Video'}
-        />
+        >
+          {m.transcript && (
+            <track
+              kind="captions"
+              srcLang="en"
+              default
+              src={`data:text/vtt;charset=utf-8,${encodeURIComponent(`WEBVTT\n\n00:00:00.000 --> 00:01:00.000\n${m.transcript}`)}`}
+            />
+          )}
+        </video>
       ) : (
         <BlurImage src={m.url} blurhash={m.blurhash} alt={m.altText ?? post.altText ?? ''} />
       )}

@@ -1,5 +1,6 @@
 'use client';
 import type { ConversationDTO } from '@lore/shared/dto/chat';
+import type { PodcastShowDetailDTO } from '@lore/shared/dto/podcast';
 import type { MediaDTO } from '@lore/shared/dto/media';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { BellOff, Link2, LogOut, Mic, Settings, ShieldCheck, UserPlus } from 'lucide-react';
@@ -15,7 +16,6 @@ import { TopBar } from '@/components/ui/TopBar';
 import { spaceTabs } from '@/features/groups/space/tabs';
 import { AiMemberPanel } from '@/features/persona/AiMemberPanel';
 import { api } from '@/lib/api';
-import { clientFlags } from '@/lib/flags';
 import { useMe } from '@/lib/hooks';
 import { qk } from '@/lib/query-keys';
 import { toast } from '@/lib/store';
@@ -155,16 +155,23 @@ export function ChatDetailsPage({ id }: { id: string }) {
                 href={`/c/${id}/settings#group-account`}
               />
             )}
-            {clientFlags.podcast && (
-              <>
-                <SectionHeader>Podcast</SectionHeader>
-                <ListRow
-                  icon={<Mic size={22} />}
-                  title="We should start a podcast"
-                  href={`/c/${id}/memories#podcast`}
-                />
-              </>
-            )}
+            <SectionHeader>Podcast</SectionHeader>
+            <ListRow
+              icon={<Mic size={22} />}
+              title="Start a podcast"
+              subtitle="Opens a private show for this group"
+              onClick={async () => {
+                try {
+                  const show = await api.post<PodcastShowDetailDTO>('/v1/podcasts', {
+                    conversationId: id,
+                    title: `${c.title ?? 'Group'} podcast`,
+                  });
+                  router.push(`/podcast/${show.showId}`);
+                } catch (e) {
+                  toast((e as Error).message, 'error');
+                }
+              }}
+            />
             {isAdmin && (
               <ListRow
                 icon={<Settings size={22} />}

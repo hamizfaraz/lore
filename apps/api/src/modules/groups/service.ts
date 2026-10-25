@@ -493,6 +493,8 @@ async function tryPublish(
 ): Promise<DraftCardDTO> {
   const db = getDb();
   const uid = actorUserId(actor);
+  const [preview] = await db.select().from(postDrafts).where(eq(postDrafts.id, draftId)).limit(1);
+  const topicTags = preview && preview.target !== 'story' ? await social.topicTagsFor(preview.caption) : [];
   const result = await db.transaction(async (tx) => {
     const locked = await tx.execute<{ id: string }>(
       sql`select id from post_drafts where id = ${draftId} for update`,
@@ -526,6 +528,7 @@ async function tryPublish(
           sourceKind: d.sourceKind,
           sourceId: d.sourceId,
           draftId: d.id,
+          topicTags,
         },
         tx as unknown as Db,
       );
@@ -555,7 +558,15 @@ async function tryPublish(
       },
       tx,
     );
-    return { postId, target: d.target, account: a, conversationId: d.conversationId };
+    return {
+      postId,
+      target: d.target,
+      account: a,
+      conversationId: d.conversationId,
+      sourceKind: d.sourceKind,
+      sourceId: d.sourceId,
+      publishedBy: d.createdByUserId,
+    };
   });
   if (result) {
     const members = await chat.activeMembers(result.conversationId);
@@ -574,6 +585,20 @@ async function tryPublish(
         },
         { push: m.userId !== uid },
       );
+    }
+    if (result.sourceKind === 'recap' && result.sourceId && result.target === 'post') {
+      try {
+        const impact = await import('../impact/service');
+        await impact.recordImpactEvent({
+          kind: 'recap_posted',
+          groupId: result.conversationId,
+          actorId: result.publishedBy,
+          objectId: result.sourceId,
+          props: { destination: 'group_post' },
+        });
+      } catch (err) {
+        logger.warn({ err }, 'recap_posted impact failed');
+      }
     }
   }
   return broadcast(draftId);

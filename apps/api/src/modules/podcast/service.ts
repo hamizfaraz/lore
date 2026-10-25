@@ -1,10 +1,11 @@
 import type { PodcastShowDetailDTO } from '@lore/shared/dto/podcast';
 import { env } from '../../lib/env';
 import { badRequest, conflict, forbidden, notFound } from '../../lib/errors';
-import { createFromBuffer } from '../media/service';
+import { postMessage } from '../chat/service';
+import { createFromBuffer, signedUrl } from '../media/service';
 import { assertFinishable, assertPodcastClip } from './policy';
 import { PodcastRepository, podcastRepository } from './repository';
-import { renderPodcastAudio } from './render';
+import { renderPodcastAudio, renderPodcastVideo } from './render';
 
 type Dependencies = {
   store: PodcastRepository;
@@ -34,7 +35,25 @@ export class PodcastService {
     if (!(await this.deps.store.membership(conversationId, userId)))
       throw forbidden('Only current group members can create a show');
     const showId = await this.deps.store.create(conversationId, userId, title.trim());
-    return this.detail(showId, userId);
+    const detail = await this.detail(showId, userId);
+    await postMessage(
+      conversationId,
+      {
+        kind: 'card',
+        cardKind: 'podcast_invite',
+        cardRefId: showId,
+        clientId: `podcast:${showId}`,
+        body: detail.title,
+      },
+      { type: 'user', userId },
+    ).catch(() => null);
+    return detail;
+  }
+
+  async inviteCard(showId: string, userId: string) {
+    const show = await this.accessible(showId, userId);
+    const stations = await this.deps.store.stations(showId);
+    return { showId: show.id, title: show.title, stationTopic: stations[0]?.topic ?? null };
   }
 
   async detail(showId: string, userId: string): Promise<PodcastShowDetailDTO> {
@@ -74,6 +93,7 @@ export class PodcastService {
           .map((item) => ({ ...item, day: item.day, createdAt: item.createdAt.toISOString() })),
       })),
       audioUrl: show.state === 'finished' ? `/v1/podcasts/${show.id}/audio` : null,
+      videoUrl: show.videoMediaId ? await signedUrl(show.videoMediaId).catch(() => null) : null,
     };
   }
 
@@ -157,6 +177,25 @@ export class PodcastService {
       if (env.NODE_ENV === 'production') throw error;
     }
     await this.deps.store.finish(showId, mediaId);
+    const video = await renderPodcastVideo(
+      audio,
+      show.title,
+      contributions.map((clip) => ({ speaker: clip.displayName || 'Speaker' })),
+    ).catch(() => null);
+    if (video) {
+      try {
+        const saved = await this.deps.save(video, {
+          ownerUserId: userId,
+          kind: 'video',
+          mime: 'video/mp4',
+          aiGenerated: true,
+          generator: 'lore-ffmpeg',
+        });
+        await this.deps.store.setVideo(showId, saved.id);
+      } catch {
+        /* the MP3 finish stands when the vertical video cannot be encoded */
+      }
+    }
     return this.detail(showId, userId);
   }
 
@@ -177,3 +216,10 @@ export const branchPodcast = service.branch.bind(service);
 export const wrapPodcast = service.wrap.bind(service);
 export const finishPodcast = service.finish.bind(service);
 export const podcastAudio = service.audio.bind(service);
+export async function resolvePodcastInvite(showId: string, userId: string) {
+  try {
+    return await service.inviteCard(showId, userId);
+  } catch {
+    return undefined;
+  }
+}

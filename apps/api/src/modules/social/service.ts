@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, inArray, isNull, lt, or, sql } from '@lore/db';
+import { and, desc, eq, gt, inArray, isNull, lt, notInArray, or, sql } from '@lore/db';
 import {
   approvals,
   comments,
@@ -9,6 +9,7 @@ import {
   postLikes,
   postMedia,
   postSaves,
+  postTags,
   posts,
   socialAccounts,
   stories,
@@ -29,6 +30,7 @@ import { env } from '../../lib/env';
 import { badRequest, forbidden, notFound } from '../../lib/errors';
 import { logger } from '../../lib/logger';
 import * as media from '../media/service';
+import { assertNotBlocked, blockedAccountIds } from './blocks';
 import * as notifications from '../notifications/service';
 import * as users from '../users/service';
 
@@ -57,6 +59,7 @@ export type Viewer = {
   following: Set<string>;
   pending: Set<string>;
   groupAccountIds: Set<string>;
+  blockedAccountIds: Set<string>;
 };
 
 export async function viewer(userId: string): Promise<Viewer> {
@@ -86,6 +89,7 @@ export async function viewer(userId: string): Promise<Viewer> {
     following: new Set(f.filter((x) => x.s === 'active').map((x) => x.t)),
     pending: new Set(f.filter((x) => x.s === 'pending').map((x) => x.t)),
     groupAccountIds: new Set(g.map((x) => x.id)),
+    blockedAccountIds: await blockedAccountIds(userId),
   };
 }
 
@@ -166,8 +170,9 @@ export async function getProfile(handle: string, viewerUserId: string): Promise<
       isSelf: v.accountId === a.id,
       following: v.following.has(a.id),
       pending: v.pending.has(a.id),
-      canSeePosts: canSeeAccount(a, v),
+      canSeePosts: canSeeAccount(a, v) && !v.blockedAccountIds.has(a.id),
       isMember,
+      blocked: v.blockedAccountIds.has(a.id),
     },
     members,
     publicGroups,
@@ -180,6 +185,7 @@ export async function follow(viewerUserId: string, targetAccountId: string) {
   const target = await accountById(targetAccountId);
   if (!target) throw notFound();
   if (target.id === v.accountId) throw badRequest("You can't follow yourself");
+  if (target.ownerUserId) await assertNotBlocked(viewerUserId, target.ownerUserId);
   const status = target.visibility === 'private' && !v.groupAccountIds.has(target.id) ? 'pending' : 'active';
   await getDb()
     .insert(follows)
@@ -312,20 +318,26 @@ const PAGE = 10;
 /** Home feed: posts from followed accounts + own + group accounts I'm in, newest first, 10 per page. */
 export async function feed(userId: string, cursor?: string) {
   const v = await viewer(userId);
-  const authorIds = [...new Set([v.accountId, ...v.following, ...v.groupAccountIds])];
+  const authorIds = [...new Set([v.accountId, ...v.following, ...v.groupAccountIds])].filter(
+    (id) => !v.blockedAccountIds.has(id),
+  );
   const c = decodeCursor(cursor);
-  const rows = await getDb()
-    .select()
-    .from(posts)
-    .where(
-      and(
-        inArray(posts.authorAccountId, authorIds),
-        isNull(posts.deletedAt),
-        c ? or(lt(posts.publishedAt, c.at), and(eq(posts.publishedAt, c.at), lt(posts.id, c.id))) : undefined,
-      ),
-    )
-    .orderBy(desc(posts.publishedAt), desc(posts.id))
-    .limit(PAGE + 1);
+  const rows = authorIds.length
+    ? await getDb()
+        .select()
+        .from(posts)
+        .where(
+          and(
+            inArray(posts.authorAccountId, authorIds),
+            isNull(posts.deletedAt),
+            c
+              ? or(lt(posts.publishedAt, c.at), and(eq(posts.publishedAt, c.at), lt(posts.id, c.id)))
+              : undefined,
+          ),
+        )
+        .orderBy(desc(posts.publishedAt), desc(posts.id))
+        .limit(PAGE + 1)
+    : [];
   const page = rows.slice(0, PAGE);
   return {
     items: await postDTOs(page, userId),
@@ -336,13 +348,15 @@ export async function feed(userId: string, cursor?: string) {
 
 export async function accountPosts(
   accountId: string,
-  tab: 'posts' | 'reels',
+  tab: 'posts' | 'reels' | 'tagged',
   userId: string,
   cursor?: string,
 ) {
   const a = await accountById(accountId);
   if (!a) throw notFound();
-  if (!canSeeAccount(a, await viewer(userId))) return { items: [], nextCursor: null };
+  const v = await viewer(userId);
+  if (!canSeeAccount(a, v)) return { items: [], nextCursor: null };
+  if (tab === 'tagged') return taggedPosts(a, v, userId, cursor);
   const c = decodeCursor(cursor);
   const rows = await getDb()
     .select()
@@ -364,6 +378,57 @@ export async function accountPosts(
   };
 }
 
+async function taggedPosts(account: AccountRow, v: Viewer, userId: string, cursor?: string) {
+  if (!account.ownerUserId) return { items: [], nextCursor: null };
+  const c = decodeCursor(cursor);
+  const rows = await getDb()
+    .select({ post: posts })
+    .from(postTags)
+    .innerJoin(posts, eq(posts.id, postTags.postId))
+    .where(
+      and(
+        eq(postTags.taggedUserId, account.ownerUserId),
+        isNull(posts.deletedAt),
+        c ? or(lt(posts.publishedAt, c.at), and(eq(posts.publishedAt, c.at), lt(posts.id, c.id))) : undefined,
+      ),
+    )
+    .orderBy(desc(posts.publishedAt), desc(posts.id))
+    .limit(31);
+  const visible = [];
+  for (const row of rows) {
+    const author = await accountById(row.post.authorAccountId);
+    if (author && canSeeAccount(author, v) && !v.blockedAccountIds.has(author.id)) visible.push(row.post);
+  }
+  const page = visible.slice(0, 30);
+  return {
+    items: await postDTOs(page, userId),
+    nextCursor: visible.length > 30 ? encodeCursor(page[29].publishedAt, page[29].id) : null,
+  };
+}
+
+async function tagPeople(postId: string, actorUserId: string, handles: string[] | undefined) {
+  const clean = [...new Set((handles ?? []).map((handle) => handle.trim().toLowerCase()).filter(Boolean))];
+  if (!clean.length) return;
+  const accounts = await getDb().select().from(socialAccounts).where(inArray(socialAccounts.handle, clean));
+  const ids = accounts.map((account) => account.ownerUserId).filter((id): id is string => Boolean(id));
+  if (!ids.length) return;
+  await getDb()
+    .insert(postTags)
+    .values(ids.map((taggedUserId) => ({ postId, taggedUserId, taggedByUserId: actorUserId })))
+    .onConflictDoNothing();
+  const actor = await users.accountSummary((await users.requirePersonalAccount(actorUserId)).id);
+  for (const taggedUserId of ids) {
+    if (taggedUserId === actorUserId) continue;
+    void notifications.notify(taggedUserId, 'mention', {
+      actorName: actor?.displayName,
+      actorHandle: actor?.handle,
+      actorAvatarUrl: actor?.avatarUrl,
+      text: 'tagged you in a post.',
+      href: `/p/${postId}`,
+    });
+  }
+}
+
 /** Reels: public reels (+ followed/private visible), newest first. */
 export async function reels(userId: string, cursor?: string) {
   const v = await viewer(userId);
@@ -381,6 +446,7 @@ export async function reels(userId: string, cursor?: string) {
           inArray(posts.authorAccountId, [v.accountId, ...v.following, ...v.groupAccountIds]),
         ),
         c ? or(lt(posts.publishedAt, c.at), and(eq(posts.publishedAt, c.at), lt(posts.id, c.id))) : undefined,
+        v.blockedAccountIds.size ? notInArray(posts.authorAccountId, [...v.blockedAccountIds]) : undefined,
       ),
     )
     .orderBy(desc(posts.publishedAt), desc(posts.id))
@@ -453,6 +519,17 @@ function validateKind(kind: PostKind, mediaRows: { kind: string }[]) {
  * POST /posts: personal publish OR group draft (server decides by policy, section 8.1 step 3).
  * Group authors are routed to groups.service and return a draft unless policy allows direct publish.
  */
+export async function topicTagsFor(caption: string): Promise<string[]> {
+  if (!caption.trim()) return [];
+  try {
+    const discovery = await import('../discovery/service');
+    return await discovery.tagCaption(caption);
+  } catch (err) {
+    logger.warn({ err }, 'caption tags skipped');
+    return [];
+  }
+}
+
 export async function createPost(userId: string, body: CreatePostBody) {
   const author = await accountById(body.authorAccountId);
   if (!author) throw notFound('Account not found');
@@ -473,7 +550,9 @@ export async function createPost(userId: string, body: CreatePostBody) {
     locationLabel: body.locationLabel,
     mediaIds: body.mediaIds,
     visibility: author.visibility,
+    topicTags: await topicTagsFor(body.caption),
   });
+  await tagPeople(row.id, userId, body.taggedHandles);
   return { type: 'post' as const, post: (await postDTOs([row], userId))[0] };
 }
 
@@ -679,12 +758,16 @@ async function storyDTOs(rows: (typeof stories.$inferSelect)[], viewerUserId: st
 /** Active stories grouped by author account (own first, unseen before seen). */
 export async function storyRail(userId: string): Promise<StoryRailItemDTO[]> {
   const v = await viewer(userId);
-  const authorIds = [...new Set([v.accountId, ...v.following, ...v.groupAccountIds])];
-  const rows = await getDb()
-    .select()
-    .from(stories)
-    .where(and(inArray(stories.authorAccountId, authorIds), gt(stories.expiresAt, new Date())))
-    .orderBy(stories.createdAt);
+  const authorIds = [...new Set([v.accountId, ...v.following, ...v.groupAccountIds])].filter(
+    (id) => !v.blockedAccountIds.has(id),
+  );
+  const rows = authorIds.length
+    ? await getDb()
+        .select()
+        .from(stories)
+        .where(and(inArray(stories.authorAccountId, authorIds), gt(stories.expiresAt, new Date())))
+        .orderBy(stories.createdAt)
+    : [];
   const dtos = await storyDTOs(rows, userId);
   const byAuthor = new Map<string, StoryDTO[]>();
   rows.forEach((r) => {
@@ -773,6 +856,9 @@ export async function explore(userId: string, q: string | undefined, cursor?: st
     [v.accountId, ...v.following, ...v.groupAccountIds].map((id) => sql`${id}::uuid`),
     sql`, `,
   )}))`;
+  const hidden = v.blockedAccountIds.size
+    ? notInArray(socialAccounts.id, [...v.blockedAccountIds])
+    : undefined;
   if (q?.trim()) {
     const term = `%${q.trim().replace(/[%_]/g, '')}%`;
     const acctRows = await db
@@ -782,6 +868,7 @@ export async function explore(userId: string, q: string | undefined, cursor?: st
         and(
           sql`(${socialAccounts.handle}::text ilike ${term} or ${socialAccounts.displayName} ilike ${term})`,
           sql`${socialAccounts.onboardedAt} is not null`,
+          hidden,
         ),
       )
       .orderBy(
@@ -798,6 +885,7 @@ export async function explore(userId: string, q: string | undefined, cursor?: st
           isNull(posts.deletedAt),
           visible,
           sql`${posts.searchTsv} @@ websearch_to_tsquery('simple', ${q.trim()})`,
+          hidden,
         ),
       )
       .orderBy(desc(posts.publishedAt))
@@ -817,7 +905,7 @@ export async function explore(userId: string, q: string | undefined, cursor?: st
     .select({ p: posts })
     .from(posts)
     .innerJoin(socialAccounts, eq(socialAccounts.id, posts.authorAccountId))
-    .where(and(isNull(posts.deletedAt), visible, sql`${posts.authorAccountId} <> ${v.accountId}`))
+    .where(and(isNull(posts.deletedAt), visible, hidden, sql`${posts.authorAccountId} <> ${v.accountId}`))
     .orderBy(
       sql`(${posts.likeCount} * 2 + ${posts.commentCount} * 3) / power(extract(epoch from (now() - ${posts.publishedAt})) / 3600 + 2, 1.3) desc`,
       desc(posts.publishedAt),

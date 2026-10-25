@@ -44,6 +44,7 @@ export function ProfileView({ handle, root }: { handle: string; root?: boolean }
   const me = useMe();
   const [tab, setTab] = useState<Tab>('posts');
   const [switcher, setSwitcher] = useState(false);
+  const [more, setMore] = useState(false);
   const [editing, setEditing] = useState(false);
   const [membersOpen, setMembersOpen] = useState(false);
   const profile = useQuery({
@@ -54,7 +55,7 @@ export function ProfileView({ handle, root }: { handle: string; root?: boolean }
   const p = profile.data;
   const postsQ = useInfiniteQuery({
     queryKey: qk.accountPosts(p?.id ?? '', tab),
-    enabled: Boolean(p?.id) && tab !== 'tagged',
+    enabled: Boolean(p?.id),
     queryFn: ({ pageParam }) =>
       api.get<{ items: PostDTO[]; nextCursor: string | null }>(
         `/v1/accounts/${p!.id}/posts?tab=${tab}${pageParam ? `&cursor=${pageParam}` : ''}`,
@@ -82,6 +83,20 @@ export function ProfileView({ handle, root }: { handle: string; root?: boolean }
       qc.invalidateQueries({ queryKey: qk.feed });
     } catch (e) {
       qc.setQueryData(qk.account(handle), was);
+      toast((e as Error).message, 'error');
+    }
+  };
+
+  const block = async () => {
+    if (!p || p.type !== 'personal') return;
+    try {
+      const other = await api.get<{ userId: string }>(`/v1/accounts/${p.id}/owner`);
+      if (p.viewer.blocked) await api.del(`/v1/blocks/${other.userId}`);
+      else await api.post('/v1/blocks', { userId: other.userId });
+      setMore(false);
+      await profile.refetch();
+      toast(p.viewer.blocked ? 'Unblocked' : 'Blocked');
+    } catch (e) {
       toast((e as Error).message, 'error');
     }
   };
@@ -135,7 +150,14 @@ export function ProfileView({ handle, root }: { handle: string; root?: boolean }
               </Link>
             </>
           ) : (
-            <MoreHorizontal size={24} />
+            <button
+              type="button"
+              aria-label="Profile options"
+              className="press"
+              onClick={() => setMore(true)}
+            >
+              <MoreHorizontal size={24} />
+            </button>
           )
         }
       />
@@ -233,12 +255,6 @@ export function ProfileView({ handle, root }: { handle: string; root?: boolean }
                 title="This account is private"
                 body="Follow this account to see their photos and videos."
               />
-            ) : tab === 'tagged' ? (
-              <EmptyState
-                icon={SquareUser}
-                title="Photos of you"
-                body="When people tag you in photos, they'll appear here."
-              />
             ) : postsQ.isLoading ? (
               <div className="grid grid-cols-3 gap-px">
                 {Array.from({ length: 6 }).map((_, i) => (
@@ -317,6 +333,17 @@ export function ProfileView({ handle, root }: { handle: string; root?: boolean }
               subtitle={m.displayName}
             />
           ))}
+        </div>
+      </Sheet>
+      <Sheet open={more} onOpenChange={setMore} title="Options">
+        <div className="pb-6">
+          {p && !p.viewer.isSelf && p.type === 'personal' && (
+            <ListRow
+              title={p.viewer.blocked ? 'Unblock' : 'Block'}
+              danger={!p.viewer.blocked}
+              onClick={() => void block()}
+            />
+          )}
         </div>
       </Sheet>
     </div>

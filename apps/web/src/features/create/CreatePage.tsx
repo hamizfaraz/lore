@@ -44,6 +44,7 @@ export function CreatePage() {
   const [zoom, setZoom] = useState(1);
   const [caption, setCaption] = useState('');
   const [alt, setAlt] = useState('');
+  const [tags, setTags] = useState('');
   const [location, setLocation] = useState('');
   const [authorId, setAuthorId] = useState<string | null>(null);
   const [courtesyReview, setCourtesyReview] = useState(false);
@@ -130,6 +131,10 @@ export function CreatePage() {
           caption,
           altText: alt || undefined,
           locationLabel: location || undefined,
+          taggedHandles: tags
+            .split(',')
+            .map((handle) => handle.trim().replace(/^@/, ''))
+            .filter(Boolean),
           mediaIds: uploaded.map((u) => u.id),
           requestReview: courtesyReview || undefined,
         });
@@ -407,6 +412,29 @@ export function CreatePage() {
                     onChange={(e) => setAlt(e.target.value)}
                     placeholder="Alt text (describe the photo)"
                     maxLength={500}
+                    className="border-0 bg-transparent px-0"
+                  />
+                  <button
+                    type="button"
+                    className="mt-1 text-[13px] font-semibold text-action"
+                    onClick={async () => {
+                      if (alt.trim()) return;
+                      try {
+                        const suggestion = await api.post<{ alt: string }>('/v1/media/alt-text', { caption });
+                        if (suggestion.alt) setAlt(suggestion.alt);
+                      } catch {
+                        /* a missing suggestion still lets the post go out */
+                      }
+                    }}
+                  >
+                    Suggest alt text
+                  </button>
+                </div>
+                <div className="border-t hairline px-4 py-2">
+                  <Field
+                    value={tags}
+                    onChange={(e) => setTags(e.target.value)}
+                    placeholder="Tag people by handle, separated by commas"
                     className="border-0 bg-transparent px-0"
                   />
                 </div>

@@ -5,7 +5,6 @@ import {
   facebookImports,
   follows,
   inArray,
-  interestProfiles,
   ne,
   socialAccounts,
   sql,
@@ -99,36 +98,12 @@ async function friendsOnLore(
 }
 
 async function handTagsToDiscovery(userId: string, tags: string[]) {
-  if (!tags.length) return;
   try {
     const d = await import('../discovery/service');
     await d.recordSignal(userId, tags, 'graph');
   } catch (err) {
     if ((err as Error).name !== 'NotImplemented') logger.warn({ err }, 'recordSignal(graph) failed');
   }
-}
-
-/** Remove tags that came from this import so a disconnect stops their future use (section 16). */
-async function stripGraphTags(userId: string, tags: string[]) {
-  if (!tags.length) return;
-  const db = getDb();
-  const [profile] = await db
-    .select()
-    .from(interestProfiles)
-    .where(eq(interestProfiles.userId, userId))
-    .limit(1);
-  if (!profile) return;
-  const drop = new Set(tags);
-  const inferred = { ...(profile.inferred ?? {}) };
-  for (const tag of drop) delete inferred[tag];
-  await db
-    .update(interestProfiles)
-    .set({
-      explicitTags: profile.explicitTags.filter((t) => !drop.has(t)),
-      inferred,
-      updatedAt: new Date(),
-    })
-    .where(eq(interestProfiles.userId, userId));
 }
 
 async function maybeSetFacebookAvatar(userId: string, pictureUrl: string | null) {
@@ -223,8 +198,13 @@ export async function confirmSuggestions(userId: string, tags: string[]) {
  */
 export async function disconnect(userId: string) {
   const row = await importRow(userId);
-  const tags = tagsFromLikes((row?.likes ?? []) as LikeRow[]);
-  await stripGraphTags(userId, tags);
+  const legacyTags = tagsFromLikes((row?.likes ?? []) as LikeRow[]);
+  try {
+    const discovery = await import('../discovery/service');
+    await discovery.clearGraphSignals(userId, legacyTags);
+  } catch (err) {
+    if ((err as Error).name !== 'NotImplemented') logger.warn({ err }, 'clearGraphSignals failed');
+  }
   const db = getDb();
   await db.delete(facebookImports).where(eq(facebookImports.userId, userId));
   await db

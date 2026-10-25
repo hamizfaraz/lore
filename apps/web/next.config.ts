@@ -12,6 +12,8 @@ const withSerwist = withSerwistInit({
 
 /** Dev: rewrite /v1, /api/auth and /socket.io to the api so the browser is always same-origin. Caddy does it in prod. */
 const config: NextConfig = {
+  // Lets CI/E2E build beside an active dev server without both processes corrupting `.next`.
+  distDir: process.env.NEXT_DIST_DIR ?? '.next',
   output: 'standalone',
   outputFileTracingRoot: new URL('../..', import.meta.url).pathname,
   transpilePackages: ['@lore/shared', '@lore/tokens'],

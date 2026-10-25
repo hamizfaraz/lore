@@ -23,6 +23,29 @@ export function decayScores(inferred: Record<string, number>, elapsedMs: number)
   );
 }
 
+/** Decay each tag from its own last-scored time. Missing times fall back to the profile update. */
+export function decayTouched(
+  inferred: Record<string, number>,
+  touched: Record<string, string>,
+  updatedAt: Date,
+  now: Date,
+): { inferred: Record<string, number>; touched: Record<string, string> } {
+  const nextInferred: Record<string, number> = {};
+  const nextTouched = { ...touched };
+  const nowIso = now.toISOString();
+  for (const [tag, score] of Object.entries(inferred)) {
+    if (score < 0) {
+      nextInferred[tag] = -1;
+      continue;
+    }
+    const at = touched[tag] ? new Date(touched[tag]).getTime() : updatedAt.getTime();
+    const elapsed = now.getTime() - (Number.isFinite(at) ? at : updatedAt.getTime());
+    nextInferred[tag] = decayScores({ [tag]: score }, elapsed)[tag]!;
+    nextTouched[tag] = nowIso;
+  }
+  return { inferred: nextInferred, touched: nextTouched };
+}
+
 export function visibleInferred(inferred: Record<string, number>) {
   return Object.entries(inferred)
     .filter(([, score]) => score > 0.1)

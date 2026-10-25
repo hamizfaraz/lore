@@ -60,7 +60,8 @@ export async function enqueue(
       ...rest,
       delay: delayMs ?? 0,
       deduplication: {
-        id: `${jobName}:${debounceKey}`,
+        // BullMQ custom/deduplication ids cannot contain `:`.
+        id: `${jobName}-${debounceKey}`,
         ttl: delayMs ?? 1000,
         extend: true,
         replace: true,

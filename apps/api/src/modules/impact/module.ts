@@ -7,5 +7,8 @@ export default defineModule({
   owner: 'C2',
   routes,
   jobs,
-  repeatables: [{ name: 'impact.sync', everyMs: 60_000 }],
+  repeatables: [
+    { name: 'impact.sync', everyMs: 60_000 },
+    { name: 'impact.refresh-topics', everyMs: 15 * 60_000 },
+  ],
 });

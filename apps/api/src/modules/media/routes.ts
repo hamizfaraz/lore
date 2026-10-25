@@ -18,6 +18,15 @@ const routes: FastifyPluginAsync = async (base) => {
   );
 
   app.post(
+    '/media/alt-text',
+    {
+      preHandler: requireUser,
+      schema: { body: z.object({ caption: z.string().max(2200).optional() }) },
+    },
+    async (req) => svc.suggestAltText(req.body.caption ?? ''),
+  );
+
+  app.post(
     '/media/:id/complete',
     { preHandler: requireUser, schema: { params: z.object({ id: z.string().uuid() }) } },
     async (req) => svc.complete(me(req).id, req.params.id),

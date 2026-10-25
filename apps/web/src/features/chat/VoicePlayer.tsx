@@ -9,7 +9,8 @@ export function VoicePlayer({
   media,
   waveform,
   own,
-}: { media: MediaDTO; waveform?: number[]; own: boolean }) {
+  degraded = false,
+}: { media: MediaDTO; waveform?: number[]; own: boolean; degraded?: boolean }) {
   const audio = useRef<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
   const [p, setP] = useState(0);
@@ -67,6 +68,10 @@ export function VoicePlayer({
         </span>
       </div>
       {media.transcriptStatus === 'pending' && <p className="mt-1 text-[12px] opacity-75">Transcribing…</p>}
+      {media.transcriptStatus === 'failed' && (
+        <p className="mt-1 text-[12px] opacity-75">Transcript unavailable</p>
+      )}
+      {degraded && media.transcript && <p className="mt-1 text-[12px] opacity-75">Approximate transcript</p>}
       {media.transcript && (
         <button
           type="button"
