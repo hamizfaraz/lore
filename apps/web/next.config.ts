@@ -1,6 +1,7 @@
 import withSerwistInit from '@serwist/next';
 import type { NextConfig } from 'next';
 
+// Keep production functional if the dashboard variable is absent during a Vercel build.
 const API =
   process.env.API_INTERNAL_URL ??
   (process.env.VERCEL ? 'https://lore-api-c79x.onrender.com' : 'http://localhost:4000');
