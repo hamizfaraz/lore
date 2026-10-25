@@ -132,7 +132,7 @@ plan.
 | 1 | C2-1 AI provider core | P0 | C1-0a; rebase on C1-0b | Implementation green; live smoke blocked on C2-0 |
 | 2 | C2-2 Milo/persona | P0 | C2-1, C1-4 hook | Implementation green; integration pending |
 | 3 | C2-3 voice | P0 | C2-1 | Implementation green; C1 merge/live acceptance pending |
-| 4 | C2-4 Concierge/plans | P0 | C2-2 | Pending |
+| 4 | C2-4 Concierge/plans | P0 | C2-2 | Implementation green; C1 integration pending |
 | 5 | C2-5 memories/recaps | P0 | C2-1, C1-2, C1-5 stub | Pending |
 | 6 | C2-6 MCP connector | P0 | C2-4 | Pending |
 | 7 | C2-7 demo seed/reset | P0 | C2-2, C2-4 | Pending |
@@ -459,6 +459,26 @@ sending anything outside LORE.
 A normal meeting-up chat can produce a sourced three-option card, members can vote/refine
 independently, all hard constraints are honored or infeasibility is explicit, and a human can
 confirm the final plan.
+
+### Current implementation status
+
+- The C2 branch now implements membership-scoped plan preferences, source normalization/cache use,
+  embeddings, budget/travel/time filters, unknown-price labels, guaranteed at-home/online fallback,
+  grounded ranking, maximin fairness, category diversity, proposal persistence, idempotent current-
+  version voting, refinement/version invalidation, human confirmation, RSVP, calendar output, and
+  `plan.updated` events.
+- The Plans surface, fair three-option card, source/freshness labels, fit dots, independent voting,
+  refine/confirm controls, confirmed card, and private/group preference sheet replace the scaffold
+  placeholders. Seven focused policy/service tests and API/web/shared typechecks pass.
+- End-to-end chat-card acceptance remains dependent on C1's chat/auth/group implementation merging;
+  live Serp/Muse verification still requires the human-owned C2-0 credentials.
+
+### Recorded plan deviation
+
+On October 24, 2026, the human explicitly instructed Computer 2 to implement the next three
+milestones and then run them. C2-4 through C2-6 are therefore authorized under section 6's explicit
+human-change exception while earlier integrated acceptance remains open. Those acceptance checks
+are not waived.
 
 ## 12. C2-5 — Memories
 

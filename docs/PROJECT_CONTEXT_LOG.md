@@ -26,8 +26,8 @@
 
 _Rewritten after each step._
 
-- Phase: C2-3 voice implementation is green on the C2 branch; C1 merge and live-provider acceptance
-  remain open. C2-2 persona integration is also waiting on C1 chat/auth/media plus a full runtime.
+- Phase: C2-4 concierge/plans implementation is green on the C2 branch; C2-5 memories is next.
+  C1 merge and live-provider acceptance remain open for the implemented C2 P0 chain.
   C2-1's paid live smoke remains blocked on human-owned C2-0 credentials.
 - Active Computer 2 branch: `c2/intelligence`, in a dedicated worktree. All implementation changes
   in this run are confined to this branch; the original checkout remains clean on `main`.
@@ -98,7 +98,7 @@ _Rewritten after each step._
 | C2-1 | AI package, mocks, guard, budget, game prompts, smoke script | live verification pending | Implementation, C1-0b reconciliation, and all local checks pass; paid live smoke awaits C2-0 |
 | C2-2 | Milo persona, proactivity, memory, basic studio | integration pending | Implementation and local checks pass; requires C1-4 hook plus live DB/Valkey acceptance |
 | C2-3 | Voice transcription and live captions | integration pending | Implementation and local checks pass; requires C1 auth/media/chat merge and live Muse acceptance |
-| C2-4 | Concierge and plans | pending | Depends on C2-2 |
+| C2-4 | Concierge and plans | integration pending | Core service, routes, UI, realtime, calendar, and seven focused tests pass; C1 chat/auth merge and live providers remain |
 | C2-5 | Shared memories and recaps | pending | Depends on C2-1, C1-2, and C1-5 stub |
 | C2-6 | Muse MCP connector | pending | Depends on C2-4 |
 | C2-7 | Seed and demo reset | pending | Depends on C2-2 and C2-4 |
@@ -126,6 +126,9 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
 - On October 24, 2026, the human again explicitly authorized the next milestone while C2-2 integrated
   acceptance remained open. C2-3 was implemented under section 6's exception; neither C2-2 nor
   C2-3 integration acceptance is waived.
+- On October 24, 2026, the human explicitly authorized the next three milestones (C2-4 through
+  C2-6) while prior integrated/live acceptance remained open. Work proceeds under section 6's
+  exception without waiving any prior acceptance check.
 
 ## Log
 
@@ -245,3 +248,9 @@ _Record every deviation in `docs/IMPLEMENTATION_PLAN.md` and in the log below so
   files, mock provider smoke, production web/API build, browser-bundle provider-secret scan, and
   `git diff --check`. Live batch/realtime acceptance remains blocked on C2-0 Muse credentials and the
   C1 auth/media/chat merge; C2-4 has not started.
+- **2026-10-24 · C2-4 concierge/plans** — Implemented membership-scoped preferences, grounded
+  candidate discovery and persistence, embeddings, hard filters, unknown-price handling, an
+  at-home guarantee, maximin/diverse ranking, proposal/version/vote/refine/confirm/RSVP behavior,
+  calendar output, `plan.updated`, source labels, fair-fit cards, confirmed cards, and the Plans
+  surface. Seven focused tests plus shared/API/web typechecks pass. Chat-card integration remains
+  pending on C1's frozen service implementations; C2-5 is next.

@@ -33,3 +33,7 @@ Check at every checkpoint (section 10 working agreements).
   `transcriptDegraded: true` (and distinguish `transcriptStatus: failed`). C2-3 emits the metadata;
   the saved media transcript remains authoritative and the uploader id, never diarization, is the
   speaker identity.
+- [ ] C2->C1: Preserve C2-4's `plan_card` / `plan_confirmed` renderers and Plans toolbar/space-tab
+  routes. C2 best-effort calls `chat.service.postMessage` for a new plan card; after C1 merges its
+  implementation, refresh `cardRefId` through the existing card payload path and retain C2's
+  `plan.updated` realtime event.
