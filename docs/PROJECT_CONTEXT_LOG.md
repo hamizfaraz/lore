@@ -26,7 +26,13 @@
 
 _Rewritten after each step._
 
-- Phase: **C1-2 Media done** on `c1/platform`. Next task: **C1-3 Social core** (then C1-4 chat).
+- Phase: **C1-3 Social core done** on `c1/platform`. Next task: **C1-4 Chat**.
+- C1-3: social module (profiles, follow incl. private→pending, feed, account posts, reels list, posts create/get/delete,
+  likes, saves, share, comments with @mention notifications, stories rail/by-account/create/view, `/accounts/:id/owner`),
+  notifications module (notify() + realtime + web push, list/read, push subscriptions). Web: Home (stories rail, feed,
+  optimistic like/save, comments/share sheets), Profile (own tab root + others + group, switcher, edit profile, members),
+  Post detail, Create (POST/STORY/REEL, crop/filters, Post as, policy-aware button), Story viewer + camera, Settings
+  (theme, privacy, push, connections, log out). Verified 8.1 acceptance via `flow.mjs` API script (see Log).
 - C1-2: `lib/storage.ts` (S3 when S3_* set, else signed local disk under `.data/media` served by
   `/v1/media/local/{upload,file}`), `POST /v1/media/presign`, `POST /v1/media/:id/complete` (sharp 480px webp thumb,
   blurhash, dims; ffprobe/ffmpeg for video/audio when installed — not installed on this Mac), `createFromBuffer`,
@@ -79,7 +85,7 @@ _Rewritten after each step._
 | C1-0b | Full scaffold on main | done | main == c1/platform at scaffold commit |
 | C1-1 | Auth | done (FB login unverified: no creds) | |
 | C1-2 | Media pipeline | done | local disk fallback when no S3 |
-| C1-3 | Social core | pending | |
+| C1-3 | Social core | done | group posting via groups.service in C1-5 |
 | C1-4 | Chat | pending | |
 | C1-5 | Group accounts | pending | |
 | C1-6 | Infra | pending | |
@@ -134,3 +140,6 @@ _Every deviation is also recorded in `docs/IMPLEMENTATION_PLAN.md` (section 18, 
   verified schema push, hypertables, `/v1/ready`. Fast-forwarded `main` to the scaffold and pushed.
 - **2026-10-24 · C1-1 done** — Better Auth email/password + Facebook provider, users module, auth screens, onboarding.
 - **2026-10-24 · C1-2 done** — media pipeline with S3 + signed local fallback; verified presign/PUT/complete/thumb.
+- **2026-10-24 · C1-3 done** — social core API + screens. API acceptance run: carousel visible on own feed in 17 ms,
+  follower sees it, likes/comments/mention notifications, private account hidden (feed/profile/direct), story in
+  follower rail. Socket.IO client now uses default transports (polling→upgrade) because Next dev rewrites don't proxy WS.
