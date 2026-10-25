@@ -33,6 +33,7 @@ import {
 } from '../packages/db/src/index';
 import { hashPassword } from '../apps/api/node_modules/better-auth/dist/crypto/index.mjs';
 import { uuidv7 } from '../packages/shared/src/ids';
+import { clearRichDemo, seedRichDemo } from './rich-demo-data';
 
 export const DEMO = {
   users: {
@@ -120,6 +121,7 @@ function messageId(index: number, family = false) {
 type DemoDb = ReturnType<typeof createDb>['db'];
 
 export async function clearDemo(db: DemoDb): Promise<void> {
+  await clearRichDemo(db);
   const stationRows = await db
     .select({ id: podcastStations.id })
     .from(podcastStations)
@@ -760,6 +762,7 @@ export async function seedDemo(db: DemoDb): Promise<Record<string, number>> {
     { recapId: DEMO.recap, mediaId: DEMO.media[1], ownerUserId: DEMO.users.leo, include: true },
   ]);
 
+  const rich = await seedRichDemo(db, now);
   return {
     users: userRows.length,
     groups: 2,
@@ -768,5 +771,6 @@ export async function seedDemo(db: DemoDb): Promise<Record<string, number>> {
     posts: DEMO.posts.length,
     candidates: DEMO.candidates.length,
     profiles: allUsers.length,
+    ...rich,
   };
 }
