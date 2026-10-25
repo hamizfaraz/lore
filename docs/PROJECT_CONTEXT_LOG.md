@@ -26,7 +26,16 @@
 
 _Rewritten after each step._
 
-- Phase: **C1-6 Infra code done** (provisioning + first deploy BLOCKED on accounts from C2-0). Next: **C1-7 Game engine + One-Word Story**.
+- Phase: **C1-7 games + C1-8 Meme Battle + C1-11 Pictionary done** (engine + UI). Next: **C1-9** reels, Explore, notifications screen; then C1-10 Graph, C1-12 keepsakes, C1-13 polish.
+- Games: `modules/games/{engine,meme,pictionary,prompts,words,service,routes,jobs,module}.ts` — pure engine (tested),
+  runtime in Valkey `game:{id}` under a SET-NX lock, mirrored to `game_sessions.result.runtime` on every change,
+  caller-filtered `game.state` per member user room, BullMQ `games.tick` (turn/phase timers, abandon) + `games.sweep`,
+  prompts via `@lore/ai` games.* with local fallback + lore notice (<3 permitted memories), five-word prefetch for the
+  next player, result illustration (Muse Image or a typographic sharp card, labeled only if AI), game_invite /
+  game_result cards, share to story / propose to group (draft). Meme: private submissions, AI entry, shuffled anon
+  slots, one vote each, self-vote blocked, reveal scoring. Pictionary: private prompt, socket strokes (not persisted),
+  normalized + Levenshtein ≤1 guesses. Web: GamesSheet launcher, GamePage (lobby/OWS/meme/pictionary/end), cards.
+  Flags: meme/pictionary need FEATURE_GAMES_MEME / FEATURE_GAMES_PICTIONARY=1 (enabled in local .env only).
 - C1-6: `infra/{api,web}.Dockerfile`, `docker-compose.yml` (caddy, web, api, mcp, worker, valkey), `Caddyfile`
   (ourlore.tech + mcp.ourlore.tech), `deploy.sh`, `vm-bootstrap.sh`, `s3-setup.sh` + `s3-cors.json`, `infra/README.md`
   (first-deploy checklist), root `.dockerignore`. Verified locally: api tsup bundle runs from `dist/` with /v1/ready ok,
@@ -109,11 +118,11 @@ _Rewritten after each step._
 | C1-4 | Chat | done | 8.2 acceptance verified via scratch socket script |
 | C1-5 | Group accounts | done | 8.4 acceptance verified (tests + HTTP flow) |
 | C1-6 | Infra | code done; deploy blocked | needs Vultr VM, Object Storage keys, DNS, prod Tiger |
-| C1-7 | Game engine + One-Word Story | pending | |
-| C1-8 | Meme Battle | pending | |
+| C1-7 | Game engine + One-Word Story | done | engine tests + HTTP flow |
+| C1-8 | Meme Battle | done | flag FEATURE_GAMES_MEME |
 | C1-9 | Reels, Explore, notifications | pending | |
 | C1-10 | Graph import | pending | |
-| C1-11 | Pictionary | pending | |
+| C1-11 | Pictionary | done (live strokes not browser-tested) | flag FEATURE_GAMES_PICTIONARY |
 | C1-12 | Solana keepsakes | pending | |
 | C1-13 | Polish | pending | |
 
@@ -177,3 +186,8 @@ _Every deviation is also recorded in `docs/IMPLEMENTATION_PLAN.md` (section 18, 
   section 16 e2e "Ava proposes; Leo approves; a third approval injected"); edits void ALL approvals incl. the author's
   (matches "editing after 2 approvals resets the count to 0").
 - **2026-10-24 · C1-6 (code) done** — prod Docker/Caddy/compose/deploy/bootstrap/S3 scripts. Deploy itself awaits accounts.
+- **2026-10-24 · C1-7/8/11 done** — game engine, One-Word Story, Meme Battle, Pictionary (API + UI + 10 engine tests).
+  HTTP flows verified: OWS (choices only to active player, lore notice, result card, share to story, abandoned lobby
+  can't share), Meme (anonymous gallery incl. AI entry, no author ids leak, self-vote blocked, reveal), Pictionary
+  (prompt hidden from guesser, case/punctuation-insensitive guess). Built ahead of C1-9 because the shared engine
+  needed all three rule sets.
