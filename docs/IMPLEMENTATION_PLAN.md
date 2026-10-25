@@ -1496,7 +1496,7 @@ Checked October 24, 2026; verify again at H0 because these products changed ofte
 
 Kept in sync with `docs/PROJECT_CONTEXT_LOG.md`. Each line: date · task · change · reason.
 
-- 2026-10-24 · C1-0a · Repo is `hamizfaraz/lore` (private). Teammate must still be added as collaborator by a human.
+- 2026-10-24 · C1-0a · Repo is `hamizfaraz/lore` (private). Teammate `shreekardittakavi` was added later the same day as a write collaborator.
 - 2026-10-24 · C1-0b · zod 4 (fastify-type-provider-zod ≥6 requires it; MCP SDK and Better Auth support it).
 - 2026-10-24 · C1-0b · `mayPublish`: AI drafts under `direct`/`courtesy` publish once ≥1 valid approval exists (matches 8.4 acceptance; the section 8.4 snippet never allowed it).
 - 2026-10-24 · C1-0b · Extra C1 tables `post_likes`, `post_saves`, `push_subscriptions`, `user_wallets` and extra columns listed in the context log (state the section 5 tables could not hold).

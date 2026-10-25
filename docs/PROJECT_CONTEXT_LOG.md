@@ -141,7 +141,7 @@ _Rewritten after each step._
 - Generate VAPID keys for web push: `npx web-push generate-vapid-keys` → `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` (+ `NEXT_PUBLIC_VAPID_PUBLIC_KEY`).
 - Solana devnet vault for keepsakes: `solana-keygen new` → base58 secret in `SOLANA_VAULT_SECRET`, then `FEATURE_KEEPSAKES=1`. The worker airdrops when the balance is low.
 
-- Add the teammate (Computer 2) as a collaborator on `hamizfaraz/lore` — GitHub username not known to the agent.
+- Computer 2 is a write collaborator: `shreekardittakavi` (added 2026-10-24).
 - Accounts/keys from plan section 14 (C2-0 provisions them): Meta API, Facebook app, Tiger Data, Vultr, domain, etc.
 
 ## Deviations from the plan
@@ -203,3 +203,4 @@ _Every deviation is also recorded in `docs/IMPLEMENTATION_PLAN.md` (section 18, 
 - **2026-10-24 · C1-10 done** — Graph import, category map, Friends on LORE, connections settings, disconnect clears graph tags. 5 graph tests pass. Live Facebook login still needs Tester credentials.
 - **2026-10-24 · C1-12 done** — Devnet keepsake mint (Metaplex Core), public metadata, wallet pubkeys at signup, flag off. 4 service tests with a fake minter. Live explorer link needs `SOLANA_VAULT_SECRET`. C2 still has to render `KeepsakeButton` on the recap.
 - **2026-10-24 · C1-13 done (code)** — LoadError on Home, Inbox, Activity, Reels, Explore, and profile grids. Offline banner. Desktop home is a 470px column plus a suggestions aside at xl; the phone top bar hides from md up. Home swipe left opens inbox and right opens the story camera, and ignores carousels. Tap targets that were `h-11` under the 14px root font are now 44px. Explore search no longer shares the grid query key (that crashed search on the first keystroke). Browser-checked on the local app: desktop column, phone home, explore search, inbox, notifications, profile. Not checked on a physical phone.
+- **2026-10-24 · collaborator** — `shreekardittakavi` has write access on `hamizfaraz/lore` and can clone and push `c2/intelligence`.
