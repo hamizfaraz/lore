@@ -26,8 +26,8 @@ export function CardShell({
   return (
     <div
       className={cn(
-        'w-[min(320px,82vw)] overflow-hidden rounded-2xl border hairline bg-bg',
-        ai && 'border-ai/30',
+        'w-[min(330px,84vw)] overflow-hidden rounded-2xl border border-line/80 bg-elevated shadow-md shadow-slate-900/5',
+        ai && 'border-ai/30 shadow-ai/5',
         className,
       )}
     >

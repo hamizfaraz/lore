@@ -2,7 +2,7 @@
 import type { PostDTO, StoryRailItemDTO } from '@lore/shared/dto/social';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDrag } from '@use-gesture/react';
-import { Heart, MessageCircle } from 'lucide-react';
+import { Bell, Heart, MessageCircle, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
@@ -90,32 +90,39 @@ export function HomeScreen() {
         <TopBar
           className="md:hidden"
           border={false}
-          left={<span className="wordmark">lore</span>}
+          left={
+            <div className="flex items-center gap-2">
+              <span className="font-serif italic font-bold text-2xl tracking-tight text-ink">lore</span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/50">
+                circles
+              </span>
+            </div>
+          }
           right={
-            <>
+            <div className="flex items-center gap-1">
               <Link
                 href="/activity"
                 aria-label={unread.data?.unread ? 'Notifications, unread' : 'Notifications'}
-                className="press relative flex h-[44px] w-[44px] items-center justify-center"
+                className="press relative flex h-[38px] w-[38px] items-center justify-center rounded-full hover:bg-surface-2 transition text-ink"
               >
-                <Heart size={26} strokeWidth={1.75} />
+                <Bell size={21} strokeWidth={2} />
                 {!!unread.data?.unread && (
-                  <span className="absolute right-0 top-0 h-2 w-2 rounded-full bg-heart" />
+                  <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-bg" />
                 )}
               </Link>
               <Link
                 href="/inbox"
                 aria-label="Messages"
-                className="press relative flex h-[44px] w-[44px] items-center justify-center"
+                className="press relative flex h-[38px] w-[38px] items-center justify-center rounded-full hover:bg-surface-2 transition text-ink"
               >
-                <MessageCircle size={26} strokeWidth={1.75} className="-scale-x-100" />
+                <MessageCircle size={21} strokeWidth={2} />
                 {unreadDms > 0 && (
-                  <span className="absolute -right-1.5 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-heart px-1 text-[11px] font-semibold text-white">
+                  <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-indigo-600 px-1 text-[10px] font-bold text-white shadow-sm ring-2 ring-bg">
                     {unreadDms}
                   </span>
                 )}
               </Link>
-            </>
+            </div>
           }
         />
         <PullToRefresh onRefresh={() => Promise.all([feed.refetch(), rail.refetch()])}>

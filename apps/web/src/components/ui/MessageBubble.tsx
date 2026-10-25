@@ -91,7 +91,11 @@ export function MessageBubble({
     : { single: '', first: 'rounded-bl-[6px]', middle: 'rounded-l-[6px]', last: 'rounded-tl-[6px]' }[
         position
       ];
-  const tone = own ? 'bg-action text-white' : isAi ? 'bg-ai-tint text-ink' : 'bg-surface-2 text-ink';
+  const tone = own
+    ? 'bg-action text-white shadow-sm'
+    : isAi
+      ? 'bg-ai-tint text-ink border border-ai/25 shadow-sm'
+      : 'bg-surface-2 text-ink border border-line/40';
   const media = msg.media.filter((m) => m.kind !== 'audio');
   const name = isAi ? msg.persona?.name : msg.sender?.displayName;
 
@@ -197,7 +201,11 @@ export function MessageBubble({
           )}
         </div>
         {isAi && onWhy && (position === 'last' || position === 'single') && (
-          <button type="button" onClick={onWhy} className="press ml-3 mt-1 text-[11px] text-ai">
+          <button
+            type="button"
+            onClick={onWhy}
+            className="press ml-3 mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-ai-tint text-[11px] font-semibold text-ai border border-ai/20 hover:bg-ai/10 transition"
+          >
             Why?{msg.meta.degraded ? ' · degraded' : ''}
             {msg.meta.demoTiming ? ' · demo timing' : ''}
           </button>

@@ -26,18 +26,22 @@ export function TopBar({
   const router = useRouter();
   return (
     <header
-      className={cn('chrome sticky top-0 z-30 bg-bg pt-safe', border && 'border-b hairline', className)}
+      className={cn(
+        'chrome sticky top-0 z-30 bg-bg/95 backdrop-blur-md pt-safe',
+        border && 'border-b border-line/70',
+        className,
+      )}
     >
-      <div className="relative flex h-[44px] items-center px-3">
+      <div className="relative flex h-[50px] items-center px-3.5">
         <div className="z-10 flex min-w-10 items-center gap-1">
           {back && (
             <button
               type="button"
               aria-label="Back"
-              className="press -ml-1 p-1"
+              className="press -ml-1 p-1.5 rounded-full hover:bg-surface-2 transition text-ink"
               onClick={() => (onBack ? onBack() : router.back())}
             >
-              <ChevronLeft size={28} strokeWidth={1.75} />
+              <ChevronLeft size={24} strokeWidth={2.2} />
             </button>
           )}
           {left}
@@ -45,14 +49,14 @@ export function TopBar({
         {title !== undefined && (
           <div
             className={cn(
-              'pointer-events-none absolute inset-x-14 truncate text-center text-[16px] font-semibold',
-              large && 'static ml-1 text-left text-[22px] font-bold',
+              'pointer-events-none absolute inset-x-14 truncate text-center text-[15px] font-bold text-ink tracking-tight',
+              large && 'static ml-1 text-left text-[20px]',
             )}
           >
             {title}
           </div>
         )}
-        <div className="z-10 ml-auto flex items-center gap-4">{right}</div>
+        <div className="z-10 ml-auto flex items-center gap-3">{right}</div>
       </div>
     </header>
   );

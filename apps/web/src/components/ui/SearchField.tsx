@@ -8,20 +8,28 @@ export const SearchField = forwardRef<
   React.InputHTMLAttributes<HTMLInputElement> & { onClear?: () => void }
 >(({ className, value, onClear, ...props }, ref) => (
   <label
-    className={cn('flex h-[44px] items-center gap-2 rounded-[10px] bg-surface-2 px-3 text-ink-2', className)}
+    className={cn(
+      'flex h-[44px] items-center gap-2.5 rounded-xl border border-line/60 bg-surface-2/70 px-3.5 text-ink-2 focus-within:border-action/60 focus-within:bg-elevated focus-within:shadow-sm transition-all',
+      className,
+    )}
   >
-    <Search size={16} strokeWidth={2} aria-hidden />
+    <Search size={17} strokeWidth={2.2} aria-hidden />
     <input
       ref={ref}
       type="search"
       value={value}
-      placeholder="Search"
-      className="h-full min-w-0 flex-1 bg-transparent text-[16px] text-ink outline-none placeholder:text-ink-2"
+      placeholder="Search circles, friends, topics"
+      className="h-full min-w-0 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-ink-2 font-normal"
       {...props}
     />
     {value && onClear && (
-      <button type="button" onClick={onClear} aria-label="Clear" className="press">
-        <X size={16} />
+      <button
+        type="button"
+        onClick={onClear}
+        aria-label="Clear"
+        className="press p-1 rounded-full hover:bg-surface-2 text-ink-2"
+      >
+        <X size={15} />
       </button>
     )}
   </label>
